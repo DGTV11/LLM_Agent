@@ -34,10 +34,13 @@ ALWAYS respond DIRECTLY to the interrogator's queries. DO NOT comment on the int
 def chatbot(messages, model="mistral", stream=True, keep_alive=300):
     print("Thinking...")
 
-    response = HOST.chat(messages=messages, model=model, stream=stream, keep_alive=keep_alive)
+    response = HOST.chat(
+        messages=messages, model=model, stream=stream, keep_alive=keep_alive
+    )
 
     for chunk in response:
         return chunk
+
 
 def chat_print(text):
     formatted_lines = [
@@ -50,23 +53,28 @@ def chat_print(text):
 
 def lsa_query(main_question, model="assistant_mistral", chatbot=HOST.chat):
     if "mistral" in model:
-        model_name = 'Mistral'
-        model_architecture = 'Mistral'
+        model_name = "Mistral"
+        model_architecture = "Mistral"
     elif "phi3" in model:
-        model_name = 'Phi-3'
-        model_architecture = 'LLaMA'
+        model_name = "Phi-3"
+        model_architecture = "LLaMA"
     elif "openchat" in model:
-        model_name = 'OpenChat'
-        model_architecture = 'LLaMA'
+        model_name = "OpenChat"
+        model_architecture = "LLaMA"
     elif "llama3" in model:
-        model_name = 'Llama-3'
-        model_architecture = 'LLaMA'
+        model_name = "Llama-3"
+        model_architecture = "LLaMA"
     else:
-        raise ValueError('Model not supported')
+        raise ValueError("Model not supported")
 
     conversation = list()
     conversation.append(
-        {"role": "system", "content": SYSTEM.replace("<<QUERY>>", main_question).replace("<<MODELNAME>>", model_name).replace("<<MODEL_ARCHITECTURE>>", model_architecture)}
+        {
+            "role": "system",
+            "content": SYSTEM.replace("<<QUERY>>", main_question)
+            .replace("<<MODELNAME>>", model_name)
+            .replace("<<MODEL_ARCHITECTURE>>", model_architecture),
+        }
     )
 
     i = -1
@@ -79,9 +87,14 @@ def lsa_query(main_question, model="assistant_mistral", chatbot=HOST.chat):
 
         i += 1
 
-        response = chatbot(messages=conversation, model=model.replace('assistant_', ''), stream=True, keep_alive=75)
+        response = chatbot(
+            messages=conversation,
+            model=model.replace("assistant_", ""),
+            stream=True,
+            keep_alive=75,
+        )
 
-        res_stream = ''
+        res_stream = ""
         for chunk in response:
             res_stream += chunk["message"]["content"]
             yield i, chunk["message"]["content"], True

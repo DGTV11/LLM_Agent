@@ -2,6 +2,7 @@ import os
 
 from host import HOST
 
+
 def gen_model_from_modelfile(
     name,
     base_path,
@@ -14,6 +15,7 @@ def gen_model_from_modelfile(
         HOST.create(model=name, modelfile=file.read())
 
     end_function()
+
 
 def regen_models(base_path):
     for file in os.listdir(os.path.join(os.path.dirname(base_path), "modelfiles")):

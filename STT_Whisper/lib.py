@@ -10,7 +10,7 @@ WAVE_OUTPUT_PATH = path.join(path.dirname(__file__), "tmp.wav")
 def whisper_microphone_transcribe(model_name="base"):
     # record audio from the microphone
     text_input = record.record_audio(WAVE_OUTPUT_PATH)
-    
+
     if text_input is not None:
         return text_input
 

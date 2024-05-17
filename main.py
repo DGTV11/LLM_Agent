@@ -105,7 +105,7 @@ def query(model_name, input_messages, query):
 
         start_time = time()
         result = HOST.chat(
-            model=model_name.replace("assistant_", ""),
+            model="phi3" if phi3 in model_name else 'mistral',
             messages=[wrap_message("system", LSA_SYSTEM), wrap_message("user", lsa_context)],
             stream=True,
             keep_alive=30,

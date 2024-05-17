@@ -22,7 +22,7 @@ python3 main.py
 
 # Troubleshooting
 If you are on Linux and playsound freezes up and doesn't play anything, run the following commands:
-'''sh
+```sh
 sudo apt-get install libx264-dev libjpeg-dev
 sudo apt-get install libgstreamer1.0-dev \
      libgstreamer-plugins-base1.0-dev \
@@ -33,7 +33,7 @@ sudo apt-get install libgstreamer1.0-dev \
      gstreamer1.0-gtk3
 sudo apt-get install gstreamer1.0-qt5
 sudo apt-get install gstreamer1.0-pulseaudio
-'''
+```
 
 # TODO
 - Implement MemGPT architecture

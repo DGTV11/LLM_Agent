@@ -9,6 +9,11 @@ pip install -r requirements.txt
 
 2) Install ffmpeg
 
+3) Install the required Ollama models
+```sh
+ollama pull llama3 mistral openchat phi3
+```
+
 # Usage (CLI)
 1) Configure Speech2Speech_Chatbot if you have not already done so
 ```sh

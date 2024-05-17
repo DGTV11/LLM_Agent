@@ -38,4 +38,3 @@ sudo apt-get install gstreamer1.0-pulseaudio
 # TODO
 - Implement MemGPT architecture
 - Allow it to use function-calling to interact with its environment, search the web, use LSA/COT, and perform other actions
-# Speech2Speech_Chatbot

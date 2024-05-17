@@ -31,10 +31,10 @@ ALWAYS respond DIRECTLY to the interrogator's queries. DO NOT comment on the int
 
 
 ###     API functions
-def chatbot(messages, model="mistral", stream=True):
+def chatbot(messages, model="mistral", stream=True, keep_alive=300):
     print("Thinking...")
 
-    response = HOST.chat(messages=messages, model=model, stream=stream)
+    response = HOST.chat(messages=messages, model=model, stream=stream, keep_alive=keep_alive)
 
     for chunk in response:
         return chunk
@@ -79,7 +79,7 @@ def lsa_query(main_question, model="assistant_mistral", chatbot=HOST.chat):
 
         i += 1
 
-        response = chatbot(messages=conversation, model=model.replace('assistant_', ''), stream=True)
+        response = chatbot(messages=conversation, model=model.replace('assistant_', ''), stream=True, keep_alive=75)
 
         res_stream = ''
         for chunk in response:

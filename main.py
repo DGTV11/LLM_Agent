@@ -79,7 +79,7 @@ def query(model_name, input_messages, query):
 
         start_time = time()
         result = HOST.chat(
-            model=model_name, messages=messages, stream=True, keep_alive=150
+            model=model_name, messages=messages, stream=True, keep_alive=30
         )
         res_stream = ""
         for chunk in result:
@@ -99,7 +99,7 @@ def query(model_name, input_messages, query):
             model=model_name.replace("assistant", "spr"),
             messages=[wrap_message("user", lsa_context)],
             stream=True,
-            keep_alive=150,
+            keep_alive=30,
         )
         spr_lsa_context = ""
         for chunk in result:

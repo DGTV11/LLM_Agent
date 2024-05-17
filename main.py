@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     start_time = time()
     messages, res_stream = query(
-        model_name, messages, "Hi there! Can you tell me a bit about yourself?"
+        model_name, messages, "Hi there! Could you introduce yourself?"
     )
     end_time = time()
     print("\n\n")

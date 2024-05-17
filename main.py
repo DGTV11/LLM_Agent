@@ -105,7 +105,7 @@ def query(model_name, input_messages, query):
 
         start_time = time()
         result = HOST.chat(
-            model="phi3" if phi3 in model_name else 'mistral',
+            model="phi3" if "phi3" in model_name else 'mistral',
             messages=[wrap_message("system", LSA_SYSTEM), wrap_message("user", lsa_context)],
             stream=True,
             keep_alive=30,
@@ -194,7 +194,7 @@ if __name__ == "__main__":
 
     start_time = time()
     messages, res_stream = query(
-        model_name, messages, "Hello! Could you introduce yourself?"
+        model_name, messages, "Hi there! Can you tell me a bit about yourself?"
     )
     end_time = time()
     print("\n\n")

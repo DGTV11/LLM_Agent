@@ -48,7 +48,7 @@ def chat_print(text):
     print("\n\n\nCHATBOT:\n\n%s" % formatted_text)
 
 
-def lsa_query(main_question, model="mistral", chatbot=HOST.chat):
+def lsa_query(main_question, model="assistant_mistral", chatbot=HOST.chat):
     if "mistral" in model:
         model_name = 'Mistral'
         model_architecture = 'Mistral'
@@ -79,7 +79,7 @@ def lsa_query(main_question, model="mistral", chatbot=HOST.chat):
 
         i += 1
 
-        response = chatbot(messages=conversation, model=model, stream=True)
+        response = chatbot(messages=conversation, model=model.replace('assistant_', ''), stream=True)
 
         res_stream = ''
         for chunk in response:

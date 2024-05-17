@@ -78,9 +78,9 @@ def query(model_name, input_messages, query):
         print(emojize(":memo: Summarised context:\n"), end='')
 
         start_time = time()
-        result = HOST.generate(
+        result = HOST.chat(
             model=model_name.replace('assistant', 'spr'),
-            prompt=[{role: 'user', content: lsa_context}],
+            prompt=[wrap_message("user", lsa_context)],
             stream=True
         )
         spr_lsa_context = ''

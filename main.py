@@ -54,31 +54,41 @@ def query(model_name, input_messages, query):
                 Respond to the query DIRECTLY based on ONLY THE MOST RELEVANT PARTS of the following context as if you are SPEAKING to me (do not acknowledge that you have discussed the query in the following context):
                 {lsa_context}""")
             )
+
+        print('Generating response...')
+        print(emojize(":robot: Assistant: "), end='')
+
+        start_time = time()
         result = HOST.chat(
             model=model_name,
             messages=messages,
             stream=True
         )
         res_stream = ''
-
-        print('Generating response...')
-        print(emojize(":robot: Assistant: "), end='')
-        start_time = time()
         for chunk in result:
             res_stream += chunk['message']['content']
             print(chunk['message']['content'], end='', flush=True)
         end_time = time()
+
         print(f'\n\nGenerated response in {round(end_time-start_time, 2)}s')
 
         generated_result = True
-        
+
         print('Summarising Latent Space Activation context...')
+        print(emojize(":memo: Summarised context:\n"), end='')
+
         start_time = time()
-        spr_lsa_context = HOST.generate(
+        result = HOST.generate(
             model=model_name.replace('assistant', 'spr'),
-            prompt=[{role: 'user', content: lsa_context}]
-        )['message']['content']
+            prompt=[{role: 'user', content: lsa_context}],
+            stream=True
+        )
+        spr_lsa_context = ''
+        for chunk in result:
+            spr_lsa_context += chunk['message']['content']
+            print(chunk['message']['content'], end='', flush=True)
         end_time = time()
+
         print(f'\n\nSummarised Latent Space Activation context in {round(end_time-start_time, 2)}s')
 
         messages.pop()

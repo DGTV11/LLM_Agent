@@ -91,7 +91,7 @@ def lsa_query(main_question, model="assistant_mistral", chatbot=HOST.chat):
             messages=conversation,
             model=model.replace("assistant_", ""),
             stream=True,
-            keep_alive=75,
+            keep_alive=150,
         )
 
         res_stream = ""

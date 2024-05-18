@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 3) Install the required Ollama models
 ```sh
-ollama pull llama3 mistral openchat phi3
+ollama pull llama3 mistral openchat phi3 nomic-embed-text
 ```
 
 ## Usage (CLI)
@@ -48,3 +48,7 @@ sudo apt-get install gstreamer1.0-pulseaudio
 <a id="1">[1]</a> 
 Charles Packer and Sarah Wooders and Kevin Lin and Vivian Fang and Shishir G. Patil and Ion Stoica and Joseph E. Gonzalez. (2024).
 MemGPT: Towards LLMs as Operating Systems.
+
+<a id="2">[2]</a>
+Zach Nussbaum and John X. Morris and Brandon Duderstadt and Andriy Mulyar (2024)
+Nomic Embed: Training a Reproducible Long Context Text Embedder

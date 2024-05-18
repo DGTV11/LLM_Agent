@@ -16,10 +16,21 @@ def get_config():
     model_name = config.get("Models", "model_name")
     whisper_model_name = config.get("Models", "whisper_model_name")
 
+    google_api_key = config.get("Keys_and_IDs", "google_api_key")
+    google_prog_search_engine_id = config.get(
+        "Keys_and_IDs", "google_prog_search_engine_id"
+    )
+    huggingface_user_access_token = config.get(
+        "Keys_and_IDs", "huggingface_user_access_token"
+    )
+
     return {
         "server_url": server_url,
         "model_name": model_name,
         "whisper_model_name": whisper_model_name,
+        "google_api_key": google_api_key,
+        "google_prog_search_engine_id": google_prog_search_engine_id,
+        "huggingface_user_access_token": huggingface_user_access_token,
     }
 
 
@@ -34,6 +45,8 @@ if __name__ == "__main__":
         ).strip()
         or "http://127.0.0.1:11434"
     )
+    if server_url[-1] == "/":
+        server_url = server_url[:-1]
     config["Server"] = {"server_url": server_url}
 
     model_number = int(
@@ -103,6 +116,20 @@ if __name__ == "__main__":
     config["Models"] = {
         "model_name": model_name,
         "whisper_model_name": whisper_model_name,
+    }
+    
+    google_api_key = input("Please input Google API Key: ").strip()
+    google_prog_search_engine_id = input(
+        "Please input Google Programmable Search Engine ID: "
+    ).strip()
+    huggingface_user_access_token = input(
+        "Please input Hugging Face User Access Token: "
+    ).strip()
+
+    config["Keys_and_IDs"] = {
+        "google_api_key": google_api_key,
+        "google_prog_search_engine_id": google_prog_search_engine_id,
+        "huggingface_user_access_token": huggingface_user_access_token,
     }
 
     with open(path.join(path.dirname(__file__), "config.ini"), "w") as configfile:

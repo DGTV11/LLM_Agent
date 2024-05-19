@@ -32,22 +32,61 @@ You are a Sparse Priming Representation (SPR) writer. An SPR is a particular kin
 LLMs are a kind of deep neural network. They have been demonstrated to embed knowledge, abilities, and concepts, ranging from reasoning to planning, and even to theory of mind. These are called latent abilities and latent content, collectively referred to as latent space. The latent space of an LLM can be activated with the correct series of words as inputs, which will create a useful internal state of the neural network. This is not unlike how the right shorthand cues can prime a human mind to think in a certain way. Like human minds, LLMs are associative, meaning you only need to use the correct associations to "prime" another model to think in the same way.
 
 # METHODOLOGY
-Render the input as a distilled list of succinct statements, assertions, associations, concepts, analogies, and metaphors. The idea is to capture as much, conceptually, as possible but with as few words as possible. Write it in a way that makes sense to you, as the future audience will be another language model, not a human. Use complete sentences."""
+Render the input as a distilled list of succinct statements, assertions, associations, concepts, analogies, and metaphors. The idea is to capture as much, conceptually, as possible but with as few words as possible. Write it in a way that makes sense to you, as the future audience will be another language model, not a human. Use complete sentences. ONLY write the statements - nothing more."""
 
 wrap_message = lambda role, content: {"role": role, "content": content}
 
+def read_response(response):
+    try:
+        tts = gTTS(response, lang="en")
+        tts.save(GTTS_OUTPUT_PATH)
+        subprocess.run(
+            GTTS_SPEED_UP_COMMAND, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+        playsound(GTTS_SPED_UP_PATH)
+
+        os.remove(GTTS_OUTPUT_PATH)
+        os.remove(GTTS_SPED_UP_PATH)
+
+        return True
+    except KeyboardInterrupt:
+        if os.path.exists(GTTS_OUTPUT_PATH):
+            os.remove(GTTS_OUTPUT_PATH)
+        if os.path.exists(GTTS_SPED_UP_PATH):
+            os.remove(GTTS_SPED_UP_PATH)
+        return False
 
 def query(model_name, input_messages, query):
     generated_result = False
     try:
+        if "mistral" in model_name:
+            model_display_name = "Mistral"
+            model_architecture = "Mistral"
+        elif "phi3" in model_name:
+            model_display_name = "Phi-3"
+            model_architecture = "LLaMA"
+        elif "openchat" in model_name:
+            model_display_name = "OpenChat"
+            model_architecture = "LLaMA"
+        elif "llama3" in model_name:
+            model_display_name = "Llama-3"
+            model_architecture = "LLaMA"
+        else:
+            raise NotImplementedError("Model not supported")
+
         print(emojize(f":person: User: {query}"))
 
         messages = input_messages.copy()
 
+        #*Generate LSA context
         stream_not_started = True
         lsa_context = ""
         for i, message, is_streaming in lsa_query(
-            query, model=model_name, chatbot=HOST.chat
+            query, 
+            model=model_name, 
+            chatbot=HOST.chat, 
+            model_name=model_display_name, 
+            model_architecture=model_architecture
         ):
             if i % 2 == 0:
                 lsa_context += f"Interrogation thought: {message['content']}\n"
@@ -78,11 +117,12 @@ def query(model_name, input_messages, query):
                 "user",
                 f"""
                 Query: {query}
-                Respond to the query DIRECTLY based on ONLY THE MOST RELEVANT PARTS of the following context as if you are SPEAKING to me (do not acknowledge that you have discussed the query in the following context):
+                Respond to the query DIRECTLY based on ONLY THE MOST RELEVANT PARTS of the following context as if you are SPEAKING to me (do not acknowledge that you have discussed the query in the following context){' (you may reference the above messages as needed to aid in your response)' if len(messages) >= 2 else ''}:
                 {lsa_context}""",
             )
         )
 
+        #*Generate response
         print("Generating response...")
         print(emojize(":robot: Assistant: "), end="")
 
@@ -100,8 +140,19 @@ def query(model_name, input_messages, query):
 
         generated_result = True
 
-        print("Summarising Latent Space Activation context...")
-        print(emojize(":memo: Summarised context:\n"), end="")
+        #*Read response
+        print("Reading response... (Use Ctrl-C to skip)")
+
+        start_time = time()
+        successfully_read = read_response(res_stream)
+        end_time = time()
+
+        if successfully_read:
+            print(f"Successfully read response in {round(end_time - start_time, 2)}s")
+
+        #*Summarise LSA context into an SPR
+        print("Summarising Latent Space Activation context... (use Ctrl-C to skip)")
+        print(emojize(":memo: Summarised context:"))
 
         start_time = time()
         result = HOST.chat(
@@ -126,7 +177,7 @@ def query(model_name, input_messages, query):
                 "user",
                 f"""
                 Query: {query}
-                Respond to the query DIRECTLY based on ONLY THE MOST RELEVANT PARTS of the following context as if you are SPEAKING to me (do not acknowledge that you have discussed the query in the following context) (context has been summarized for brevity):
+                Respond to the query DIRECTLY based on ONLY THE MOST RELEVANT PARTS of the following context as if you are SPEAKING to me (do not acknowledge that you have discussed the query in the following context){' (you may reference the above messages as needed to aid in your response)' if len(messages) >= 2 else ''} (context has been summarized for brevity):
                 {spr_lsa_context}""",
             )
         )
@@ -138,28 +189,6 @@ def query(model_name, input_messages, query):
             messages.append(wrap_message("assistant", res_stream))
             return messages, res_stream
         return input_messages, None
-
-
-def read_query(query):
-    try:
-        tts = gTTS(query, lang="en")
-        tts.save(GTTS_OUTPUT_PATH)
-        subprocess.run(
-            GTTS_SPEED_UP_COMMAND, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        playsound(GTTS_SPED_UP_PATH)
-
-        os.remove(GTTS_OUTPUT_PATH)
-        os.remove(GTTS_SPED_UP_PATH)
-
-        return True
-    except KeyboardInterrupt:
-        if os.path.exists(GTTS_OUTPUT_PATH):
-            os.remove(GTTS_OUTPUT_PATH)
-        if os.path.exists(GTTS_SPED_UP_PATH):
-            os.remove(GTTS_SPED_UP_PATH)
-        return False
-
 
 if __name__ == "__main__":
     # parser = argparse.ArgumentParser(description="Speech-to-Speech Chatbot")
@@ -202,13 +231,6 @@ if __name__ == "__main__":
     if res_stream is not None:
         print(f"Responded in {round(end_time - start_time, 2)}s")
 
-        start_time = time()
-        success = read_query(res_stream)
-        end_time = time()
-
-        if success:
-            print(f"Read in {round(end_time - start_time, 2)}s")
-
     while True:
         # Record user input
         result = whisper_microphone_transcribe(model_name=whisper_model_name)
@@ -220,10 +242,3 @@ if __name__ == "__main__":
 
         if res_stream is not None:
             print(f"Responded in {round(end_time - start_time, 2)}s")
-
-            start_time = time()
-            success = read_query(res_stream)
-            end_time = time()
-
-            if success:
-                print(f"Read in {round(end_time - start_time, 2)}s")

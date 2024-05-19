@@ -13,12 +13,11 @@ def whisper_microphone_transcribe(model_name="base"):
 
     if text_input is not None:
         return text_input
+    # transcribe the audio
+    result = transcribe.transcribe_audio(WAVE_OUTPUT_PATH, model_name=model_name)
 
     # delete the temporary audio file
     remove(WAVE_OUTPUT_PATH)
-
-    # transcribe the audio
-    result = transcribe.transcribe_audio(WAVE_OUTPUT_PATH, model_name=model_name)
 
     # return the result
     return result.text

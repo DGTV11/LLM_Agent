@@ -7,15 +7,13 @@ from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 
 from host import HOST_URL
-from tokenizers import NOMIC_EMBED_TEXT_TOKENIZER
-
-RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE = 5
+from llm_os.tokenisers import NOMIC_EMBED_TEXT_TOKENIZER
 
 class ArchivalStorage:
     def __init__(self, top_k=100):
         self.top_k = top_k
 
-        self.client = chromadb.PersistentClient(path=path.join(path.dirname(__file__), "persistent_storage", "chroma"))
+        self.client = chromadb.PersistentClient(path=path.join(path.dirname(__file__), "persistent_storage")):
         self.ef = OllamaEmbeddingFunction(
             model_name="nomic-embed-text",
             url=f"{HOST_URL}/api/embeddings",

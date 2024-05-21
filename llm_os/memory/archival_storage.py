@@ -51,7 +51,7 @@ class ArchivalStorage:
 
             start = int(start if start else 0)
             count = int(count if count else self.top_k)
-            end = int(count+start, len(self.cache[query]))
+            end = min(count+start, len(self.cache[query]))
 
             local_time = datetime.now().astimezone().strftime("%Y-%m-%d %I:%M:%S %p %Z%z")}.strip()
             results = [{"timestamp": local_time(), "content": document} for document in self.cache[query][start:end]]

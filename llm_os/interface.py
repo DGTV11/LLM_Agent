@@ -7,7 +7,7 @@ class CLIInterface:
     
     @staticmethod
     def internal_monologue(msg: str):
-        print(emojize(f':thought_balloon: {msg}')
+        print(emojize(f':thought_balloon: {msg}'))
 
     @staticmethod
     def assistant_message(msg: str):

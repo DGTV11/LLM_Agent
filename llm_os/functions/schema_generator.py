@@ -9,6 +9,7 @@ from llm_os.constants import (
     FUNCTION_PARAM_DESCRIPTION_REQ_HEARTBEAT,
     FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
     FUNCTION_PARAM_TYPE_REQ_HEARTBEAT,
+    PY_TO_JSON_TYPE_MAP,
 )
 
 NO_HEARTBEAT_FUNCTIONS = ["send_message", "pause_heartbeats"]
@@ -45,18 +46,10 @@ def type_to_json_schema_type(py_type):
         return type_to_json_schema_type(type_args[0])
 
     # Mapping of Python types to JSON schema types
-    type_map = {
-        int: "integer",
-        str: "string",
-        bool: "boolean",
-        float: "number",
-        list[str]: "array",
-        # Add more mappings as needed
-    }
-    if py_type not in type_map:
+    if py_type not in PY_TO_JSON_TYPE_MAP:
         raise ValueError(f"Python type {py_type} has no corresponding JSON schema type")
 
-    return type_map.get(py_type, "string")  # Default to "string" if type not in map
+    return PY_TO_JSON_TYPE_MAP.get(py_type, "string")  # Default to "string" if type not in map
 
 
 def pydantic_model_to_open_ai(model):

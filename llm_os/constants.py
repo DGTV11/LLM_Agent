@@ -1,4 +1,4 @@
-# Retrieval queries
+ Retrieval queries
 RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE = 5
 
 # Working context
@@ -12,3 +12,22 @@ FUNCTION_PARAM_DESCRIPTION_REQ_HEARTBEAT = "Request an immediate heartbeat after
 
 # Summarisation constants
 WORD_LIMIT = 100
+
+# JSON schema type maps
+PY_TO_JSON_TYPE_MAP = {
+    int: "integer",
+    str: "string",
+    bool: "boolean",
+    float: "number",
+    list[str]: "array",
+    # Add more mappings as needed
+}
+
+JSON_TO_PY_TYPE_MAP = {
+    "integer": int,
+    "string": str,
+    "boolean": bool,
+    "number": float,
+    "array": list[str],
+    # Add more mappings as needed
+}

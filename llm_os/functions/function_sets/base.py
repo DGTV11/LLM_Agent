@@ -51,10 +51,9 @@ def pause_heartbeats(self: Agent, minutes: int) -> Optional[str]:
     self.pause_heartbeats_minutes = int(minutes)
 
     return f"Pausing timed heartbeats for {minutes} min"
-'''
 
 pause_heartbeats.__doc__ = pause_heartbeats_docstring
-
+'''
 
 def core_memory_append(self: Agent, section_name: str, content: str) -> Optional[str]:
     """

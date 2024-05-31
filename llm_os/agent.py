@@ -9,6 +9,7 @@ from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
+from llm_os.constants import JSON_TO_PY_TYPE_MAP
 
 class Agent:
     def __init__(
@@ -47,16 +48,47 @@ class Agent:
             },
         }
 
-    def __call_function(self, function_call):
-        function_name = function_call['name']
-        function_params = function_call['parameters']
-        function = self.memory.function_dats[function_name]['python_function']
+    def __call_function(self, function_call): #TODO
+        # Returns: res_messageds, heartbeat_request, function_failed
+        res_messageds = []  
+        
+        # Step 1: Parse function call
+        try:
+            called_function_name = function_call['name']
+            called_function_arguments = function_call['arguments']
+        except KeyError as e:
+            res_messageds.append(Agent.package_tool_response(f'Failed to parse function call: {e}.', True))
+            return res_messageds, True, True # Sends heartbeat request so LLM can retry
 
+        # Step 2: Check if function exists
+        called_function_dat = self.memory.function_dats.get(function_name, None)
+        if not called_function_dat:
+            res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not exist.', True))
+            return res_messageds, True, True # Sends heartbeat request so LLM can retry
+
+        # Step 3: Get python function and function schema
+        called_function = function_dat['python_function']
+        called_function_schema = json.loads(function_dat['json_schema'])
+        called_function_parameters = called_function_schema['parameters']['properties']
+
+        # Step 4: Valiate arguments
+        ## Check if required arguments are present
+        called_function_parameter_names = called_function_parameters.keys()
+        for argument in called_function_arguments.keys():
+            if argument not in called_function_parameter_names:
+                res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument}".', True))
+                return res_messageds, True, True # Sends heartbeat request so LLM can retry
+        if len(called_function_arguments) != len(called_function_parameter_names):
+            res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" requires {len(called_function_parameter_names)} arguments ({len(called_function_arguments)} given).', True))
+            return res_messageds, True, True # Sends heartbeat request so LLM can retry
+        ## Check if arguments are of the correct type
+        for argument_name, argument_value in called_function_arguments.items():
+            pass
 
     def step(self, user_messaged) -> str: #TODO
         #note: messaged must be in the form {'type': type, {'role': role, 'content': content}}
         
-        queued_messageds = user_messaged
+        queued_messageds = [user_messaged]
 
         ## Step 1: Generate response
         result = HOST.chat(
@@ -72,4 +104,8 @@ class Agent:
         if 'function_call' in json_result:
             res_messageds, heartbeat_request, function_failed = self.__call_function(json_result['function_call'])
         else:
-            pass
+            res_messageds = []
+            heartbeat_request = function_failed = False
+        
+        ## Step 3: Extend message history
+        queued_messageds += res_messageds

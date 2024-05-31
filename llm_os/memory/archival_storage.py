@@ -2,7 +2,7 @@ from os import path
 import hashlib
 
 import chromadb
-from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
+import chromadb.utils.embedding_functions as embedding_functions
 from semantic_text_splitter import TextSplitter
 from tokenizers import Tokenizer
 
@@ -13,8 +13,8 @@ class ArchivalStorage:
     def __init__(self, top_k=100):
         self.top_k = top_k
 
-        self.client = chromadb.PersistentClient(path=path.join(path.dirname(__file__), "persistent_storage")):
-        self.ef = OllamaEmbeddingFunction(
+        self.client = chromadb.PersistentClient(path=path.join(path.dirname(__file__), "persistent_storage"))
+        self.ef = embedding_functions.OllamaEmbeddingFunction(
             model_name="nomic-embed-text",
             url=f"{HOST_URL}/api/embeddings",
         )
@@ -53,7 +53,7 @@ class ArchivalStorage:
             count = int(count if count else self.top_k)
             end = min(count+start, len(self.cache[query]))
 
-            local_time = datetime.now().astimezone().strftime("%Y-%m-%d %I:%M:%S %p %Z%z")}.strip()
+            local_time = datetime.now().astimezone().strftime("%Y-%m-%d %I:%M:%S %p %Z%z").strip()
             results = [{"timestamp": local_time(), "content": document} for document in self.cache[query][start:end]]
 
             return results, len(results)

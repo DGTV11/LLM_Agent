@@ -5,11 +5,9 @@ from typing import get_args, get_origin
 from docstring_parser import parse
 from pydantic import BaseModel
 
-from llm_os.constants import (
-    FUNCTION_PARAM_DESCRIPTION_REQ_HEARTBEAT,
-    FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
-    FUNCTION_PARAM_TYPE_REQ_HEARTBEAT,
-)
+FUNCTION_PARAM_NAME_REQ_HEARTBEAT = "request_heartbeat"
+FUNCTION_PARAM_TYPE_REQ_HEARTBEAT = "boolean"
+FUNCTION_PARAM_DESCRIPTION_REQ_HEARTBEAT = "Request an immediate heartbeat after function execution. Set to 'true' if you want to send a follow-up message or run a follow-up function."
 
 NO_HEARTBEAT_FUNCTIONS = ["send_message", "pause_heartbeats"]
 
@@ -142,3 +140,38 @@ def generate_schema(function):
         schema["parameters"]["required"].append(FUNCTION_PARAM_NAME_REQ_HEARTBEAT)
 
     return schema
+
+from typing import Optional
+
+from llm_os.constants import RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
+from llm_os.agent import Agent
+
+def send_message(self: Agent, message: str) -> Optional[str]:
+    """
+    Sends a message to the human user.
+
+    Args:
+        message (str): Message contents. All unicode (including emojis) are supported.
+
+    Returns:
+        Optional[str]: None is always returned as this function does not produce a response.
+    """
+    self.interface.send_assistant_message(message)
+    return None
+
+print(generate_schema(send_message))
+
+def conversation_search(self: Agent, query: str, page: Optional[int] = 0) -> Optional[str]:
+    """
+    Search prior conversation history using case-insensitive string matching.
+
+    Args:
+        query (str): String to search for.
+        page (int): Allows you to page through results. Only use on a follow-up query. Defaults to 0 (first page).
+
+    Returns:
+        str: Query result string
+    """
+    return 'foo'
+
+print(generate_schema(conversation_search))

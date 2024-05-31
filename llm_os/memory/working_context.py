@@ -2,7 +2,7 @@ from typing import Callable
 from llm_os.constants import WORKING_CTX_PERSONA_MAX_TOKENS, WORKING_CTX_HUMAN_MAX_TOKENS
 
 class WorkingContext:
-    def __init__(self, no_token_func: Callable[str], persona: str, human: str):
+    def __init__(self, no_token_func: Callable[[str], int], persona: str, human: str):
         self.no_token_func = no_token_func
         self.persona = persona
         self.human = human

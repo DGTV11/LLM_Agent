@@ -1,10 +1,10 @@
 from os import path
-from datetime import now, datetime
+from datetime import datetime
 import json
 
 class RecallStorage:
     def __init__(self):
-        self.rc_path = path.join(path.dirname(__file__), "persistent_storage", "recall_storage.json"))
+        self.rc_path = path.join(path.dirname(__file__), "persistent_storage", "recall_storage.json")
         if path.exists(self.rc_path):
             self.__save_rc_path_dat_to_rs_cache()
         else:
@@ -28,16 +28,16 @@ class RecallStorage:
 
     @property
     def conv_messageds(self):
-        return [messaged for messaged in self.rs_cache if messaged['type'] not in ['system', 'function']]
+        return [messaged for messaged in self.rs_cache if messaged['type'] not in ['system', 'tool']]
     
-    def insert(self, message):
+    def insert(self, messaged):
         #note: messaged must be in the form {'type': type, {'role': role, 'content': content}}
-        messaged = {
-            'timestamp': now().astimezone().strftime("%Y-%m-%d"),
-            'type': message['type'],
-            'message': message['message']
+        recall_messaged = {
+            'timestamp': datetime.now().astimezone().strftime("%Y-%m-%d"),
+            'type': messaged['type'],
+            'message': messaged['message']
         }
-        self.__save_messaged(messaged)
+        self.__save_messaged(recall_messaged)
 
     def text_search(self, query_string, count=None, start=None):
         results = [message for messaged in self.conv_messageds if messaged['message']['content'] is not None and query_string.lower() in messaged['message']['content'].lower()]

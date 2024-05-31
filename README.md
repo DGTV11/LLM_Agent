@@ -40,6 +40,12 @@ sudo apt-get install gstreamer1.0-qt5
 sudo apt-get install gstreamer1.0-pulseaudio
 ```
 
+## Note
+- The code in llm_os is based on the MemGPT codebase [here](https://github.com/cpacker/MemGPT) (some parts are from the codebase, some parts are from the internet)
+- The system instructions have been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/prompts) with few edits
+- The schema generator has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/schema_generator.py) with few edits
+- The base function set has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/function_sets/base.py) with few edits
+
 ## TODO
 - Implement MemGPT architecture
 - Allow it to use function-calling to interact with its environment, search the web, use LSA/COT, and perform other actions

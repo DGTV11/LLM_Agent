@@ -1,4 +1,5 @@
 from queue import Queue
+from functools import reduce
 import json
 
 from config import CONFIG
@@ -9,7 +10,7 @@ from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
-from llm_os.constants import JSON_TO_PY_TYPE_MAP
+from llm_os.constants import PY_TO_JSON_TYPE_MAP, JSON_TO_PY_TYPE_MAP, FUNCTION_PARAM_NAME_REQ_HEARTBEAT
 
 class Agent:
     def __init__(
@@ -83,7 +84,28 @@ class Agent:
             return res_messageds, True, True # Sends heartbeat request so LLM can retry
         ## Check if arguments are of the correct type
         for argument_name, argument_value in called_function_arguments.items():
-            pass
+            required_param_type = called_function_parameters[argument_name]['type']
+
+            if type(argument_value) is list:
+                if required_param_type != 'array':
+                    res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "array" (expected type "{required_param_type}").', True))
+                    return res_messageds, True, True # Sends heartbeat request so LLM can retry
+                param_array_field_type = JSON_TO_PY_TYPE_MAP['array'].__args__[0]
+                all_arg_elem_correct_type = reduce(lambda x, y: x and y, map(lambda x: type(x) is param_array_field_type, argument_value), True)
+                if not all_arg_elem_correct_type:
+                    res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "array" (some or all elements are not of type {PY_TO_JSON_TYPE_MAP[param_array_field_type]}).', True))
+                    return res_messageds, True, True # Sends heartbeat request so LLM can retry
+                continue
+
+            argument_value_type = PY_TO_JSON_TYPE_MAP[type(argument_value)]
+            if required_param_type == 'array':
+                res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "array").', True))
+                return res_messageds, True, True # Sends heartbeat request so LLM can retry
+
+            if argument_value_type != required_param_type:
+                res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "{required_param_type}").', True))
+
+        # Step 5: Call function
 
     def step(self, user_messaged) -> str: #TODO
         #note: messaged must be in the form {'type': type, {'role': role, 'content': content}}

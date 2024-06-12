@@ -1,7 +1,7 @@
- Retrieval queries
+# Retrieval query constants
 RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE = 5
 
-# Working context
+# Working context constants
 WORKING_CTX_HUMAN_MAX_TOKENS = 500
 WORKING_CTX_PERSONA_MAX_TOKENS = 500
 
@@ -31,3 +31,7 @@ JSON_TO_PY_TYPE_MAP = {
     "array": list[str],
     # Add more mappings as needed
 }
+
+# Memory pressure constants
+WARNING_TOKEN_FRAC = 0.7
+FLUSH_TOKEN_FRAC = 1

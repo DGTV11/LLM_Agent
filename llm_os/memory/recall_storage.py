@@ -31,7 +31,7 @@ class RecallStorage:
         return [messaged for messaged in self.rs_cache if messaged['type'] not in ['system', 'tool']]
     
     def insert(self, messaged):
-        #note: messaged must be in the form {'type': type, {'role': role, 'content': content}}
+        #note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
         recall_messaged = {
             'timestamp': datetime.now().astimezone().strftime("%Y-%m-%d"),
             'type': messaged['type'],

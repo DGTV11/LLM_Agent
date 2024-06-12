@@ -47,15 +47,24 @@ class Memory:
     
     @property
     def main_ctx_message_seq(self):
-        #note: messaged must be in the form {'type': type, {'role': role, 'content': content}}
+        #note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
         translated_messages = []
+        user_role_buf = []
+
         for messaged in self.fifo_queue.queue:
             if messaged['type'] == 'system':
-                translated_messages.append({"role": "user", "content": f"(SYSTEM MESSAGE) messaged['message']['content']"})
+                user_role_buf.append(f"(SYSTEM MESSAGE) {messaged['message']['content']}"})
             elif messaged['type'] == 'tool':
-                translated_messages.append({"role": "user", "content": f"(TOOL MESSAGE) messaged['message']['content']"})
+                user_role_buf.append(f"(TOOL MESSAGE) {messaged['message']['content']}")
+            elif messaged['type'] == 'user':
+                user_role_buf.append(f"(USER MESSAGE) {messaged['message']['content']}")
             else:
+                translated_messages.append({'role': 'user', 'content': '\n\n'.join(user_role_buf)})
                 translated_messages.append(messaged['message'])
+                user_role_buf = []
+
+        if user_role_buf:
+            translated_messages.append({'role': 'user', 'content': '\n\n'.join(user_role_buf)})
 
         return (
             [{"role": "system", "content": self.main_context_system_message}]

@@ -10,7 +10,7 @@ from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
-from llm_os.constants import PY_TO_JSON_TYPE_MAP, JSON_TO_PY_TYPE_MAP, FUNCTION_PARAM_NAME_REQ_HEARTBEAT
+from llm_os.constants import PY_TO_JSON_TYPE_MAP, JSON_TO_PY_TYPE_MAP, FUNCTION_PARAM_NAME_REQ_HEARTBEAT, WARNING_TOKEN_FRAC, FLUSH_TOKEN_FRAC
 
 class Agent:
     def __init__(
@@ -106,28 +106,55 @@ class Agent:
                 res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "{required_param_type}").', True))
 
         # Step 5: Call function
-
-    def step(self, user_messaged) -> str: #TODO
-        #note: messaged must be in the form {'type': type, {'role': role, 'content': content}}
+        called_heartbeat_request = called_function_arguments.get(FUNCTION_PARAM_NAME_REQ_HEARTBEAT, None)
         
-        queued_messageds = [user_messaged]
+        if called_heartbeat_request is not None:
+            del called_function_arguments[FUNCTION_PARAM_NAME_REQ_HEARTBEAT]
+        else:
+            called_heartbeat_request = False
 
+        called_function_arguments['self'] = self
+
+        try:
+            called_function_result = called_function(**called_function_arguments)
+        except Exception as e:
+            res_messageds.append(Agent.package_tool_response(e, True))
+            return res_messageds, True, True # Sends heartbeat request so LLM can retry
+
+        # Step 6: Package response
+        res_messageds.append(Agent.package_tool_response(called_function_result, False))
+        return res_messageds, called_heartbeat_request, False
+
+    def step(self) -> str: #TODO
+        #note: all messageds must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+        
         ## Step 1: Generate response
         result = HOST.chat(
             model=self.model_name, 
-            messages=self.memory.main_ctx_message_seq(messaged),
+            messages=self.memory.main_ctx_message_seq,
             format="json",
             options={"num_ctx": self.ctx_window},
         )
-        json_result = json.loads(result)
+        result_content = result['message']['content']
+        res_messageds = [{'type': 'assistant', 'message': result['message']}]
+
+        json_result = json.loads(result_content)
         self.interface.internal_monologue(json_result['thoughts'])
 
         ## Step 2: Check if LLM wanted to call a function
         if 'function_call' in json_result:
-            res_messageds, heartbeat_request, function_failed = self.__call_function(json_result['function_call'])
+            d_res_messageds, heartbeat_request, function_failed = self.__call_function(json_result['function_call'])
+            res_messageds += d_res_messageds
         else:
-            res_messageds = []
             heartbeat_request = function_failed = False
         
-        ## Step 3: Extend message history
-        queued_messageds += res_messageds
+        ## Step 3: Check memory pressure
+        if not self.memory_pressure_warning_alr_given and self.memory.main_ctx_message_seq_no_tokens > int(WARNING_TOKEN_FRAC * self.memory.ctx_window):
+            res_messageds.append({'type': 'system', 'message': {'role': 'user', 'content': f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage."}})
+
+        ## Step 4: Update memory
+        for messaged in res_messageds:
+            self.memory.append_messaged_to_fq_and_rs(queued_messageds)
+
+        ## Step 5: Return response
+

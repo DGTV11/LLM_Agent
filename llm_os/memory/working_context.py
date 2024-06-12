@@ -1,11 +1,24 @@
 from typing import Callable
+from os import path
+import json
+
 from llm_os.constants import WORKING_CTX_PERSONA_MAX_TOKENS, WORKING_CTX_HUMAN_MAX_TOKENS
 
 class WorkingContext:
     def __init__(self, no_token_func: Callable[[str], int], persona: str, human: str):
+        self.rc_path = path.join(path.dirname(__file__), "persistent_storage", "working_context.json")
         self.no_token_func = no_token_func
-        self.persona = persona
-        self.human = human
+
+        if os.path.exists(self.rc_path):
+            with open(self.rc_path, "r") as f:
+                wc_cache = json.loads(f.read())
+                self.persona = wc_cache['persona']
+                self.human = wc_cache['human']
+        else:
+            self.persona = persona
+            self.human = human
+        
+        self.__update_working_context_ps()
 
     def __repr__(self):
         return f'''<persona>
@@ -14,6 +27,10 @@ class WorkingContext:
         <human>
         {self.human}
         </human>'''
+
+    def __update_working_context_ps(self):
+        with open(self.rc_path, "w") as f:
+            f.write(json.dumps({'persona': self.persona, 'human': self.human}))
 
     def __str__(self):
         return self.__repr__()
@@ -24,6 +41,7 @@ class WorkingContext:
             raise ValueError(f"Edit failed: Exceeds {WORKING_CTX_PERSONA_MAX_TOKENS} token limit (requested {no_tokens_new_persona}). Consider summarizing existing core memories in 'persona' and/or moving lower priority content to archival memory to free up space in core memory, then trying again.")
 
         self.persona = new_persona
+        self.__update_working_context_ps()
         return self.no_token_func(self.persona)
 
     def edit_human(self, new_human):
@@ -32,6 +50,7 @@ class WorkingContext:
             raise ValueError(f"Edit failed: Exceeds {WORKING_CTX_HUMAN_MAX_TOKENS} token limit (requested {no_tokens_new_human}). Consider summarizing existing core memories in 'human' and/or moving lower priority content to archival memory to free up space in core memory, then trying again.")
 
         self.human = new_human
+        self.__update_working_context_ps()
         return self.no_token_func(self.human)
 
     def edit(self, section, content):

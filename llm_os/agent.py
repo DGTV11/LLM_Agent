@@ -258,16 +258,29 @@ class Agent:
         res_messageds = [{"type": "assistant", "message": result["message"]}]
 
         json_result = json.loads(result_content)
-        self.interface.internal_monologue(json_result["thoughts"])
+        if json_result.get("thoughts", None):
+            self.interface.internal_monologue(json_result["thoughts"])
 
-        ## Step 2: Check if LLM wanted to call a function
-        if "function_call" in json_result:
-            d_res_messageds, heartbeat_request, function_failed = self.__call_function(
-                json_result["function_call"]
-            )
-            res_messageds += d_res_messageds
+            ## Step 2: Check if LLM wanted to call a function
+            if "function_call" in json_result:
+                d_res_messageds, heartbeat_request, function_failed = self.__call_function(
+                    json_result["function_call"]
+                )
+                res_messageds += d_res_messageds
+            else:
+                heartbeat_request = function_failed = False
         else:
-            heartbeat_request = function_failed = False
+            interface_message = "Error: you MUST at least include the 'thoughts' field in your response as your internal monologue!"
+            res_messageds.append(
+                {
+                    "type": "system",
+                    "message": {"role": "user", "content": interface_message},
+                }
+            )
+            self.interface.system_message(interface_message)
+            heartbeat_request = True
+            function_failed = False
+
 
         ## Step 3: Check memory pressure
         if (

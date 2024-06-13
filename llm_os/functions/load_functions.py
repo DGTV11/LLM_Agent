@@ -52,12 +52,13 @@ def load_all_function_sets():
         for filename in os.listdir(path):
             filepath = os.path.join(path, filename)
             if (
-                os.path.isfile(filename)
+                os.path.isfile(filepath)
                 and filename.endswith(".py")
                 and not (filename.startswith("_") or filename.startswith("."))
             ):
                 try:
                     function_sets.append(FunctionSet(filepath))
+                    print(f"Loaded function set {filename}")
                 except SyntaxError as e:
                     print(
                         f"Skipped loading function set {filename} due to a syntax error: {e}"

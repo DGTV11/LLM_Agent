@@ -270,7 +270,7 @@ class Agent:
             else:
                 heartbeat_request = function_failed = False
         else:
-            interface_message = "Error: you MUST at least include the 'thoughts' field in your response as your internal monologue!"
+            interface_message = "Error: you MUST at least include the 'thoughts' field in your response as your internal monologue! If you wanted to call a function, please try again while including your internal_monologue as if you had never gotten this message."
             res_messageds.append(
                 {
                     "type": "system",

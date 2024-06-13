@@ -36,6 +36,7 @@ Render the input as a distilled list of succinct statements, assertions, associa
 
 wrap_message = lambda role, content: {"role": role, "content": content}
 
+
 def read_response(response):
     try:
         tts = gTTS(response, lang="en")
@@ -55,6 +56,7 @@ def read_response(response):
         if os.path.exists(GTTS_SPED_UP_PATH):
             os.remove(GTTS_SPED_UP_PATH)
         return False
+
 
 def query(model_name, input_messages, query):
     generated_result = False
@@ -78,15 +80,15 @@ def query(model_name, input_messages, query):
 
         messages = input_messages.copy()
 
-        #*Generate LSA context
+        # *Generate LSA context
         stream_not_started = True
         lsa_context = ""
         for i, message, is_streaming in lsa_query(
-            query, 
-            model=model_name, 
-            chatbot=HOST.chat, 
-            model_name=model_display_name, 
-            model_architecture=model_architecture
+            query,
+            model=model_name,
+            chatbot=HOST.chat,
+            model_name=model_display_name,
+            model_architecture=model_architecture,
         ):
             if i % 2 == 0:
                 lsa_context += f"Interrogation thought: {message['content']}\n"
@@ -122,7 +124,7 @@ def query(model_name, input_messages, query):
             )
         )
 
-        #*Generate response
+        # *Generate response
         print("Generating response...")
         print(emojize(":robot: Assistant: "), end="")
 
@@ -140,7 +142,7 @@ def query(model_name, input_messages, query):
 
         generated_result = True
 
-        #*Read response
+        # *Read response
         print("Reading response... (Use Ctrl-C to skip)")
 
         start_time = time()
@@ -150,14 +152,17 @@ def query(model_name, input_messages, query):
         if successfully_read:
             print(f"Successfully read response in {round(end_time - start_time, 2)}s")
 
-        #*Summarise LSA context into an SPR
+        # *Summarise LSA context into an SPR
         print("Summarising Latent Space Activation context... (use Ctrl-C to skip)")
         print(emojize(":memo: Summarised context:"))
 
         start_time = time()
         result = HOST.chat(
-            model="phi3" if "phi3" in model_name else 'mistral',
-            messages=[wrap_message("system", LSA_SYSTEM), wrap_message("user", lsa_context)],
+            model="phi3" if "phi3" in model_name else "mistral",
+            messages=[
+                wrap_message("system", LSA_SYSTEM),
+                wrap_message("user", lsa_context),
+            ],
             stream=True,
             keep_alive=30,
         )
@@ -189,6 +194,7 @@ def query(model_name, input_messages, query):
             messages.append(wrap_message("assistant", res_stream))
             return messages, res_stream
         return input_messages, None
+
 
 if __name__ == "__main__":
     # parser = argparse.ArgumentParser(description="Speech-to-Speech Chatbot")

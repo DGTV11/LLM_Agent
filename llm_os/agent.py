@@ -1,8 +1,8 @@
+from os import path
 from collections import deque
 from functools import reduce
 import json
 
-from config import CONFIG
 from host import HOST
 
 from llm_os.interface import CLIInterface
@@ -11,154 +11,284 @@ from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
 from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
-from llm_os.constants import PY_TO_JSON_TYPE_MAP, JSON_TO_PY_TYPE_MAP, FUNCTION_PARAM_NAME_REQ_HEARTBEAT, WARNING_TOKEN_FRAC, FLUSH_TOKEN_FRAC, TRUNCATION_TOKEN_FRAC, WORD_LIMIT, LAST_N_MESSAGES_TO_PRESERVE,
+from llm_os.constants import (
+    PY_TO_JSON_TYPE_MAP,
+    JSON_TO_PY_TYPE_MAP,
+    FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
+    WARNING_TOKEN_FRAC,
+    FLUSH_TOKEN_FRAC,
+    TRUNCATION_TOKEN_FRAC,
+    WORD_LIMIT,
+    LAST_N_MESSAGES_TO_PRESERVE,
+)
+
 
 class Agent:
     def __init__(
-            self, 
-            interface: CLIInterface, 
-            persona_name: str,
-            model_name: str, 
-            function_dats: dict,
-            system_instructions: str, working_context: WorkingContext, fifo_queue: Queue[str],
-            archival_storage: ArchivalStorage,
-            recall_storage: RecallStorage
-        ):
+        self,
+        interface: CLIInterface,
+        conv_name: str,
+        model_name: str,
+        function_dats: dict,
+        system_instructions: str,
+        working_context: WorkingContext,
+        archival_storage: ArchivalStorage,
+        recall_storage: RecallStorage,
+    ):
+        self.misc_info_path = path.join(
+            path.dirname(path.dirname(__file__)), "persistent_storage", conv_name, "misc_info.json"
+        )
+
         self.interface = interface
         self.model_name = model_name
-        self.persona_name = persona_name
+        self.conv_name = conv_name
 
         self.memory = Memory(
             self.model_name,
-            self.persona_name,
+            self.conv_name,
             function_dats,
-            system_instructions, working_context, fifo_queue, 
-            archival_storage, recall_storage
+            system_instructions,
+            working_context,
+            archival_storage,
+            recall_storage,
         )
 
-        self.memory_pressure_warning_alr_given = False
+        self.__memory_pressure_warning_alr_given = False
+        if path.exists(self.misc_info_path):
+            self.__save_misc_info_path_dat_to_misc_info_vars()
+        else:
+            self.__write_misc_info_vars_to_misc_info_path_dat()
+
+    def __save_misc_info_path_dat_to_misc_info_vars(self):
+        with open(self.misc_info_path, "r") as f:
+            misc_info = json.loads(f.read())
+            self.__memory_pressure_warning_alr_given = misc_info[
+                "memory_pressure_warning_alr_given"
+            ]
+
+    def __write_misc_info_vars_to_misc_info_path_dat(self):
+        if not path.exists(self.misc_info_path):
+            f = open(self.misc_info_path, "x")
+            f.close()
+        with open(self.misc_info_path, "w") as f:
+            misc_info = {
+                "memory_pressure_warning_alr_given": self.__memory_pressure_warning_alr_given
+            }
+            f.write(json.dumps(misc_info))
+
+    @property
+    def memory_pressure_warning_alr_given(self):
+        return self.__memory_pressure_warning_alr_given
+
+    @memory_pressure_warning_alr_given.setter
+    def memory_pressure_warning_alr_given(self, value):
+        self.__memory_pressure_warning_alr_given = value
+        self.__write_misc_info_vars_to_misc_info_path()
 
     @staticmethod
     def package_tool_response(result, has_error):
         if has_error:
-            status = f'Status: Failed.'
+            status = f"Status: Failed."
         else:
-            status = f'Status: OK.'
+            status = f"Status: OK."
 
         return {
-            'type': 'tool',
-            'message': {
-                'role': 'user',
-                'content': f'{status} Result: {result}'
-            },
+            "type": "tool",
+            "message": {"role": "user", "content": f"{status} Result: {result}"},
         }
 
     def __call_function(self, function_call):
         # Returns: res_messageds, heartbeat_request, function_failed
-        res_messageds = []  
-        
+        res_messageds = []
+
         # Step 1: Parse function call
         try:
-            called_function_name = function_call['name']
-            called_function_arguments = function_call['arguments']
+            called_function_name = function_call["name"]
+            called_function_arguments = function_call["arguments"]
         except KeyError as e:
-            res_messageds.append(Agent.package_tool_response(f'Failed to parse function call: {e}.', True))
-            return res_messageds, True, True # Sends heartbeat request so LLM can retry
+            interface_message = f"Failed to parse function call: {e}."
+            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            self.interface.function_res_message(interface_message, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 
         # Step 2: Check if function exists
-        called_function_dat = self.memory.function_dats.get(function_name, None)
+        called_function_dat = self.memory.function_dats.get(called_function_name, None)
         if not called_function_dat:
-            res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not exist.', True))
-            return res_messageds, True, True # Sends heartbeat request so LLM can retry
+            interface_message = f'Function "{called_function_name}" does not exist.'
+            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            self.interface.function_res_message(interface_message, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 
         # Step 3: Get python function and function schema
-        called_function = function_dat['python_function']
-        called_function_schema = json.loads(function_dat['json_schema'])
-        called_function_parameters = called_function_schema['parameters']['properties']
+        called_function = called_function_dat["python_function"]
+        called_function_schema = json.loads(called_function_dat["json_schema"])
+        called_function_parameters = called_function_schema["parameters"]["properties"]
 
         # Step 4: Valiate arguments
         ## Check if required arguments are present
         called_function_parameter_names = called_function_parameters.keys()
         for argument in called_function_arguments.keys():
             if argument not in called_function_parameter_names:
-                res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument}".', True))
-                return res_messageds, True, True # Sends heartbeat request so LLM can retry
+                interface_message = f'Function "{called_function_name}" does not accept argument "{argument}".'
+                res_messageds.append(
+                    Agent.package_tool_response(interface_message, True)
+                )
+                self.interface.function_res_message(interface_message, True)
+
+                return (
+                    res_messageds,
+                    True,
+                    True,
+                )  # Sends heartbeat request so LLM can retry
         if len(called_function_arguments) != len(called_function_parameter_names):
-            res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" requires {len(called_function_parameter_names)} arguments ({len(called_function_arguments)} given).', True))
-            return res_messageds, True, True # Sends heartbeat request so LLM can retry
+            interface_message = f'Function "{called_function_name}" requires {len(called_function_parameter_names)} arguments ({len(called_function_arguments)} given).'
+            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            self.interface.function_res_message(interface_message, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
         ## Check if arguments are of the correct type
         for argument_name, argument_value in called_function_arguments.items():
-            required_param_type = called_function_parameters[argument_name]['type']
+            required_param_type = called_function_parameters[argument_name]["type"]
 
             if type(argument_value) is list:
-                if required_param_type != 'array':
-                    res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "array" (expected type "{required_param_type}").', True))
-                    return res_messageds, True, True # Sends heartbeat request so LLM can retry
-                param_array_field_type = JSON_TO_PY_TYPE_MAP['array'].__args__[0]
-                all_arg_elem_correct_type = reduce(lambda x, y: x and y, map(lambda x: type(x) is param_array_field_type, argument_value), True)
+                if required_param_type != "array":
+                    interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "array" (expected type "{required_param_type}").'
+                    res_messageds.append(
+                        Agent.package_tool_response(interface_message, True)
+                    )
+                    self.interface.function_res_message(interface_message, True)
+
+                    return (
+                        res_messageds,
+                        True,
+                        True,
+                    )  # Sends heartbeat request so LLM can retry
+                param_array_field_type = JSON_TO_PY_TYPE_MAP["array"].__args__[0]
+                all_arg_elem_correct_type = reduce(
+                    lambda x, y: x and y,
+                    map(lambda x: type(x) is param_array_field_type, argument_value),
+                    True,
+                )
                 if not all_arg_elem_correct_type:
-                    res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "array" (some or all elements are not of type {PY_TO_JSON_TYPE_MAP[param_array_field_type]}).', True))
-                    return res_messageds, True, True # Sends heartbeat request so LLM can retry
+                    interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "array" (some or all elements are not of type {PY_TO_JSON_TYPE_MAP[param_array_field_type]}).'
+                    res_messageds.append(
+                        Agent.package_tool_response(interface_message, True)
+                    )
+                    self.interface.function_res_message(interface_message, True)
+
+                    return (
+                        res_messageds,
+                        True,
+                        True,
+                    )  # Sends heartbeat request so LLM can retry
                 continue
 
             argument_value_type = PY_TO_JSON_TYPE_MAP[type(argument_value)]
-            if required_param_type == 'array':
-                res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "array").', True))
-                return res_messageds, True, True # Sends heartbeat request so LLM can retry
+            if required_param_type == "array":
+                interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "array").'
+                res_messageds.append(
+                    Agent.package_tool_response(interface_message, True)
+                )
+                self.interface.function_res_message(interface_message, True)
+
+                return (
+                    res_messageds,
+                    True,
+                    True,
+                )  # Sends heartbeat request so LLM can retry
 
             if argument_value_type != required_param_type:
-                res_messageds.append(Agent.package_tool_response(f'Function "{function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "{required_param_type}").', True))
+                interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "{required_param_type}").'
+                res_messageds.append(
+                    Agent.package_tool_response(interface_message, True)
+                )
+                self.interface.function_res_message(interface_message, True)
+
+                return (
+                    res_messageds,
+                    True,
+                    True,
+                )  # Sends heartbeat request so LLM can retry
 
         # Step 5: Call function
-        called_heartbeat_request = called_function_arguments.get(FUNCTION_PARAM_NAME_REQ_HEARTBEAT, None)
-        
+        called_heartbeat_request = called_function_arguments.get(
+            FUNCTION_PARAM_NAME_REQ_HEARTBEAT, None
+        )
+
         if called_heartbeat_request is not None:
             del called_function_arguments[FUNCTION_PARAM_NAME_REQ_HEARTBEAT]
         else:
             called_heartbeat_request = False
 
-        called_function_arguments['self'] = self
+        called_function_arguments["self"] = self
 
         try:
+            self.interface.function_call_message(
+                called_function_name, called_function_arguments
+            )
             called_function_result = called_function(**called_function_arguments)
         except Exception as e:
             res_messageds.append(Agent.package_tool_response(e, True))
-            return res_messageds, True, True # Sends heartbeat request so LLM can retry
+            self.interface.function_res_message(e, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 
         # Step 6: Package response
         res_messageds.append(Agent.package_tool_response(called_function_result, False))
+        self.interface.function_res_message(called_function_result, False)
+
         return res_messageds, called_heartbeat_request, False
 
-    def step(self) -> str: #TODO
-        #note: all messageds must be in the form {'type': type, 'message': {'role': role, 'content': content}}
-        
+    def step(self) -> str:
+        # note: all messageds must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+
         ## Step 1: Generate response
         result = HOST.chat(
-            model=self.model_name, 
+            model=self.model_name,
             messages=self.memory.main_ctx_message_seq,
             format="json",
-            options={"num_ctx": self.ctx_window},
+            options={"num_ctx": self.memory.ctx_window},
         )
-        result_content = result['message']['content']
-        res_messageds = [{'type': 'assistant', 'message': result['message']}]
+        result_content = result["message"]["content"]
+        res_messageds = [{"type": "assistant", "message": result["message"]}]
 
         json_result = json.loads(result_content)
-        self.interface.internal_monologue(json_result['thoughts'])
+        self.interface.internal_monologue(json_result["thoughts"])
 
         ## Step 2: Check if LLM wanted to call a function
-        if 'function_call' in json_result:
-            d_res_messageds, heartbeat_request, function_failed = self.__call_function(json_result['function_call'])
+        if "function_call" in json_result:
+            d_res_messageds, heartbeat_request, function_failed = self.__call_function(
+                json_result["function_call"]
+            )
             res_messageds += d_res_messageds
         else:
             heartbeat_request = function_failed = False
-        
+
         ## Step 3: Check memory pressure
-        if not self.memory_pressure_warning_alr_given and self.memory.main_ctx_message_seq_no_tokens > int(WARNING_TOKEN_FRAC * self.memory.ctx_window):
-            res_messageds.append({'type': 'system', 'message': {'role': 'user', 'content': f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage."}})
+        if (
+            not self.memory_pressure_warning_alr_given
+            and self.memory.main_ctx_message_seq_no_tokens
+            > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
+        ):
+            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage."
+            res_messageds.append(
+                {
+                    "type": "system",
+                    "message": {"role": "user", "content": interface_message},
+                }
+            )
+            self.interface.system_message(interface_message)
+
             self.memory_pressure_warning_alr_given = True
             heartbeat_request = True
-        elif self.memory_pressure_warning_alr_given and self.memory.main_ctx_message_seq_no_tokens > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window):
-            self.summary_message_seq()
+        elif (
+            self.memory_pressure_warning_alr_given
+            and self.memory.main_ctx_message_seq_no_tokens
+            > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
+        ):
+            self.summarise_messages_in_place()
             self.memory_pressure_warning_alr_given = False
 
         ## Step 4: Update memory
@@ -170,64 +300,83 @@ class Agent:
 
     @staticmethod
     def summary_message_seq(messaged_seq):
-        #note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+        # note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
         translated_messages = []
         user_role_buf = []
 
-        for messaged in messaged_list:
-            if messaged['type'] == 'system':
-                user_role_buf.append(f"(SYSTEM MESSAGE) {messaged['message']['content']}"})
-            elif messaged['type'] == 'tool':
+        for messaged in messaged_seq:
+            if messaged["type"] == "system":
+                user_role_buf.append(
+                    f"(SYSTEM MESSAGE) {messaged['message']['content']}"
+                )
+            elif messaged["type"] == "tool":
                 user_role_buf.append(f"(TOOL MESSAGE) {messaged['message']['content']}")
-            elif messaged['type'] == 'user':
+            elif messaged["type"] == "user":
                 user_role_buf.append(f"(USER MESSAGE) {messaged['message']['content']}")
             else:
-                translated_messages.append({'role': 'user', 'content': '\n\n'.join(user_role_buf)})
-                message_content_dict = json.loads(messaged['message']['content'])
-                assistant_message_content = '(ASSISTANT MESSAGE)' + message_content_dict['thoughts']
-                if 'function_call' in message_content_dict:
-                    assistant_message_content += '\n\n(TOOL CALL)' + message_content_dict['function_call']
-                translated_messages.append({'role': 'assistant', 'content': assistant_message_content})
+                translated_messages.append(
+                    {"role": "user", "content": "\n\n".join(user_role_buf)}
+                )
+                message_content_dict = json.loads(messaged["message"]["content"])
+                assistant_message_content = (
+                    "(ASSISTANT MESSAGE)" + message_content_dict["thoughts"]
+                )
+                if "function_call" in message_content_dict:
+                    assistant_message_content += (
+                        "\n\n(TOOL CALL)" + message_content_dict["function_call"]
+                    )
+                translated_messages.append(
+                    {"role": "assistant", "content": assistant_message_content}
+                )
                 user_role_buf = []
 
         if user_role_buf:
-            translated_messages.append({'role': 'user', 'content': '\n\n'.join(user_role_buf)})
+            translated_messages.append(
+                {"role": "user", "content": "\n\n".join(user_role_buf)}
+            )
 
-        return (
-            [{"role": "system", "content": get_summarise_system_prompt}]
-            + translated_messages
-        )
+        return [
+            {"role": "system", "content": get_summarise_system_prompt}
+        ] + translated_messages
 
     def summarise_messages_in_place(self):
-        assert self.memory.main_ctx_message_seq[0]['role'] == 'system'
+        assert self.memory.main_ctx_message_seq[0]["role"] == "system"
 
         messages_to_be_summarised = deque()
 
-        while self.memory.main_ctx_message_seq_no_tokens > int(TRUNCATION_TOKEN_FRAC * self.memory.ctx_window) and len(self.memory.fifo_queue) > LAST_N_MESSAGES_TO_PRESERVE:
-            if len(self.memory.fifo_queue) + 1 > LAST_N_MESSAGES_TO_PRESERVE and self.memory.fifo_queue[0]['message']['role'] == 'assistant':
+        while (
+            self.memory.main_ctx_message_seq_no_tokens
+            > int(TRUNCATION_TOKEN_FRAC * self.memory.ctx_window)
+            and len(self.memory.fifo_queue) > LAST_N_MESSAGES_TO_PRESERVE
+        ):
+            if (
+                len(self.memory.fifo_queue) + 1 > LAST_N_MESSAGES_TO_PRESERVE
+                and self.memory.fifo_queue[0]["message"]["role"] == "assistant"
+            ):
                 break
             self.memory.no_messages_in_queue -= 1
             messages_to_be_summarised.appendleft(self.memory.popleft())
         self.memory.__write_fq_to_fq_path()
-        
+
         summary_message_seq = Agent.summary_message_seq(messages_to_be_summarised)
 
         result = HOST.chat(
-            model=self.model_name, 
+            model=self.model_name,
             messages=summary_message_seq,
-            options={"num_ctx": self.ctx_window},
+            options={"num_ctx": self.memory.ctx_window},
         )
-        result_content = result['message']['content']
-        
+        result_content = result["message"]["content"]
+
         self.memory.fifo_queue.appendleft(
             {
-                'type': 'system', 
-                {
-                    'role': 'user', 
-                    'content': (
+                "type": "system",
+                "message": {
+                    "role": "user",
+                    "content": (
                         f"Note: prior messages ({self.memory.total_no_messages-self.memory.no_messages_in_queue} of {self.memory.total_no_messages}) have been hidden from view due to conversation memory constraints.\n"
-                            + f"The following is a summary of the previous {len(summary_message_seq)} messages:\n{result_content}"
-                    )
+                        + f"The following is a summary of the previous {len(summary_message_seq)} messages:\n{result_content}"
+                    ),
+                },
             }
         )
         self.memory.no_messages_in_queue += 1

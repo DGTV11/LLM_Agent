@@ -40,7 +40,9 @@ def type_to_json_schema_type(py_type):
     if is_optional(py_type):
         # Assert that Optional has only one type argument
         type_args = get_args(py_type)
-        assert optional_length(py_type) == 1, f"Optional type must have exactly one type argument, but got {py_type}"
+        assert (
+            optional_length(py_type) == 1
+        ), f"Optional type must have exactly one type argument, but got {py_type}"
 
         # Extract and map the inner type
         return type_to_json_schema_type(type_args[0])
@@ -49,7 +51,9 @@ def type_to_json_schema_type(py_type):
     if py_type not in PY_TO_JSON_TYPE_MAP:
         raise ValueError(f"Python type {py_type} has no corresponding JSON schema type")
 
-    return PY_TO_JSON_TYPE_MAP.get(py_type, "string")  # Default to "string" if type not in map
+    return PY_TO_JSON_TYPE_MAP.get(
+        py_type, "string"
+    )  # Default to "string" if type not in map
 
 
 def pydantic_model_to_open_ai(model):
@@ -57,11 +61,15 @@ def pydantic_model_to_open_ai(model):
     docstring = parse(model.__doc__ or "")
     parameters = {k: v for k, v in schema.items() if k not in ("title", "description")}
     for param in docstring.params:
-        if (name := param.arg_name) in parameters["properties"] and (description := param.description):
+        if (name := param.arg_name) in parameters["properties"] and (
+            description := param.description
+        ):
             if "description" not in parameters["properties"][name]:
                 parameters["properties"][name]["description"] = description
 
-    parameters["required"] = sorted(k for k, v in parameters["properties"].items() if "default" not in v)
+    parameters["required"] = sorted(
+        k for k, v in parameters["properties"].items() if "default" not in v
+    )
 
     if "description" not in schema:
         if docstring.short_description:
@@ -97,23 +105,39 @@ def generate_schema(function):
 
         # Assert that the parameter has a type annotation
         if param.annotation == inspect.Parameter.empty:
-            raise TypeError(f"Parameter '{param.name}' in function '{function.__name__}' lacks a type annotation")
+            raise TypeError(
+                f"Parameter '{param.name}' in function '{function.__name__}' lacks a type annotation"
+            )
 
         # Find the parameter's description in the docstring
-        param_doc = next((d for d in docstring.params if d.arg_name == param.name), None)
+        param_doc = next(
+            (d for d in docstring.params if d.arg_name == param.name), None
+        )
 
         # Assert that the parameter has a description
         if not param_doc or not param_doc.description:
-            raise ValueError(f"Parameter '{param.name}' in function '{function.__name__}' lacks a description in the docstring")
+            raise ValueError(
+                f"Parameter '{param.name}' in function '{function.__name__}' lacks a description in the docstring"
+            )
 
-        if inspect.isclass(param.annotation) and issubclass(param.annotation, BaseModel):
-            schema["parameters"]["properties"][param.name] = pydantic_model_to_open_ai(param.annotation)
+        if inspect.isclass(param.annotation) and issubclass(
+            param.annotation, BaseModel
+        ):
+            schema["parameters"]["properties"][param.name] = pydantic_model_to_open_ai(
+                param.annotation
+            )
         else:
             # Add parameter details to the schema
-            param_doc = next((d for d in docstring.params if d.arg_name == param.name), None)
+            param_doc = next(
+                (d for d in docstring.params if d.arg_name == param.name), None
+            )
             schema["parameters"]["properties"][param.name] = {
                 # "type": "string" if param.annotation == str else str(param.annotation),
-                "type": type_to_json_schema_type(param.annotation) if param.annotation != inspect.Parameter.empty else "string",
+                "type": (
+                    type_to_json_schema_type(param.annotation)
+                    if param.annotation != inspect.Parameter.empty
+                    else "string"
+                ),
                 "description": param_doc.description,
             }
         if param.default == inspect.Parameter.empty:
@@ -121,7 +145,9 @@ def generate_schema(function):
 
         if get_origin(param.annotation) is list:
             if get_args(param.annotation)[0] is str:
-                schema["parameters"]["properties"][param.name]["items"] = {"type": "string"}
+                schema["parameters"]["properties"][param.name]["items"] = {
+                    "type": "string"
+                }
 
         if param.annotation == inspect.Parameter.empty:
             schema["parameters"]["required"].append(param.name)

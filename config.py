@@ -134,6 +134,3 @@ if __name__ == "__main__":
 
     with open(path.join(path.dirname(__file__), "config.ini"), "w") as configfile:
         config.write(configfile)
-else:
-    if not CONFIG:
-        raise ValueError("Config not found, please run config.py")

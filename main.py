@@ -170,7 +170,7 @@ if __name__ == "__main__":
         )
 
     # Main conversation loop
-    interface_message = f'User \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user{" based on your previous conversation" if has_prev_conv else ""}.'
+    interface_message = f'User \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user{" based on your previous conversation" if has_prev_conv else ""} using the \'send_message\' function.'
     agent.interface.system_message(interface_message)
     agent.memory.append_messaged_to_fq_and_rs(
         {

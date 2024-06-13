@@ -3,8 +3,8 @@ from datetime import datetime
 import json
 
 class RecallStorage:
-    def __init__(self):
-        self.rc_path = path.join(path.dirname(__file__), "persistent_storage", "recall_storage.json")
+    def __init__(self, persona_name):
+        self.rc_path = path.join(path.dirname(__file__), "persistent_storage", persona_name, "recall_storage.json")
         if path.exists(self.rc_path):
             self.__save_rc_path_dat_to_rs_cache()
         else:
@@ -20,7 +20,7 @@ class RecallStorage:
 
     def __save_messaged(self, messaged):
         self.rs_cache.append(messaged)
-        __write_rs_cache_to_rc_path()
+        self.__write_rs_cache_to_rc_path()
     
     def __save_rc_path_dat_to_rs_cache(self):
         with open(self.rc_path, "r") as f:

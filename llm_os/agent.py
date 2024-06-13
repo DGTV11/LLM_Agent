@@ -1,4 +1,4 @@
-from queue import Queue
+from collections import deque
 from functools import reduce
 import json
 
@@ -10,12 +10,14 @@ from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
-from llm_os.constants import PY_TO_JSON_TYPE_MAP, JSON_TO_PY_TYPE_MAP, FUNCTION_PARAM_NAME_REQ_HEARTBEAT, WARNING_TOKEN_FRAC, FLUSH_TOKEN_FRAC
+from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
+from llm_os.constants import PY_TO_JSON_TYPE_MAP, JSON_TO_PY_TYPE_MAP, FUNCTION_PARAM_NAME_REQ_HEARTBEAT, WARNING_TOKEN_FRAC, FLUSH_TOKEN_FRAC, TRUNCATION_TOKEN_FRAC, WORD_LIMIT, LAST_N_MESSAGES_TO_PRESERVE,
 
 class Agent:
     def __init__(
             self, 
             interface: CLIInterface, 
+            persona_name: str,
             model_name: str, 
             function_dats: dict,
             system_instructions: str, working_context: WorkingContext, fifo_queue: Queue[str],
@@ -24,9 +26,11 @@ class Agent:
         ):
         self.interface = interface
         self.model_name = model_name
+        self.persona_name = persona_name
 
         self.memory = Memory(
             self.model_name,
+            self.persona_name,
             function_dats,
             system_instructions, working_context, fifo_queue, 
             archival_storage, recall_storage
@@ -49,7 +53,7 @@ class Agent:
             },
         }
 
-    def __call_function(self, function_call): #TODO
+    def __call_function(self, function_call):
         # Returns: res_messageds, heartbeat_request, function_failed
         res_messageds = []  
         
@@ -151,10 +155,79 @@ class Agent:
         ## Step 3: Check memory pressure
         if not self.memory_pressure_warning_alr_given and self.memory.main_ctx_message_seq_no_tokens > int(WARNING_TOKEN_FRAC * self.memory.ctx_window):
             res_messageds.append({'type': 'system', 'message': {'role': 'user', 'content': f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage."}})
+            self.memory_pressure_warning_alr_given = True
+            heartbeat_request = True
+        elif self.memory_pressure_warning_alr_given and self.memory.main_ctx_message_seq_no_tokens > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window):
+            self.summary_message_seq()
+            self.memory_pressure_warning_alr_given = False
 
         ## Step 4: Update memory
         for messaged in res_messageds:
-            self.memory.append_messaged_to_fq_and_rs(queued_messageds)
+            self.memory.append_messaged_to_fq_and_rs(messaged)
 
         ## Step 5: Return response
+        return res_messageds, heartbeat_request, function_failed
 
+    @staticmethod
+    def summary_message_seq(messaged_seq):
+        #note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+        translated_messages = []
+        user_role_buf = []
+
+        for messaged in messaged_list:
+            if messaged['type'] == 'system':
+                user_role_buf.append(f"(SYSTEM MESSAGE) {messaged['message']['content']}"})
+            elif messaged['type'] == 'tool':
+                user_role_buf.append(f"(TOOL MESSAGE) {messaged['message']['content']}")
+            elif messaged['type'] == 'user':
+                user_role_buf.append(f"(USER MESSAGE) {messaged['message']['content']}")
+            else:
+                translated_messages.append({'role': 'user', 'content': '\n\n'.join(user_role_buf)})
+                message_content_dict = json.loads(messaged['message']['content'])
+                assistant_message_content = '(ASSISTANT MESSAGE)' + message_content_dict['thoughts']
+                if 'function_call' in message_content_dict:
+                    assistant_message_content += '\n\n(TOOL CALL)' + message_content_dict['function_call']
+                translated_messages.append({'role': 'assistant', 'content': assistant_message_content})
+                user_role_buf = []
+
+        if user_role_buf:
+            translated_messages.append({'role': 'user', 'content': '\n\n'.join(user_role_buf)})
+
+        return (
+            [{"role": "system", "content": get_summarise_system_prompt}]
+            + translated_messages
+        )
+
+    def summarise_messages_in_place(self):
+        assert self.memory.main_ctx_message_seq[0]['role'] == 'system'
+
+        messages_to_be_summarised = deque()
+
+        while self.memory.main_ctx_message_seq_no_tokens > int(TRUNCATION_TOKEN_FRAC * self.memory.ctx_window) and len(self.memory.fifo_queue) > LAST_N_MESSAGES_TO_PRESERVE:
+            if len(self.memory.fifo_queue) + 1 > LAST_N_MESSAGES_TO_PRESERVE and self.memory.fifo_queue[0]['message']['role'] == 'assistant':
+                break
+            self.memory.no_messages_in_queue -= 1
+            messages_to_be_summarised.appendleft(self.memory.popleft())
+        self.memory.__write_fq_to_fq_path()
+        
+        summary_message_seq = Agent.summary_message_seq(messages_to_be_summarised)
+
+        result = HOST.chat(
+            model=self.model_name, 
+            messages=summary_message_seq,
+            options={"num_ctx": self.ctx_window},
+        )
+        result_content = result['message']['content']
+        
+        self.memory.fifo_queue.appendleft(
+            {
+                'type': 'system', 
+                {
+                    'role': 'user', 
+                    'content': (
+                        f"Note: prior messages ({self.memory.total_no_messages-self.memory.no_messages_in_queue} of {self.memory.total_no_messages}) have been hidden from view due to conversation memory constraints.\n"
+                            + f"The following is a summary of the previous {len(summary_message_seq)} messages:\n{result_content}"
+                    )
+            }
+        )
+        self.memory.no_messages_in_queue += 1

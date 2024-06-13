@@ -5,8 +5,8 @@ import json
 from llm_os.constants import WORKING_CTX_PERSONA_MAX_TOKENS, WORKING_CTX_HUMAN_MAX_TOKENS
 
 class WorkingContext:
-    def __init__(self, no_token_func: Callable[[str], int], persona: str, human: str):
-        self.rc_path = path.join(path.dirname(__file__), "persistent_storage", "working_context.json")
+    def __init__(self, persona_name: str, no_token_func: Callable[[str], int], persona: str, human: str):
+        self.rc_path = path.join(path.dirname(__file__), "persistent_storage", persona_name, "working_context.json")
         self.no_token_func = no_token_func
 
         if os.path.exists(self.rc_path):

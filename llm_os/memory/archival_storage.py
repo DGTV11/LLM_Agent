@@ -10,10 +10,10 @@ from host import HOST_URL
 from llm_os.tokenisers import NOMIC_EMBED_TEXT_TOKENIZER
 
 class ArchivalStorage:
-    def __init__(self, top_k=100):
+    def __init__(self, persona_name, top_k=100):
         self.top_k = top_k
 
-        self.client = chromadb.PersistentClient(path=path.join(path.dirname(__file__), "persistent_storage"))
+        self.client = chromadb.PersistentClient(path=path.join(path.dirname(__file__), "persistent_storage", "persona_name"))
         self.ef = embedding_functions.OllamaEmbeddingFunction(
             model_name="nomic-embed-text",
             url=f"{HOST_URL}/api/embeddings",

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from queue import Queue
+from collections import deque
+import json
 
 from llm_os.tokenisers import get_tokeniser_and_context_window
 from llm_os.memory.archival_storage import ArchivalStorage
@@ -10,17 +11,26 @@ class Memory:
     def __init__(
             self,       
             model_name: str, 
+            persona_name: str,
             function_dats: dict,
-            system_instructions: str, working_context: WorkingContext, fifo_queue: Queue[str], 
+            system_instructions: str, working_context: WorkingContext,
             archival_storage: ArchivalStorage, recall_storage: RecallStorage
         ):
+        self.fifo_queue_path = path.join(path.dirname(__file__), "persistent_storage", persona_name, "fifo_queue.json")
+
         # Function data      
         self.function_dats = function_dats
 
         # Main context
         self.system_instructions = system_instructions
         self.working_context = working_context
-        self.fifo_queue = fifo_queue
+        if path.exists(self.rc_path):
+            self.__save_fq_path_dat_to_fq()
+        else:
+            self.fifo_queue = deque()
+            self.total_no_messages = 0
+            self.no_messages_in_queue = 0
+            self.__write_fq_to_fq_path()
 
         # External context
         self.archival_storage = archival_storage
@@ -28,10 +38,32 @@ class Memory:
 
         self.tokenizer, self.ctx_window, self.num_token_func, self.ct_num_token_func = get_tokeniser_and_context_window(model_name)
 
+    def __write_fq_to_fq_path(self):
+        with open(self.fq_path, "w") as f:
+            f.write(
+                json.dumps(
+                    {
+                        'fifo_queue': list(self.fifo_queue),
+                        'total_no_messages': self.total_no_messages,
+                        'no_messages_in_queue': self.no_messages_in_queue
+                    }
+                )
+            )
+
+    def __save_fq_path_dat_to_fq(self):
+        with open(self.fq_path, "r") as f:
+            fq_info = json.loads(f.read())
+            self.fifo_queue = deque(fq_info['fifo_queue'])
+            self.total_no_messages = fq_info['total_no_messages']
+            self.no_messages_in_queue = fq_info['no_messages_in_queue']
+
     def append_messaged_to_fq_and_rs(self, messaged):
         #note: messaged must be in the form {'type': type, {'role': role, 'content': content}}
-        self.fifo_queue.put(messaged)
+        self.fifo_queue.append(messaged)
         self.recall_storage.insert(messaged)
+        self.total_no_messages += 1
+        self.no_messages_in_queue += 1
+        self.__write_fq_to_fq_path()
     
     @property
     def main_context_system_message(self):
@@ -51,7 +83,7 @@ class Memory:
         translated_messages = []
         user_role_buf = []
 
-        for messaged in self.fifo_queue.queue:
+        for messaged in self.fifo_queue:
             if messaged['type'] == 'system':
                 user_role_buf.append(f"(SYSTEM MESSAGE) {messaged['message']['content']}"})
             elif messaged['type'] == 'tool':

@@ -180,7 +180,9 @@ if __name__ == "__main__":
             },
         }
     )
-    agent.step()
+    heartbeat_request = True
+    while heartbeat_request:
+        _, heartbeat_request, _ = agent.step()
 
     while True:
         input_message = input("(/help for commands, /exit to exit) > ")

@@ -176,7 +176,7 @@ if __name__ == "__main__":
             "type": "system",
             "message": {
                 "role": "user",
-                "content": f"User '{conv_name.split('@')[0].split('--')[1]}'' entered the conversation",
+                "content": f"User '{conv_name.split('@')[0].split('--')[1]}' entered the conversation",
             },
         }
     )

@@ -36,7 +36,10 @@ class Agent:
         recall_storage: RecallStorage,
     ):
         self.misc_info_path = path.join(
-            path.dirname(path.dirname(__file__)), "persistent_storage", conv_name, "misc_info.json"
+            path.dirname(path.dirname(__file__)),
+            "persistent_storage",
+            conv_name,
+            "misc_info.json",
         )
 
         self.interface = interface

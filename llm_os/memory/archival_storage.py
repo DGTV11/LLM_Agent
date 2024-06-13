@@ -15,7 +15,11 @@ class ArchivalStorage:
         self.top_k = top_k
 
         self.client = chromadb.PersistentClient(
-            path=path.join(path.dirname(path.dirname(path.dirname(__file__))), "persistent_storage", conv_name)
+            path=path.join(
+                path.dirname(path.dirname(path.dirname(__file__))),
+                "persistent_storage",
+                conv_name,
+            )
         )
         self.ef = OllamaEmbeddingFunction(
             model_name="nomic-embed-text",
@@ -63,7 +67,10 @@ class ArchivalStorage:
             end = min(count + start, len(self.cache[query]))
 
             local_time = (
-                datetime.now().astimezone().strftime("%Y-%m-%d %I:%M:%S %p %Z%z").strip()
+                datetime.now()
+                .astimezone()
+                .strftime("%Y-%m-%d %I:%M:%S %p %Z%z")
+                .strip()
             )
             results = [
                 {"timestamp": local_time(), "content": document}

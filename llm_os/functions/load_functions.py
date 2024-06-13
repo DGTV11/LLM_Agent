@@ -43,9 +43,7 @@ def load_all_function_sets():
     #    os.path.dirname(__file__), "llm_os", "functions", "function_sets"
     # )
 
-    functions_path = os.path.join(
-        os.path.dirname(__file__), "function_sets"
-    )
+    functions_path = os.path.join(os.path.dirname(__file__), "function_sets")
     user_functions_path = os.path.join(functions_path, "user_functions")
 
     function_sets = []

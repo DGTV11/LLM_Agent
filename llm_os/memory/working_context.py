@@ -39,7 +39,7 @@ class WorkingContext:
 
     def __update_working_context_ps(self):
         if not path.exists(self.wc_path):
-            f = open(self.wc_path, 'x')
+            f = open(self.wc_path, "x")
             f.close()
         with open(self.wc_path, "w") as f:
             f.write(json.dumps({"persona": self.persona, "human": self.human}))

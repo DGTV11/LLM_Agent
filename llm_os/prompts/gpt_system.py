@@ -6,7 +6,7 @@ def get_system_text(key):
     # file_path = os.path.join(
     #     os.path.dirname(__file__), "llm_os", "prompts", "system", filename
     # )
-    file_path = os.path.join(os.path.dirname(__file__), 'system', filename)
+    file_path = os.path.join(os.path.dirname(__file__), "system", filename)
 
     if os.path.exists(file_path):
         with open(file_path, "r", encoding="utf-8") as file:

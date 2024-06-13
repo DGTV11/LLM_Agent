@@ -22,7 +22,10 @@ class Memory:
         recall_storage: RecallStorage,
     ):
         self.fq_path = path.join(
-            path.dirname(path.dirname(path.dirname(__file__))), "persistent_storage", conv_name, "fifo_queue.json"
+            path.dirname(path.dirname(path.dirname(__file__))),
+            "persistent_storage",
+            conv_name,
+            "fifo_queue.json",
         )
 
         # Function data

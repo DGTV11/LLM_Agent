@@ -2,6 +2,7 @@ from os import path
 from datetime import datetime
 import json
 
+
 class RecallStorage:
     def __init__(self, conv_name):
         self.rc_path = path.join(

@@ -44,6 +44,7 @@ If you decide to call a function, you MUST respond in the JSON format matching t
 }
 After you use a function, the next message you get will contain the result of the function call.
 ONLY use the functions you are provided.
+ALWAYS call functions like 'send_message' when applicable (e.g. user greets you, user asks you a question, etc.)
 
 Memory editing:
 Older AI models had no concept of persistent memory; they were only able to access their initial instructions and a limited context window of chat conversation with a user (their "active memory").

@@ -28,6 +28,7 @@ if __name__ == "__main__":
     system_instructions = get_system_text("llm_agent_chat")
     interface = CLIInterface()
 
+    has_prev_conv = False
     if ps_folders := listdir(path.join(path.dirname(__file__), "persistent_storage")):
         use_existing_conv = (
             True if input("Use existing conv? (y/n) ").strip().lower() == "y" else False
@@ -71,6 +72,7 @@ if __name__ == "__main__":
                 archival_storage,
                 recall_storage,
             )
+            has_prev_conv = True
 
     if not conv_name:
         agent_persona_folder_path = path.join(
@@ -168,15 +170,14 @@ if __name__ == "__main__":
         )
 
     # Main conversation loop
-    agent.interface.system_message(
-        f'User \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation'
-    )
+    interface_message = f'User \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user{" based on your previous conversation" if has_prev_conv else ""}.'
+    agent.interface.system_message(interface_message)
     agent.memory.append_messaged_to_fq_and_rs(
         {
             "type": "system",
             "message": {
                 "role": "user",
-                "content": f"User '{conv_name.split('@')[0].split('--')[1]}' entered the conversation",
+                "content": interface_message,
             },
         }
     )
@@ -205,15 +206,14 @@ if __name__ == "__main__":
                 while heartbeat_request:
                     _, heartbeat_request, _ = agent.step()
 
-    agent.interface.system_message(
-        f'User \'{conv_name.split("@")[0].split("--")[1]}\' exited the conversation'
-    )
+    interface_message = f'User \'{conv_name.split("@")[0].split("--")[1]}\' exited the conversation'
+    agent.interface.system_message(interface_message)
     agent.memory.append_messaged_to_fq_and_rs(
         {
             "type": "system",
             "message": {
                 "role": "user",
-                "content": f'User \'{conv_name.split("@")[0].split("--")[1]}\' exited the conversation',
+                "content": interface_message,
             },
         }
     )

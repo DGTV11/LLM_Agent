@@ -161,8 +161,10 @@ class Agent:
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
  
         if called_function_arguments.keys() < set(called_function_required_parameter_names) or called_function_arguments.keys != set(called_function_required_parameter_names):
-            required_arguments_str = 
-            interface_message = f'Function "{called_function_name}" requires at least the {} arguments ({len(called_function_arguments)} given).'
+            required_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_required_parameter_names))
+            given_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_arguments.keys())) 
+
+            interface_message = f'Function "{called_function_name}" requires at least the arguments {required_arguments_str} ({given_arguments_str} given).'
             res_messageds.append(Agent.package_tool_response(interface_message, True))
             self.interface.function_res_message(interface_message, True)
 

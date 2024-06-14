@@ -1,4 +1,5 @@
 # Retrieval query constants
+JSON_ENSURE_ASCII = False
 RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE = 5
 
 # Working context constants

@@ -1,4 +1,4 @@
-import importlib, inspect, os
+import importlib, inspect, os, sys
 
 from llm_os.functions.schema_generator import generate_schema
 
@@ -6,23 +6,20 @@ from llm_os.functions.schema_generator import generate_schema
 class FunctionSet:
     def __init__(self, path):
         self.path = path
-        self.func_set_name = os.path.basename(self.path).split(".")[0]
+        self.module_name = os.path.splitext(os.path.basename(self.path))[0]
 
-        spec = importlib.util.spec_from_file_location(self.func_set_name, path)
+        spec = importlib.util.spec_from_file_location(self.module_name, path)
         self.module = importlib.util.module_from_spec(spec)
-
-    def is_mod_function(self, func):
-        return inspect.isfunction(func) and inspect.getmodule(func) == self.mod
+        sys.modules[self.module_name] = self.module
+        spec.loader.exec_module(self.module)
 
     @property
     def function_dict(self):
         func_dict = {}
-        for attr_name in dir(self.module):
-            attr = getattr(self.module, attr_name)
-            if self.is_mod_function(attr):
-                if attr_name in func_dict:
-                    raise Exception(f"Duplicate function: {attr_name}")
-                func_dict[attr_name] = attr
+        for func_name, func in inspect.getmembers(self.module, inspect.isfunction):
+            if func_name in func_dict:
+                raise Exception(f"Duplicate function: {func_name}")
+            func_dict[func_name] = func
         if len(func_dict.items()) == 0:
             raise Exception(f"No functions found in {self.path}")
         return func_dict
@@ -75,7 +72,7 @@ def get_function_dats_from_function_sets(function_sets):
     func_dict = {}
 
     for function_set in function_sets:
-        for func_name, func_dat in function_set.function_schemas_and_functions:
+        for func_name, func_dat in function_set.function_schemas_and_functions.items():
             if func_name in func_dict:
                 raise Exception(f"Duplicate function: {func_name}")
             func_dict[func_name] = func_dat

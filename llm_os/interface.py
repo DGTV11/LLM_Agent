@@ -34,7 +34,7 @@ class CLIInterface:
     def function_call_message(func_name: str, func_args: dict, end="\n"):
         print(
             emojize(
-                f':high_voltage: Called function {func_name} with arguments {func_args} ({func_name}({", ".join([f"{k}={v}" for k, v in func_args.items()])}))'
+                f':high_voltage: Called function {func_name} with arguments {func_args}))'
             ),
             end=end,
             flush=True,

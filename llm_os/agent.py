@@ -160,7 +160,7 @@ class Agent:
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
  
-        if called_function_arguments.keys() < set(called_function_required_parameter_names) or called_function_arguments.keys() != set(called_function_required_parameter_names):
+        if set(called_function_required_parameter_names).issubset(set(called_function_arguments.keys())):
             required_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_required_parameter_names))
             given_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_arguments.keys())) 
 

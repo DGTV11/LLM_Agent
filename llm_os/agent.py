@@ -128,6 +128,7 @@ class Agent:
         called_function = called_function_dat["python_function"]
         called_function_schema = called_function_dat["json_schema"]
         called_function_parameters = called_function_schema["parameters"]["properties"]
+        called_function_required_parameter_names = called_function_schema["parameters"]["required"]
 
         # Step 4: Valiate arguments
         ## Check if required arguments are present
@@ -145,12 +146,29 @@ class Agent:
                     True,
                     True,
                 )  # Sends heartbeat request so LLM can retry
-        if len(called_function_arguments) != len(called_function_parameter_names):
-            interface_message = f'Function "{called_function_name}" requires {len(called_function_parameter_names)} arguments ({len(called_function_arguments)} given).'
+
+        if len(called_function_arguments) < len(called_function_required_parameter_names):
+            interface_message = f'Function "{called_function_name}" requires at least {len(called_function_required_parameter_names)} arguments ({len(called_function_arguments)} given).'
             res_messageds.append(Agent.package_tool_response(interface_message, True))
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+        if len(called_function_arguments) > len(called_function_parameter_names):
+            interface_message = f'Function "{called_function_name}" can take at most {len(called_function_parameter_names)} arguments ({len(called_function_arguments)} given).'
+            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            self.interface.function_res_message(interface_message, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+ 
+        if called_function_arguments.keys() < set(called_function_required_parameter_names) or called_function_arguments.keys != set(called_function_required_parameter_names):
+            required_arguments_str = 
+            interface_message = f'Function "{called_function_name}" requires at least the {} arguments ({len(called_function_arguments)} given).'
+            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            self.interface.function_res_message(interface_message, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+
+
         ## Check if arguments are of the correct type
         for argument_name, argument_value in called_function_arguments.items():
             required_param_type = called_function_parameters[argument_name]["type"]

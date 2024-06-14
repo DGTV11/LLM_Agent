@@ -73,7 +73,7 @@ class ArchivalStorage:
                 .strip()
             )
             results = [
-                {"timestamp": local_time(), "content": document}
+                {"timestamp": local_time, "content": document}
                 for document in self.cache[query][start:end]
             ]
 

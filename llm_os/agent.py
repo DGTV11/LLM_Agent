@@ -126,7 +126,7 @@ class Agent:
 
         # Step 3: Get python function and function schema
         called_function = called_function_dat["python_function"]
-        called_function_schema = json.loads(called_function_dat["json_schema"])
+        called_function_schema = called_function_dat["json_schema"]
         called_function_parameters = called_function_schema["parameters"]["properties"]
 
         # Step 4: Valiate arguments
@@ -257,20 +257,11 @@ class Agent:
         result_content = result["message"]["content"]
         res_messageds = [{"type": "assistant", "message": result["message"]}]
 
-        json_result = json.loads(result_content)
-        if json_result.get("thoughts", None):
-            self.interface.internal_monologue(json_result["thoughts"])
-
-            ## Step 2: Check if LLM wanted to call a function
-            if "function_call" in json_result:
-                d_res_messageds, heartbeat_request, function_failed = self.__call_function(
-                    json_result["function_call"]
-                )
-                res_messageds += d_res_messageds
-            else:
-                heartbeat_request = function_failed = False
-        else:
-            interface_message = "Error: you MUST at least include the 'thoughts' field in your response as your internal monologue! If you wanted to call a function, please try again while including your internal_monologue as if you had never gotten this message."
+        self.interface.debug_message(f'Got result: {result_content}')
+        try:
+            json_result = json.loads(result_content)
+        except json.decoder.JSONDecodeError:
+            interface_message = "Error: you MUST give a JSON object that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
             res_messageds.append(
                 {
                     "type": "system",
@@ -280,6 +271,29 @@ class Agent:
             self.interface.system_message(interface_message)
             heartbeat_request = True
             function_failed = False
+        else:
+            if json_result.get("thoughts", None):
+                self.interface.internal_monologue(json_result["thoughts"])
+
+                ## Step 2: Check if LLM wanted to call a function
+                if "function_call" in json_result:
+                    d_res_messageds, heartbeat_request, function_failed = self.__call_function(
+                        json_result["function_call"]
+                    )
+                    res_messageds += d_res_messageds
+                else:
+                    heartbeat_request = function_failed = False
+            else:
+                interface_message = "Error: you MUST at least include the 'thoughts' field in your response as your internal monologue! If you wanted to call a function, please try again while including your internal_monologue. Please try again without acknowledging this message."
+                res_messageds.append(
+                    {
+                        "type": "system",
+                        "message": {"role": "user", "content": interface_message},
+                    }
+                )
+                self.interface.system_message(interface_message)
+                heartbeat_request = True
+                function_failed = False
 
 
         ## Step 3: Check memory pressure

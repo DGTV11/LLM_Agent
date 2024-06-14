@@ -85,7 +85,7 @@ class Memory:
         return f"""# SYSTEM INSTRUCTIONS
         {self.system_instructions}
         # FUNCTION JSON SCHEMAS
-        {newline.join([dat["json_schema"] for dat in self.function_dats.values()])}
+        {newline.join([str(dat["json_schema"]) for dat in self.function_dats.values()])}
         # EXTERNAL CONTEXT INFORMATION
         {len(self.recall_storage)} previous messages between you and the user are stored in recall storage (use functions to access them)
         {len(self.archival_storage)} total memories you created are stored in archival storage (use functions to access them)

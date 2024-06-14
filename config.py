@@ -64,15 +64,15 @@ if __name__ == "__main__":
 
     match model_number:
         case 1:
-            model_name = "assistant_llama3"
+            model_name = "llama3"
         case 2:
-            model_name = "assistant_openchat"
+            model_name = "openchat"
         case 3:
-            model_name = "assistant_mistral"
+            model_name = "mistral"
         case 4:
-            model_name = "assistant_phi_3"
+            model_name = "phi_3"
         case _:
-            model_name = "assistant_llama3"
+            model_name = "llama3"
 
     whisper_model_number = int(
         input(

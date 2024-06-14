@@ -170,6 +170,10 @@ if __name__ == "__main__":
         )
 
     # Main conversation loop
+    no_tokens_in_ctx = agent.memory.main_ctx_message_seq_no_tokens
+    ctx_window = agent.memory.ctx_window
+    print(f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%)")
+
     interface_message = f'User \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user{" based on your previous conversation" if has_prev_conv else ""} using the \'send_message\' function.'
     agent.interface.system_message(interface_message)
     agent.memory.append_messaged_to_fq_and_rs(
@@ -185,8 +189,11 @@ if __name__ == "__main__":
     while heartbeat_request:
         _, heartbeat_request, _ = agent.step()
 
+    print("/help for commands, /exit to exit")
     while True:
-        input_message = input("(/help for commands, /exit to exit) > ")
+        no_tokens_in_ctx = agent.memory.main_ctx_message_seq_no_tokens
+        ctx_window = agent.memory.ctx_window
+        input_message = input(f"{no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%) > ")
 
         match input_message.strip():
             case "/help":
@@ -217,3 +224,7 @@ if __name__ == "__main__":
             },
         }
     )
+
+    no_tokens_in_ctx = agent.memory.main_ctx_message_seq_no_tokens
+    ctx_window = agent.memory.ctx_window
+    print(f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)%})")

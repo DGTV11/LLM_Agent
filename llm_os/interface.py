@@ -7,6 +7,10 @@ class CLIInterface:
         print(emojize(f":warning: {msg}"), end=end, flush=True)
 
     @staticmethod
+    def debug_message(msg: str, end="\n"):
+        print(emojize(f":lady_beetle: {msg}"), end=end, flush=True)
+
+    @staticmethod
     def internal_monologue(msg: str, end="\n"):
         print(emojize(f":thought_balloon: {msg}"), end=end, flush=True)
 

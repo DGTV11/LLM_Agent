@@ -28,7 +28,7 @@ class FunctionSet:
     def function_schemas_and_functions(self):
         return {
             func_name: {
-                "python_function": generate_schema(func),
+                "python_function": func,
                 "json_schema": generate_schema(func),
             }
             for func_name, func in self.function_dict.items()

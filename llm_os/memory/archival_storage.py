@@ -43,7 +43,7 @@ class ArchivalStorage:
 
             hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
             ids = [hex_stringify(chunk) for chunk in chunks]
-            self.collection.add(documents=[chunks], ids=ids)
+            self.collection.add(documents=chunks, ids=ids)
 
             self.cache = {}
 

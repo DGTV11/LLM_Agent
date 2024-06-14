@@ -133,9 +133,9 @@ if __name__ == "__main__":
             except ValueError:
                 print("Input is not an integer! Please try again!")
 
-        chosen_human_persona = agent_persona_folder_enum_dict[chosen_agent_persona_num]
+        chosen_human_persona = human_persona_folder_enum_dict[chosen_agent_persona_num]
         chosen_human_persona_fp = path.join(
-            agent_persona_folder_path, chosen_human_persona
+            human_persona_folder_path, chosen_human_persona
         )
 
         # Load personas

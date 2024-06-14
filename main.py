@@ -227,4 +227,4 @@ if __name__ == "__main__":
 
     no_tokens_in_ctx = agent.memory.main_ctx_message_seq_no_tokens
     ctx_window = agent.memory.ctx_window
-    print(f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)%})")
+    print(f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%)")

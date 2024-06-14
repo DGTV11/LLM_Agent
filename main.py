@@ -199,7 +199,11 @@ if __name__ == "__main__":
             match input_message.strip():
                 case "/help":
                     print("HELP")
+                    print("/reload_functions -> reloads function sets")
                     print("/exit -> exit conversation")
+                case "/reload_functions":
+                    function_dats = get_function_dats_from_function_sets(load_all_function_sets())
+                    agent.memory.function_dats = function_dats
                 case "/exit":
                     break
                 case _:

@@ -39,11 +39,11 @@ class ArchivalStorage:
             splitter = TextSplitter.from_huggingface_tokenizer(
                 NOMIC_EMBED_TEXT_TOKENIZER, 8192
             )
-            chunks = splitter.chunks(content)
+            chunk_list = splitter.chunks(content)
 
             hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
-            ids = [hex_stringify(chunk) for chunk in chunks]
-            self.collection.add(documents=chunks, ids=ids)
+            ids = [hex_stringify(chunk) for chunk in chunk_list]
+            self.collection.add(documents=chunk_list, ids=ids)
 
             self.cache = {}
 

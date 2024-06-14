@@ -110,7 +110,7 @@ def conversation_search(
     except:
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
-    results, total = self.memory.recall_memory.text_search(
+    results, total = self.memory.recall_storage.text_search(
         query, count=count, start=page * count
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
@@ -149,7 +149,7 @@ def conversation_search_date(
     except:
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
-    results, total = self.memory.recall_memory.date_search(
+    results, total = self.memory.recall_storage.date_search(
         start_date, end_date, count=count, start=page * count
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
@@ -177,7 +177,7 @@ def archival_memory_insert(self: Agent, content: str) -> Optional[str]:
     Returns:
         Optional[str]: None is always returned as this function does not produce a response.
     """
-    self.memory.archival_memory.insert(content)
+    self.memory.archival_storage.insert(content)
     return None
 
 
@@ -201,7 +201,7 @@ def archival_memory_search(
     except:
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
-    results, total = self.memory.archival_memory.search(
+    results, total = self.memory.archival_storage.search(
         query, count=count, start=page * count
     )
     num_pages = math.ceil(total / count) - 1  # 0 index

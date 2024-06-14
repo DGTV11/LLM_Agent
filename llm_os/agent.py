@@ -160,7 +160,7 @@ class Agent:
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
  
-        if set(called_function_required_parameter_names).issubset(set(called_function_arguments.keys())):
+        if not set(called_function_required_parameter_names).issubset(set(called_function_arguments.keys())):
             required_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_required_parameter_names))
             given_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_arguments.keys())) 
 
@@ -266,6 +266,31 @@ class Agent:
 
     def step(self) -> str:
         # note: all messageds must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+
+        ## Step 0: Check memory pressure
+        if (
+            not self.memory_pressure_warning_alr_given
+            and self.memory.main_ctx_message_seq_no_tokens
+            > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
+        ):
+            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage after responding to the user's query (if any)."
+            res_messageds.append(
+                {
+                    "type": "system",
+                    "message": {"role": "user", "content": interface_message},
+                }
+            )
+            self.interface.system_message(interface_message)
+
+            self.memory_pressure_warning_alr_given = True
+            heartbeat_request = True
+        elif (
+            self.memory_pressure_warning_alr_given
+            and self.memory.main_ctx_message_seq_no_tokens
+            > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
+        ):
+            self.summarise_messages_in_place()
+            self.memory_pressure_warning_alr_given = False
 
         ## Step 1: Generate response
         result = HOST.chat(

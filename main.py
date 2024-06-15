@@ -1,4 +1,5 @@
 from os import path, listdir, mkdir
+from time import time
 from uuid import uuid4
 
 from config import CONFIG
@@ -188,7 +189,9 @@ if __name__ == "__main__":
         )
         heartbeat_request = True
         while heartbeat_request:
+            start_time = time()
             _, heartbeat_request, _ = agent.step()
+            print(f'Time taken for agent step: {round(time() - start_time, 2)}s')
 
         print("/help for commands, /exit to exit")
         while True:
@@ -216,7 +219,9 @@ if __name__ == "__main__":
                     )
                     heartbeat_request = True
                     while heartbeat_request:
+                        start_time = time()
                         _, heartbeat_request, _ = agent.step()
+                        print(f'Time taken for agent step: {round(time() - start_time, 2)}s')
     except KeyboardInterrupt:
         print('Received keyboard interrupt. Exiting...')
     finally:    

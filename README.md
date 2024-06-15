@@ -1,5 +1,5 @@
-# Speech2Speech Chatbot 
-A (hopefully easy-to-use) speech-to-speech chatbot
+# LLM Agent
+A MemGPT-based conversational agent
 
 ## Installation
 1) Install Python dependencies
@@ -11,16 +11,19 @@ pip install -r requirements.txt
 
 3) Install the required Ollama models
 ```sh
-ollama pull llama3 mistral openchat phi3 nomic-embed-text
+ollama pull llama3
+ollama pull mistral 
+ollama pull openchat
+ollama pull nomic-embed-text
 ```
 
 ## Usage (CLI)
-1) Configure Speech2Speech_Chatbot if you have not already done so
+1) Configure LLM_Agent if you have not already done so
 ```sh
 python3 config.py
 ```
 
-2) Run Speech2Speech_Chatbot
+2) Run LLM_Agent
 ```sh
 python3 main.py
 ```
@@ -47,8 +50,9 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - The base function set has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/function_sets/base.py) with few edits
 
 ## TODO
-- Implement MemGPT architecture
-- Allow it to use function-calling to interact with its environment, search the web, use LSA/COT, and perform other actions
+- Allow LLM_Agent to use end-to-end speech-to-speech (we need faster SLMS!)
+- Allow LLM_Agent to speak to multiple users (group chat/conversation)
+- Allow it to use function-calling to interact with its greater environment, search the web, use LSA/COT, and perform other actions
 
 ## References
 <a id="1">[1]</a> 

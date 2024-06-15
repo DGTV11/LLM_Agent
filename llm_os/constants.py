@@ -1,3 +1,6 @@
+# Interface constants
+SHOW_DEBUG_MESSAGES = False # Set to True when testing new models
+
 # Retrieval query constants
 JSON_ENSURE_ASCII = False
 RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE = 5

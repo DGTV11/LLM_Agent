@@ -1,5 +1,6 @@
 from emoji import emojize
 
+from llm_os.constants import SHOW_DEBUG_MESSAGES
 
 class CLIInterface:
     @staticmethod
@@ -8,7 +9,8 @@ class CLIInterface:
 
     @staticmethod
     def debug_message(msg: str, end="\n"):
-        print(emojize(f":lady_beetle: {msg}"), end=end, flush=True)
+        if SHOW_DEBUG_MESSAGES:
+            print(emojize(f":lady_beetle: {msg}"), end=end, flush=True)
 
     @staticmethod
     def internal_monologue(msg: str, end="\n"):

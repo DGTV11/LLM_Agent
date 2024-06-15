@@ -54,7 +54,7 @@ class RecallStorage:
 
     def text_search(self, query_string, count=None, start=None):
         results = [
-            messaged["message"]
+            messaged
             for messaged in self.conv_messageds
             if messaged["message"]["content"] is not None
             and query_string.lower() in messaged["message"]["content"].lower()
@@ -71,7 +71,7 @@ class RecallStorage:
         end_dt = datetime.strptime(end_date, "%Y-%m-%d")
 
         results = [
-            messaged["message"]
+            messaged
             for messaged in self.conv_messageds
             if start_dt
             <= datetime.strptime(messaged["timestamp"], "%Y-%m-%d")

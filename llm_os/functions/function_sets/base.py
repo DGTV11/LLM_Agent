@@ -68,7 +68,7 @@ def core_memory_append(self: Agent, section_name: str, content: str) -> Optional
     Returns:
         Optional[str]: None is always returned as this function does not produce a response.
     """
-    self.memory.working_context.edit_append(secton_name, content)
+    self.memory.working_context.edit_append(section_name, content)
     return None
 
 

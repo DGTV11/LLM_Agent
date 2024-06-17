@@ -13,8 +13,7 @@ pip install -r requirements.txt
 ```sh
 ollama pull llama3
 ollama pull mistral 
-ollama pull openchat
-ollama pull qwen2:1.5b
+ollama pull openhermes
 ollama pull nomic-embed-text
 ```
 

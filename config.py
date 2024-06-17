@@ -54,9 +54,8 @@ if __name__ == "__main__":
             """
     Choose the model you want to use: 
     1) Llama-3 (default)
-    2) OpenChat
-    3) Mistral 7B 
-    4) Qwen2 1.5B
+    2) Mistral 7B 
+    3) OpenHermes (Mistral 7B)
     > """
         )
         or 1
@@ -66,11 +65,9 @@ if __name__ == "__main__":
         case 1:
             model_name = "llama3"
         case 2:
-            model_name = "openchat"
-        case 3:
             model_name = "mistral"
-        case 4:
-            model_name = "qwen2:1.5b"
+        case 3:
+            model_name = "openhermes"
         case _:
             model_name = "llama3"
 

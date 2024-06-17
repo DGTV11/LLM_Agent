@@ -43,17 +43,9 @@ def get_tokeniser_and_context_window(model_name):
             ct_num_token_func = lambda conv: len(
                 tokenizer.apply_chat_template(mistral_format_system(conv))
             )
-        case "openchat":
+        case "openhermes":
             tokenizer = AutoTokenizer.from_pretrained(
-                "openchat/openchat_3.5",
-                token=CONFIG["huggingface_user_access_token"],
-            )
-            ctx_window = 8192
-            num_token_func = lambda text: len(tokenizer.encode(text))
-            ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
-        case "qwen2:1.5b":
-            tokenizer = AutoTokenizer.from_pretrained(
-                "Qwen/Qwen2-1.5B-Instruct",
+                "teknium/OpenHermes-2.5-Mistral-7B",
                 token=CONFIG["huggingface_user_access_token"],
             )
             ctx_window = 16384 # usually 32768 but reduced to lower RAM usage

@@ -56,7 +56,7 @@ if __name__ == "__main__":
     1) Llama-3 (default)
     2) OpenChat
     3) Mistral 7B 
-    4) Phi-3
+    4) Qwen2 1.5B
     > """
         )
         or 1
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         case 3:
             model_name = "mistral"
         case 4:
-            model_name = "phi_3"
+            model_name = "qwen2:1.5b"
         case _:
             model_name = "llama3"
 

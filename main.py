@@ -175,7 +175,7 @@ if __name__ == "__main__":
     ctx_window = agent.memory.ctx_window
     print(f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%)")
 
-    interface_message = f'User \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user{" based on your previous conversation" if has_prev_conv else ""} using the \'send_message\' function.'
+    interface_message = f'User with username \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user{" based on your previous conversation" if has_prev_conv else ""} using the \'send_message\' function.'
     try:
         agent.interface.system_message(interface_message)
         agent.memory.append_messaged_to_fq_and_rs(
@@ -225,7 +225,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print('Received keyboard interrupt. Exiting...')
     finally:    
-        interface_message = f'User \'{conv_name.split("@")[0].split("--")[1]}\' exited the conversation'
+        interface_message = f'User with username \'{conv_name.split("@")[0].split("--")[1]}\' exited the conversation'
         agent.interface.system_message(interface_message)
         agent.memory.append_messaged_to_fq_and_rs(
             {

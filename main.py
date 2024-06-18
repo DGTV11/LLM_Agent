@@ -192,7 +192,7 @@ if __name__ == "__main__":
         while heartbeat_request:
             start_time = time()
             _, heartbeat_request, _ = agent.step()
-            print(f'Time taken for agent step: {datetime(seconds=round(time() - start_time, 2))}s')
+            print(f'Time taken for agent step: {timedelta(seconds=round(time() - start_time, 2))}s')
 
         print("/help for commands, /exit to exit")
         while True:

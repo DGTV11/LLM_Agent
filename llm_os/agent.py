@@ -319,7 +319,23 @@ class Agent:
         regex = re.search(r'[a-zA-Z0-9 ,.\n]+(\{[a-zA-Z0-9 \":\{\},\n]+\})[a-zA-Z0-9 ,.\n]+', result_content)
         try:
             json_string = regex.group(1)
+        except AttributeError:
+            res_messageds = [{"type": "assistant", "message": result_content}]
+
+            interface_message = "Error: you MUST give a JSON object that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
+            res_messageds.append(
+                {
+                    "type": "system",
+                    "message": {"role": "user", "content": interface_message},
+                }
+            )
+            self.interface.system_message(interface_message)
+            heartbeat_request = True
+            function_failed = False
+
         except IndexError:
+            res_messageds = [{"type": "assistant", "message": result_content}]
+
             interface_message = "Error: you MUST give a JSON object that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
             res_messageds.append(
                 {

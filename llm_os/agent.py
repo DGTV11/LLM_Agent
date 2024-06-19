@@ -316,9 +316,9 @@ class Agent:
             for chunk in result:
                 result_content += chunk['message']['content']
 
-        regex = re.search(r'[a-zA-Z0-9 ,.\n]+(\{[a-zA-Z0-9 \":\{\},\n]+\})[a-zA-Z0-9 ,.\n]+', text)
+        regex = re.search(r'[a-zA-Z0-9 ,.\n]+(\{[a-zA-Z0-9 \":\{\},\n]+\})[a-zA-Z0-9 ,.\n]+', result_content)
         try:
-            json_string = result.group(1)
+            json_string = regex.group(1)
         except IndexError:
             interface_message = "Error: you MUST give a JSON object that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
             res_messageds.append(

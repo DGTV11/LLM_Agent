@@ -50,9 +50,10 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - The base function set has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/function_sets/base.py) with few edits
 
 ## TODO
+- Upgrade LLM_Agent's archival memory (add KG)
+- Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions
 - Allow LLM_Agent to use end-to-end speech-to-speech (we need faster SLMS!)
 - Allow LLM_Agent to speak to multiple users (group chat/conversation)
-- Allow it to use function-calling to interact with its greater environment, search the web, use LSA/COT, and perform other actions
 
 ## References
 <a id="1">[1]</a> 

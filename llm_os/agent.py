@@ -21,7 +21,6 @@ from llm_os.constants import (
     WARNING_TOKEN_FRAC,
     FLUSH_TOKEN_FRAC,
     TRUNCATION_TOKEN_FRAC,
-    WORD_LIMIT,
     LAST_N_MESSAGES_TO_PRESERVE,
 )
 

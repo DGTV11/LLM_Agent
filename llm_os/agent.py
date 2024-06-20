@@ -1,7 +1,7 @@
 from os import path
 from collections import deque
 from functools import reduce
-import json
+import json5
 import regex
 
 from host import HOST
@@ -345,10 +345,10 @@ class Agent:
 
             res_messageds = [{"type": "assistant", "message": {"role": "assistant", "content": result_content}}]
 
-            json_result = json.loads(result_content)
+            json_result = json5.loads(result_content)
             if type(json_result) is not dict:
                 raise RuntimeError
-        except (RuntimeError, json.decoder.JSONDecodeError):
+        except (RuntimeError, ValueError):
             res_messageds = [{"type": "assistant", "message": {"role": "assistant", "content": result_content}}]
 
             if is_first_message:

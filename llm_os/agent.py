@@ -353,7 +353,12 @@ class Agent:
             heartbeat_request = True
             function_failed = False
         else:
-            if json_result.get("thoughts", None):
+            unidentified_keys = []
+            for key in json_result.keys():
+                if key not in ["thoughts", "function_call"]:
+                    unidentified_keys.append(key)
+
+            if (not unidentified_keys) and json_result.get("thoughts", None):
                 self.interface.internal_monologue(json_result["thoughts"])
 
                 ## Step 2: Check if LLM wanted to call a function
@@ -376,6 +381,18 @@ class Agent:
                     heartbeat_request = is_first_message
 
                     function_failed = False
+            elif unidentified_keys:
+                surround_with_single_quotes = lambda s: f"'{s}'"
+                interface_message = f"Error: fields {', '.join(map(surround_with_single_quotes, unidentified_keys))} should not be included in your generated JSON object (refer to the given JSON schema!). Please try again without acknowledging this message."
+                res_messageds.append(
+                    {
+                        "type": "system",
+                        "message": {"role": "user", "content": interface_message},
+                    }
+                )
+                self.interface.system_message(interface_message)
+                heartbeat_request = True
+                function_failed = False
             else:
                 interface_message = "Error: you MUST at least include the 'thoughts' field in the JSON object you respond with as your internal monologue! If you wanted to call a function, please try again while including your internal_monologue. Please try again without acknowledging this message."
                 res_messageds.append(

@@ -112,7 +112,7 @@ class Agent:
             called_function_name = function_call["name"]
             if called_function_name not in FIRST_MESSAGE_COMPULSORY_FUNCTION_SET:
                 surround_with_single_quotes = lambda s: f"'{s}'"
-                interface_message = f"Function called during starting message of conversation MUST be in {', '.join(map(surround_with_single_quotes, FIRST_MESSAGE_COMPULSORY_FUNCTION_SET))}."
+                interface_message = f"Name of function called during starting message of conversation MUST be in {', '.join(map(surround_with_single_quotes, FIRST_MESSAGE_COMPULSORY_FUNCTION_SET))}."
                 res_messageds.append(Agent.package_tool_response(interface_message, True))
                 self.interface.function_res_message(interface_message, True)
 
@@ -120,7 +120,7 @@ class Agent:
 
             called_function_arguments = function_call["arguments"]
         except KeyError as e:
-            interface_message = f"Failed to parse function call: {e}."
+            interface_message = f"Failed to parse function call: Missing {e} field."
             res_messageds.append(Agent.package_tool_response(interface_message, True))
             self.interface.function_res_message(interface_message, True)
 
@@ -340,7 +340,7 @@ class Agent:
                 raise json.decoder.JSONDecodeError
         except json.decoder.JSONDecodeError:
             if is_first_message:
-                interface_message = "Error: you MUST give a SINGLE JSON object that at least includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
+                interface_message = "Error: you MUST give a SINGLE JSON object that at least includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! Please try again without acknowledging this message."
             else:
                 interface_message = "Error: you MUST give a SINGLE JSON object that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
             res_messageds.append(

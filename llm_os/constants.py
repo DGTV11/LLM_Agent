@@ -22,7 +22,7 @@ FUNCTION_PARAM_DESCRIPTION_REQ_HEARTBEAT = "Request an immediate heartbeat after
 
 # Summarisation constants
 TRUNCATION_TOKEN_FRAC = 0.5
-WORD_LIMIT = 100
+SUMMARY_WORD_LIMIT = 100
 LAST_N_MESSAGES_TO_PRESERVE = 3
 
 # JSON schema type maps

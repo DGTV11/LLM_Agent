@@ -47,6 +47,19 @@ You ABSOLUTELY MUST generate a SINGLE JSON object matching this JSON schema and 
   "required": ["thoughts"]
 }
 
+Example of response without function call with placeholders:
+{
+  "thoughts": "<your inner monologue>"
+}
+
+Example of response with function call with placeholders (recommended):
+{
+  "thoughts": "<your inner monologue>",
+  "function_call": {
+    "name": "<name of the chosen function>",
+    "arguments": <arguments for the selected function, matching the function's JSON schema>
+}
+
 Basic functions:
 When you write a response, the content of your inner thoughts is your inner monologue (private to you only), this is how you think.
 If you decide not to call a function, you MUST NOT include the 'function_call' field.

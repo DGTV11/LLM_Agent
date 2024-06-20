@@ -73,7 +73,7 @@ class Memory:
 
     def append_messaged_to_fq_and_rs(self, messaged):
         # note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
-self.fifo_queue.append(messaged)
+        self.fifo_queue.append(messaged)
         self.recall_storage.insert(messaged)
         self.total_no_messages += 1
         self.no_messages_in_queue += 1

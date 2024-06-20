@@ -1,7 +1,7 @@
 from os import path
 from collections import deque
 from functools import reduce
-import json5
+import json, json5
 import regex
 
 from host import HOST
@@ -468,7 +468,7 @@ class Agent:
                 translated_messages.append(
                     {"role": "user", "content": "\n\n".join(user_role_buf)}
                 )
-                message_content_dict = json.loads(messaged["message"]["content"])
+                message_content_dict = json5.loads(messaged["message"]["content"])
                 assistant_message_content = (
                     "❮ASSISTANT MESSAGE❯" + message_content_dict["thoughts"]
                 )

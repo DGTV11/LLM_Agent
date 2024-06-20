@@ -193,6 +193,7 @@ if __name__ == "__main__":
             start_time = time()
             _, heartbeat_request, _ = agent.step(is_first_message=True)
             print(f'Time taken for agent step: {timedelta(seconds=round(time() - start_time, 2))}s')
+            print('\n\n', end='')
 
         print("/help for commands, /exit to exit")
         while True:
@@ -223,6 +224,7 @@ if __name__ == "__main__":
                         start_time = time()
                         _, heartbeat_request, _ = agent.step()
                         print(f'Time taken for agent step: {timedelta(seconds=round(time() - start_time, 2))}s')
+                        print('\n\n', end='')
     except KeyboardInterrupt:
         print('Received keyboard interrupt. Exiting...')
     except Exception as e:

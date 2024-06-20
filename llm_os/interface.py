@@ -1,5 +1,6 @@
 from emoji import emojize
 
+from llm_os.constants import SHOW_DEBUG_MESSAGES
 
 class CLIInterface:
     @staticmethod
@@ -32,13 +33,22 @@ class CLIInterface:
 
     @staticmethod
     def function_call_message(func_name: str, func_args: dict, end="\n"):
-        print(
-            emojize(
-                f':high_voltage: Called function {func_name} with arguments {func_args}))'
-            ),
-            end=end,
-            flush=True,
-        )
+        if SHOW_DEBUG_MESSAGES:
+            print(
+                emojize(
+                    f":high_voltage: Called function '{func_name}' with arguments {func_args}"
+                ),
+                end=end,
+                flush=True,
+            )
+        else:
+            print(
+                emojize(
+                    f":high_voltage: Called function '{func_name}'"
+                ),
+                end=end,
+                flush=True,
+            )
 
     @staticmethod
     def function_res_message(msg: str, has_error: bool, end="\n"):

@@ -339,7 +339,7 @@ class Agent:
             json_object_finder = regex.compile(r'\{(?:[^{}]|(?R))*\}')
             found_json_objects = json_object_finder.findall(result_content)
             if len(found_json_objects) != 1:
-                raise json.decoder.JSONDecodeError
+                raise RuntimeError
 
             result_content = found_json_objects[0]
 
@@ -347,8 +347,8 @@ class Agent:
 
             json_result = json.loads(result_content)
             if type(json_result) is not dict:
-                raise json.decoder.JSONDecodeError
-        except json.decoder.JSONDecodeError:
+                raise RuntimeError
+        except (RuntimeError, json.decoder.JSONDecodeError):
             if is_first_message:
                 interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT JSON OBJECT that includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! You must NOT give ANY extra text other than the JSON object! Please try again without acknowledging this message."
             else:

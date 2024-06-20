@@ -2,6 +2,7 @@ from os import path
 from collections import deque
 from functools import reduce
 import json
+import regex
 
 from host import HOST
 
@@ -334,9 +335,15 @@ class Agent:
             for chunk in result:
                 result_content += chunk['message']['content']
 
-        res_messageds = [{"type": "assistant", "message": {"role": "assistant", "content": result_content}}]
-
         try:
+            found_json_objects = regex.compile(r'\{(?:[^{}]|(?R))*\}')
+            if len(found_json_objects) != 1:
+                raise json.decoder.JSONDecodeError
+
+            result_content = found_json_objects[0]
+
+            res_messageds = [{"type": "assistant", "message": {"role": "assistant", "content": result_content}}]
+
             json_result = json.loads(result_content)
             if type(json_result) is not dict:
                 raise json.decoder.JSONDecodeError

@@ -340,9 +340,9 @@ class Agent:
                 raise json.decoder.JSONDecodeError
         except json.decoder.JSONDecodeError:
             if is_first_message:
-                interface_message = "Error: you MUST give a SINGLE JSON object that at least includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! Please try again without acknowledging this message."
+                interface_message = "Error: you MUST give a SINGLE JSON object AND ONLY THAT JSON OBJECT that at least includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! Please try again without acknowledging this message."
             else:
-                interface_message = "Error: you MUST give a SINGLE JSON object that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
+                interface_message = "Error: you MUST give a SINGLE JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. Please try again without acknowledging this message."
             res_messageds.append(
                 {
                     "type": "system",

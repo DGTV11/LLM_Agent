@@ -53,9 +53,10 @@ if __name__ == "__main__":
         input(
             """
     Choose the model you want to use: 
-    1) Llama-3 (default)
+    1) Llama-3 8B (default)
     2) Mistral 7B 
     3) OpenHermes (Mistral 7B)
+    4) Phi-3-Mini (4K context length)
     > """
         )
         or 1
@@ -68,6 +69,8 @@ if __name__ == "__main__":
             model_name = "mistral"
         case 3:
             model_name = "openhermes"
+        case 4:
+            model_name = "phi3"
         case _:
             model_name = "llama3"
 

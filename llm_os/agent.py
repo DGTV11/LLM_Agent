@@ -449,23 +449,23 @@ class Agent:
         for messaged in messaged_seq:
             if messaged["type"] == "system":
                 user_role_buf.append(
-                    f"(SYSTEM MESSAGE) {messaged['message']['content']}"
+                    f"❮SYSTEM MESSAGE❯ {messaged['message']['content']}"
                 )
             elif messaged["type"] == "tool":
-                user_role_buf.append(f"(TOOL MESSAGE) {messaged['message']['content']}")
+                user_role_buf.append(f"❮TOOL MESSAGE❯ {messaged['message']['content']}")
             elif messaged["type"] == "user":
-                user_role_buf.append(f"(USER MESSAGE) {messaged['message']['content']}")
+                user_role_buf.append(f"❮USER MESSAGE❯ {messaged['message']['content']}")
             else:
                 translated_messages.append(
                     {"role": "user", "content": "\n\n".join(user_role_buf)}
                 )
                 message_content_dict = json.loads(messaged["message"]["content"])
                 assistant_message_content = (
-                    "(ASSISTANT MESSAGE)" + message_content_dict["thoughts"]
+                    "❮ASSISTANT MESSAGE❯" + message_content_dict["thoughts"]
                 )
                 if "function_call" in message_content_dict:
                     assistant_message_content += (
-                        "\n\n(TOOL CALL)" + message_content_dict["function_call"]
+                        "\n\n❮TOOL CALL❯" + message_content_dict["function_call"]
                     )
                 translated_messages.append(
                     {"role": "assistant", "content": assistant_message_content}

@@ -73,7 +73,7 @@ class Memory:
 
     def append_messaged_to_fq_and_rs(self, messaged):
         # note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
-        self.fifo_queue.append(messaged)
+self.fifo_queue.append(messaged)
         self.recall_storage.insert(messaged)
         self.total_no_messages += 1
         self.no_messages_in_queue += 1
@@ -101,12 +101,12 @@ class Memory:
         for messaged in self.fifo_queue:
             if messaged["type"] == "system":
                 user_role_buf.append(
-                    f"(SYSTEM MESSAGE) {messaged['message']['content']}"
+                    f"❮SYSTEM MESSAGE❯ {messaged['message']['content']}"
                 )
             elif messaged["type"] == "tool":
-                user_role_buf.append(f"(TOOL MESSAGE) {messaged['message']['content']}")
+                user_role_buf.append(f"❮TOOL MESSAGE❯ {messaged['message']['content']}")
             elif messaged["type"] == "user":
-                user_role_buf.append(f"(USER MESSAGE) {messaged['message']['content']}")
+                user_role_buf.append(f"❮USER MESSAGE❯ {messaged['message']['content']}")
             else:
                 translated_messages.append(
                     {"role": "user", "content": "\n\n".join(user_role_buf)}

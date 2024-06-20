@@ -336,7 +336,8 @@ class Agent:
                 result_content += chunk['message']['content']
 
         try:
-            found_json_objects = regex.compile(r'\{(?:[^{}]|(?R))*\}')
+            json_object_finder = regex.compile(r'\{(?:[^{}]|(?R))*\}')
+            found_json_objects = json_object_finder.findall(result_content)
             if len(found_json_objects) != 1:
                 raise json.decoder.JSONDecodeError
 

@@ -13,6 +13,8 @@ from llm_os.memory.recall_storage import RecallStorage
 from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
 from llm_os.constants import (
     SHOW_DEBUG_MESSAGES,
+    SEND_MESSAGE_FUNCTION_NAME,
+    FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,
     PY_TO_JSON_TYPE_MAP,
     JSON_TO_PY_TYPE_MAP,
     FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
@@ -101,13 +103,21 @@ class Agent:
             "message": {"role": "user", "content": f"{status} Result: {result}"},
         }
 
-    def __call_function(self, function_call):
+    def __call_function(self, function_call, is_first_message=False):
         # Returns: res_messageds, heartbeat_request, function_failed
         res_messageds = []
 
         # Step 1: Parse function call
         try:
             called_function_name = function_call["name"]
+            if called_function_name not in FIRST_MESSAGE_COMPULSORY_FUNCTION_SET:
+                surround_with_single_quotes = lambda s: f"'{s}'"
+                interface_message = f"Function called during starting message of conversation MUST be in {', '.join(map(surround_with_single_quotes, FIRST_MESSAGE_COMPULSORY_FUNCTION_SET))}."
+                res_messageds.append(Agent.package_tool_response(interface_message, True))
+                self.interface.function_res_message(interface_message, True)
+
+                return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+
             called_function_arguments = function_call["arguments"]
         except KeyError as e:
             interface_message = f"Failed to parse function call: {e}."
@@ -242,6 +252,13 @@ class Agent:
         )
 
         if called_heartbeat_request is not None:
+            if is_first_message and not called_heartbeat_request:
+                interface_message = f"Function called during starting message of conversation MUST request a heartbeat through \"'heartbeat_request': true\" IF the function name is not '{SEND_MESSAGE_FUNCTION_NAME}'."
+                res_messageds.append(Agent.package_tool_response(interface_message, True))
+                self.interface.function_res_message(interface_message, True)
+
+                return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+
             del called_function_arguments[FUNCTION_PARAM_NAME_REQ_HEARTBEAT]
         else:
             called_heartbeat_request = False
@@ -265,7 +282,7 @@ class Agent:
 
         return res_messageds, called_heartbeat_request, False
 
-    def step(self) -> str:
+    def step(self, is_first_message=False) -> str:
         # note: all messageds must be in the form {'type': type, 'message': {'role': role, 'content': content}}
 
         ## Step 0: Check memory pressure
@@ -339,11 +356,23 @@ class Agent:
                 ## Step 2: Check if LLM wanted to call a function
                 if "function_call" in json_result:
                     d_res_messageds, heartbeat_request, function_failed = self.__call_function(
-                        json_result["function_call"]
+                        json_result["function_call"], is_first_message
                     )
                     res_messageds += d_res_messageds
                 else:
-                    heartbeat_request = function_failed = False
+                    if is_first_message:
+                        interface_message = "Error: you MUST include a function call inside the 'function_call' field as per the given schema during the starting message of a conversation. Please try again without acknowledging this message."
+                        res_messageds.append(
+                            {
+                                "type": "system",
+                                "message": {"role": "user", "content": interface_message},
+                            }
+                        )
+                        self.interface.system_message(interface_message)
+                        
+                    heartbeat_request = is_first_message
+
+                    function_failed = False
             else:
                 interface_message = "Error: you MUST at least include the 'thoughts' field in the JSON object you respond with as your internal monologue! If you wanted to call a function, please try again while including your internal_monologue. Please try again without acknowledging this message."
                 res_messageds.append(

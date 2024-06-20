@@ -1,6 +1,12 @@
 # Interface constants
 SHOW_DEBUG_MESSAGES = True # Set to True when testing new models
 
+# Function constants
+SEND_MESSAGE_FUNCTION_NAME = "send_message"
+
+# First message constants
+FIRST_MESSAGE_COMPULSORY_FUNCTION_SET = [SEND_MESSAGE_FUNCTION_NAME, "conversation_search"]
+
 # Retrieval query constants
 JSON_ENSURE_ASCII = False
 RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE = 5

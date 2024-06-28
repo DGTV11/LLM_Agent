@@ -56,10 +56,5 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - Allow LLM_Agent to speak to multiple users (group chat/conversation)
 
 ## References
-<a id="1">[1]</a> 
-Charles Packer and Sarah Wooders and Kevin Lin and Vivian Fang and Shishir G. Patil and Ion Stoica and Joseph E. Gonzalez. (2024).
-MemGPT: Towards LLMs as Operating Systems.
-
-<a id="2">[2]</a>
-Zach Nussbaum and John X. Morris and Brandon Duderstadt and Andriy Mulyar (2024)
-Nomic Embed: Training a Reproducible Long Context Text Embedder
+- Packer, Charles, et al. ‘MemGPT: Towards LLMs as Operating Systems’. arXiv [Cs.AI], 2024, http://arxiv.org/abs/2310.08560. arXiv.
+- Nussbaum, Zach, et al. ‘Nomic Embed: Training a Reproducible Long Context Text Embedder’. arXiv [Cs.CL], 2024, http://arxiv.org/abs/2402.01613. arXiv.

@@ -352,9 +352,9 @@ class Agent:
             res_messageds = [{"type": "assistant", "message": {"role": "assistant", "content": result_content}}]
 
             if is_first_message:
-                interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT JSON OBJECT that includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! You must NOT give ANY extra text other than the JSON object! Please try again without acknowledging this message."
+                interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT JSON OBJECT that includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
             else:
-                interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. You must NOT give ANY extra text other than the JSON object! Please try again without acknowledging this message."
+                interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
             res_messageds.append(
                 {
                     "type": "system",

@@ -121,7 +121,7 @@ class Agent:
             called_function_arguments = function_call["arguments"]
         except KeyError as e:
             interface_message = f"Failed to parse function call: Missing {e} field."
-            if 'arguments' in e and 'parameters' in function_call:
+            if 'arguments' in str(e) and 'parameters' in function_call:
                 interface_message += " Please replace the 'parameters' field with the 'arguments' field."
 
             res_messageds.append(Agent.package_tool_response(interface_message, True))

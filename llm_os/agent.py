@@ -112,7 +112,7 @@ class Agent:
             called_function_name = function_call["name"]
             if is_first_message and called_function_name not in FIRST_MESSAGE_COMPULSORY_FUNCTION_SET:
                 surround_with_single_quotes = lambda s: f"'{s}'"
-                interface_message = f"Name of function called during starting message of conversation MUST be in {', '.join(map(surround_with_single_quotes, FIRST_MESSAGE_COMPULSORY_FUNCTION_SET))}."
+                interface_message = f"Name of function called during starting message of conversation MUST be in {', '.join(map(surround_with_single_quotes, FIRST_MESSAGE_COMPULSORY_FUNCTION_SET))}. Name of function called during starting message of conversation MUST NOT be {surround_with_single_quotes(called_function_name)}"
                 res_messageds.append(Agent.package_tool_response(interface_message, True))
                 self.interface.function_res_message(interface_message, True)
 

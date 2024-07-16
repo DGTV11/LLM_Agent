@@ -31,7 +31,7 @@ if __name__ == "__main__":
     interface = CLIInterface()
 
     has_prev_conv = False
-    if ps_folders := listdir(path.join(path.dirname(__file__), "persistent_storage")):
+    if ps_folders := list(filter(lambda s: s[0] != '.', listdir(path.join(path.dirname(__file__), "persistent_storage")))):
         use_existing_conv = (
             True if input("Use existing conv? (y/n) ").strip().lower() == "y" else False
         )

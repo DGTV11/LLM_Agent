@@ -33,6 +33,22 @@ def get_tokeniser_and_context_window(model_name):
             ctx_window = 8192
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
+        case "CognitiveComputations/dolphin-2.9.3-qwen2-1.5b:Q2_K":
+            tokenizer = AutoTokenizer.from_pretrained(
+                "cognitivecomputations/dolphin-2.9.3-qwen2-1.5b",
+                token=CONFIG["huggingface_user_access_token"],
+            )
+            ctx_window = 16384
+            num_token_func = lambda text: len(tokenizer.encode(text))
+            ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
+        case "openhermes":
+            tokenizer = AutoTokenizer.from_pretrained(
+                "teknium/OpenHermes-2.5-Mistral-7B",
+                token=CONFIG["huggingface_user_access_token"],
+            )
+            ctx_window = 16384 # usually 32768 but reduced to lower RAM usage
+            num_token_func = lambda text: len(tokenizer.encode(text))
+            ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
         case "mistral":
             tokenizer = AutoTokenizer.from_pretrained(
                 "mistralai/Mistral-7B-Instruct-v0.3",
@@ -43,14 +59,7 @@ def get_tokeniser_and_context_window(model_name):
             ct_num_token_func = lambda conv: len(
                 tokenizer.apply_chat_template(mistral_format_system(conv))
             )
-        case "openhermes":
-            tokenizer = AutoTokenizer.from_pretrained(
-                "teknium/OpenHermes-2.5-Mistral-7B",
-                token=CONFIG["huggingface_user_access_token"],
-            )
-            ctx_window = 16384 # usually 32768 but reduced to lower RAM usage
-            num_token_func = lambda text: len(tokenizer.encode(text))
-            ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
+
         case _:
             raise ValueError(f"{model_name} is not a supported model.")
 

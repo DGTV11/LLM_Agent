@@ -54,8 +54,9 @@ if __name__ == "__main__":
             """
     Choose the model you want to use: 
     1) Llama-3 8B (default)
-    2) Mistral 7B 
-    3) OpenHermes (Mistral 7B)
+    2) CognitiveComputations/dolphin-2.9.3-qwen2-1.5b:Q2_K (Qwen2 1.5b finetune)
+    3) OpenHermes (Mistral 7B finetune)
+    4) Mistral 7B
     > """
         )
         or 1
@@ -65,9 +66,11 @@ if __name__ == "__main__":
         case 1:
             model_name = "llama3"
         case 2:
-            model_name = "mistral"
+            model_name = "CognitiveComputations/dolphin-2.9.3-qwen2-1.5b:Q2_K"
         case 3:
             model_name = "openhermes"
+        case 4:
+            model_name = "mistral"
         case _:
             model_name = "llama3"
 

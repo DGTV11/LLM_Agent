@@ -33,9 +33,9 @@ def get_tokeniser_and_context_window(model_name):
             ctx_window = 8192
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
-        case "CognitiveComputations/dolphin-2.9.3-qwen2-1.5b:Q2_K":
+        case "qwen2:1.5b":
             tokenizer = AutoTokenizer.from_pretrained(
-                "cognitivecomputations/dolphin-2.9.3-qwen2-1.5b",
+                "Qwen/Qwen2-1.5B",
                 token=CONFIG["huggingface_user_access_token"],
             )
             ctx_window = 16384

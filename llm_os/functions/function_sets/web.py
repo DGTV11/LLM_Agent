@@ -4,12 +4,12 @@ from typing import Optional
 from llm_os.agent import Agent
 from config import CONFIG
 from llm_os.constants import (
-    JSON_ENSURE_ASCII
+    JSON_ENSURE_ASCII,
     RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE,
 )
 
-    
-def google_search(self: Agent. query: str, page: Optional[int] = 0) -> Optional[str]:
+
+def google_search(self: Agent, query: str, page: Optional[int] = 0) -> Optional[str]:
     """
     Retrieves possible website urls from search queries from Google's Custom Search JSON API (don't query this too many times - just query this as little as required to get factually correct information).
 
@@ -19,7 +19,7 @@ def google_search(self: Agent. query: str, page: Optional[int] = 0) -> Optional[
 
     Returns:
         str: Query result string
-    """   
+    """
 
     if page is None or (isinstance(page, str) and page.lower().strip() == "none"):
         page = 0
@@ -46,6 +46,7 @@ def google_search(self: Agent. query: str, page: Optional[int] = 0) -> Optional[
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str
 
+
 def load_webpage_from_url(self: Agent, url: str) -> Optional[str]:
     """
     Retrieves the webpage content of a url.
@@ -55,7 +56,6 @@ def load_webpage_from_url(self: Agent, url: str) -> Optional[str]:
 
     Returns:
         str: Query result string
-    """   
-
+    """
 
     return self.web_interface.load_webpage_from_url(url)

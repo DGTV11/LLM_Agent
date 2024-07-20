@@ -2,6 +2,7 @@ from emoji import emojize
 
 from llm_os.constants import SHOW_DEBUG_MESSAGES
 
+
 class CLIInterface:
     @staticmethod
     def warning_message(msg: str, end="\n"):
@@ -43,9 +44,7 @@ class CLIInterface:
             )
         else:
             print(
-                emojize(
-                    f":high_voltage: Called function '{func_name}'"
-                ),
+                emojize(f":high_voltage: Called function '{func_name}'"),
                 end=end,
                 flush=True,
             )

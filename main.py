@@ -33,7 +33,12 @@ if __name__ == "__main__":
     web_interface = WebInterface()
 
     has_prev_conv = False
-    if ps_folders := list(filter(lambda s: s[0] != '.', listdir(path.join(path.dirname(__file__), "persistent_storage")))):
+    if ps_folders := list(
+        filter(
+            lambda s: s[0] != ".",
+            listdir(path.join(path.dirname(__file__), "persistent_storage")),
+        )
+    ):
         use_existing_conv = (
             True if input("Use existing conv? (y/n) ").strip().lower() == "y" else False
         )
@@ -178,7 +183,9 @@ if __name__ == "__main__":
     # Main conversation loop
     no_tokens_in_ctx = agent.memory.main_ctx_message_seq_no_tokens
     ctx_window = agent.memory.ctx_window
-    print(f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%)")
+    print(
+        f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%)"
+    )
 
     try:
         interface_message = f'User with username \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user and start the conversation based on your persona\'s specifications{" and your previous conversation" if has_prev_conv else ""}.'
@@ -196,14 +203,18 @@ if __name__ == "__main__":
         while heartbeat_request:
             start_time = time()
             _, heartbeat_request, _ = agent.step(is_first_message=True)
-            print(f'Time taken for agent step: {timedelta(seconds=round(time() - start_time, 2))}s')
-            print('\n\n', end='')
+            print(
+                f"Time taken for agent step: {timedelta(seconds=round(time() - start_time, 2))}s"
+            )
+            print("\n\n", end="")
 
         print("/help for commands, /exit to exit")
         while True:
             no_tokens_in_ctx = agent.memory.main_ctx_message_seq_no_tokens
             ctx_window = agent.memory.ctx_window
-            input_message = input(f"{no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%) > ")
+            input_message = input(
+                f"{no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%) > "
+            )
 
             match input_message.strip():
                 case "/help":
@@ -211,7 +222,9 @@ if __name__ == "__main__":
                     print("/reload_functions -> reloads function sets")
                     print("/exit -> exit conversation")
                 case "/reload_functions":
-                    function_dats = get_function_dats_from_function_sets(load_all_function_sets())
+                    function_dats = get_function_dats_from_function_sets(
+                        load_all_function_sets()
+                    )
                     agent.memory.function_dats = function_dats
                 case "/exit":
                     break
@@ -227,13 +240,15 @@ if __name__ == "__main__":
                     while heartbeat_request:
                         start_time = time()
                         _, heartbeat_request, _ = agent.step()
-                        print(f'Time taken for agent step: {timedelta(seconds=round(time() - start_time, 2))}s')
-                        print('\n\n', end='')
+                        print(
+                            f"Time taken for agent step: {timedelta(seconds=round(time() - start_time, 2))}s"
+                        )
+                        print("\n\n", end="")
     except KeyboardInterrupt:
-        print('Received keyboard interrupt. Exiting...')
+        print("Received keyboard interrupt. Exiting...")
     except Exception as e:
-        print('Exiting due to error:', e)
-    finally:    
+        print("Exiting due to error:", e)
+    finally:
         interface_message = f'User with username \'{conv_name.split("@")[0].split("--")[1]}\' exited the conversation'
         agent.interface.system_message(interface_message)
         agent.memory.append_messaged_to_fq_and_rs(
@@ -248,4 +263,6 @@ if __name__ == "__main__":
 
         no_tokens_in_ctx = agent.memory.main_ctx_message_seq_no_tokens
         ctx_window = agent.memory.ctx_window
-        print(f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%)")
+        print(
+            f"Context info: {no_tokens_in_ctx}/{ctx_window} tokens ({round((no_tokens_in_ctx/ctx_window)*100, 2)}%)"
+        )

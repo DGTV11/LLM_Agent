@@ -6,7 +6,7 @@ from typing import Optional
 from llm_os.agent import Agent
 from llm_os.constants import (
     JSON_ENSURE_ASCII,
-    #MAX_PAUSE_HEARTBEATS,
+    # MAX_PAUSE_HEARTBEATS,
     RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE,
 )
 

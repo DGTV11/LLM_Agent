@@ -114,19 +114,30 @@ class Agent:
         # Step 1: Parse function call
         try:
             called_function_name = function_call["name"]
-            if is_first_message and called_function_name not in FIRST_MESSAGE_COMPULSORY_FUNCTION_SET:
+            if (
+                is_first_message
+                and called_function_name not in FIRST_MESSAGE_COMPULSORY_FUNCTION_SET
+            ):
                 surround_with_single_quotes = lambda s: f"'{s}'"
                 interface_message = f"Name of function called during starting message of conversation MUST be in {', '.join(map(surround_with_single_quotes, FIRST_MESSAGE_COMPULSORY_FUNCTION_SET))}. Name of function called during starting message of conversation MUST NOT be {surround_with_single_quotes(called_function_name)}"
-                res_messageds.append(Agent.package_tool_response(interface_message, True))
+                res_messageds.append(
+                    Agent.package_tool_response(interface_message, True)
+                )
                 self.interface.function_res_message(interface_message, True)
 
-                return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+                return (
+                    res_messageds,
+                    True,
+                    True,
+                )  # Sends heartbeat request so LLM can retry
 
             called_function_arguments = function_call["arguments"]
         except KeyError as e:
             interface_message = f"Failed to parse function call: Missing {e} field."
-            if 'arguments' in str(e) and 'parameters' in function_call:
-                interface_message += " Please replace the 'parameters' field with the 'arguments' field."
+            if "arguments" in str(e) and "parameters" in function_call:
+                interface_message += (
+                    " Please replace the 'parameters' field with the 'arguments' field."
+                )
 
             res_messageds.append(Agent.package_tool_response(interface_message, True))
             self.interface.function_res_message(interface_message, True)
@@ -146,7 +157,9 @@ class Agent:
         called_function = called_function_dat["python_function"]
         called_function_schema = called_function_dat["json_schema"]
         called_function_parameters = called_function_schema["parameters"]["properties"]
-        called_function_required_parameter_names = called_function_schema["parameters"]["required"]
+        called_function_required_parameter_names = called_function_schema["parameters"][
+            "required"
+        ]
 
         # Step 4: Valiate arguments
         ## Check if required arguments are present
@@ -165,7 +178,9 @@ class Agent:
                     True,
                 )  # Sends heartbeat request so LLM can retry
 
-        if len(called_function_arguments) < len(called_function_required_parameter_names):
+        if len(called_function_arguments) < len(
+            called_function_required_parameter_names
+        ):
             interface_message = f'Function "{called_function_name}" requires at least {len(called_function_required_parameter_names)} arguments ({len(called_function_arguments)} given).'
             res_messageds.append(Agent.package_tool_response(interface_message, True))
             self.interface.function_res_message(interface_message, True)
@@ -177,17 +192,25 @@ class Agent:
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
- 
-        if not set(called_function_required_parameter_names).issubset(set(called_function_arguments.keys())):
-            required_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_required_parameter_names))
-            given_arguments_str = ",".join(map(lambda arg_name: f"'{arg_name}'", called_function_arguments.keys())) 
+
+        if not set(called_function_required_parameter_names).issubset(
+            set(called_function_arguments.keys())
+        ):
+            required_arguments_str = ",".join(
+                map(
+                    lambda arg_name: f"'{arg_name}'",
+                    called_function_required_parameter_names,
+                )
+            )
+            given_arguments_str = ",".join(
+                map(lambda arg_name: f"'{arg_name}'", called_function_arguments.keys())
+            )
 
             interface_message = f'Function "{called_function_name}" requires at least the arguments {required_arguments_str} ({given_arguments_str} given).'
             res_messageds.append(Agent.package_tool_response(interface_message, True))
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
-
 
         ## Check if arguments are of the correct type
         for argument_name, argument_value in called_function_arguments.items():
@@ -261,10 +284,16 @@ class Agent:
         if called_heartbeat_request is not None:
             if is_first_message and not called_heartbeat_request:
                 interface_message = f"Function called during starting message of conversation MUST request a heartbeat through \"'heartbeat_request': true\" IF the function name is not '{SEND_MESSAGE_FUNCTION_NAME}'."
-                res_messageds.append(Agent.package_tool_response(interface_message, True))
+                res_messageds.append(
+                    Agent.package_tool_response(interface_message, True)
+                )
                 self.interface.function_res_message(interface_message, True)
 
-                return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+                return (
+                    res_messageds,
+                    True,
+                    True,
+                )  # Sends heartbeat request so LLM can retry
 
             del called_function_arguments[FUNCTION_PARAM_NAME_REQ_HEARTBEAT]
         else:
@@ -322,38 +351,48 @@ class Agent:
             model=self.model_name,
             messages=self.memory.main_ctx_message_seq,
             options={"num_ctx": self.memory.ctx_window},
-            stream=True
+            stream=True,
         )
         result_content = ""
 
         if SHOW_DEBUG_MESSAGES:
-            self.interface.debug_message(f'Got result:')
+            self.interface.debug_message(f"Got result:")
 
             for chunk in result:
-                chunk_content = chunk['message']['content']
+                chunk_content = chunk["message"]["content"]
                 result_content += chunk_content
                 self.interface.append_to_message(chunk_content)
 
-            self.interface.append_to_message('\n')
+            self.interface.append_to_message("\n")
         else:
             for chunk in result:
-                result_content += chunk['message']['content']
+                result_content += chunk["message"]["content"]
 
         try:
-            json_object_finder = regex.compile(r'\{(?:[^{}]|(?R))*\}')
+            json_object_finder = regex.compile(r"\{(?:[^{}]|(?R))*\}")
             found_json_objects = json_object_finder.findall(result_content)
             if len(found_json_objects) != 1:
                 raise RuntimeError
 
             result_content = found_json_objects[0]
 
-            res_messageds = [{"type": "assistant", "message": {"role": "assistant", "content": result_content}}]
+            res_messageds = [
+                {
+                    "type": "assistant",
+                    "message": {"role": "assistant", "content": result_content},
+                }
+            ]
 
             json_result = json5.loads(result_content)
             if type(json_result) is not dict:
                 raise RuntimeError
         except (RuntimeError, ValueError):
-            res_messageds = [{"type": "assistant", "message": {"role": "assistant", "content": result_content}}]
+            res_messageds = [
+                {
+                    "type": "assistant",
+                    "message": {"role": "assistant", "content": result_content},
+                }
+            ]
 
             if is_first_message:
                 interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT JSON OBJECT that includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
@@ -379,8 +418,10 @@ class Agent:
 
                 ## Step 2: Check if LLM wanted to call a function
                 if "function_call" in json_result:
-                    d_res_messageds, heartbeat_request, function_failed = self.__call_function(
-                        json_result["function_call"], is_first_message
+                    d_res_messageds, heartbeat_request, function_failed = (
+                        self.__call_function(
+                            json_result["function_call"], is_first_message
+                        )
                     )
                     res_messageds += d_res_messageds
                 else:
@@ -389,11 +430,14 @@ class Agent:
                         res_messageds.append(
                             {
                                 "type": "system",
-                                "message": {"role": "user", "content": interface_message},
+                                "message": {
+                                    "role": "user",
+                                    "content": interface_message,
+                                },
                             }
                         )
                         self.interface.system_message(interface_message)
-                        
+
                     heartbeat_request = is_first_message
 
                     function_failed = False

@@ -77,7 +77,7 @@ class ArchivalStorage:
                 for document in self.cache[query][start:end]
             ]
 
-            return results, len(results)
+            return results, len(self.cache[query])
         except Exception as e:
             print("Archival search error", e)
             raise e

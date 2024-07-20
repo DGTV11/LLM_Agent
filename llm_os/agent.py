@@ -7,6 +7,7 @@ import regex
 from host import HOST
 
 from llm_os.interface import CLIInterface
+from llm_os.web_interface import WebInterface
 from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.archival_storage import ArchivalStorage
@@ -30,6 +31,7 @@ class Agent:
     def __init__(
         self,
         interface: CLIInterface,
+        web_interface: WebInterface,
         conv_name: str,
         model_name: str,
         function_dats: dict,
@@ -46,6 +48,8 @@ class Agent:
         )
 
         self.interface = interface
+        self.web_interface = web_interface
+
         self.model_name = model_name
         self.conv_name = conv_name
 

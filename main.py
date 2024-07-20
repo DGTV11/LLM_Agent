@@ -7,6 +7,7 @@ from config import CONFIG
 
 from llm_os.agent import Agent
 from llm_os.interface import CLIInterface
+from llm_os.web_interface import WebInterface
 
 from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
@@ -29,6 +30,7 @@ if __name__ == "__main__":
     function_dats = get_function_dats_from_function_sets(load_all_function_sets())
     system_instructions = get_system_text("llm_agent_chat")
     interface = CLIInterface()
+    web_interface = WebInterface()
 
     has_prev_conv = False
     if ps_folders := list(filter(lambda s: s[0] != '.', listdir(path.join(path.dirname(__file__), "persistent_storage")))):
@@ -66,6 +68,7 @@ if __name__ == "__main__":
             archival_storage = ArchivalStorage(conv_name)
             agent = Agent(
                 interface,
+                web_interface,
                 conv_name,
                 CONFIG["model_name"],
                 function_dats,
@@ -162,6 +165,7 @@ if __name__ == "__main__":
         archival_storage = ArchivalStorage(conv_name)
         agent = Agent(
             interface,
+            web_interface,
             conv_name,
             CONFIG["model_name"],
             function_dats,

@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 
 from config import CONFIG
 from llm_os.constants import (
-    JSON_ENSURE_ASCII
+    JSON_ENSURE_ASCII,
     RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE,
 )
 

@@ -40,7 +40,7 @@ class Memory:
             self.fifo_queue = deque()
             self.total_no_messages = 0
             self.no_messages_in_queue = 0
-            self.__write_fq_to_fq_path()
+            self.write_fq_to_fq_path()
 
         # External context
         self.archival_storage = archival_storage
@@ -50,7 +50,7 @@ class Memory:
             get_tokeniser_and_context_window(model_name)
         )
 
-    def __write_fq_to_fq_path(self):
+    def write_fq_to_fq_path(self):
         plf = Path(self.fq_path)
         plf.touch(exist_ok=True)
         with open(self.fq_path, "w") as f:
@@ -77,7 +77,7 @@ class Memory:
         self.recall_storage.insert(messaged)
         self.total_no_messages += 1
         self.no_messages_in_queue += 1
-        self.__write_fq_to_fq_path()
+        self.write_fq_to_fq_path()
 
     @property
     def main_context_system_message(self):

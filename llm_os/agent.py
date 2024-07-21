@@ -334,7 +334,7 @@ class Agent:
                     "message": {"role": "user", "content": interface_message},
                 }
             ]
-            self.interface.system_message(interface_message)
+            self.interface.memory_message(interface_message)
 
             self.memory_pressure_warning_alr_given = True
             heartbeat_request = True
@@ -478,7 +478,7 @@ class Agent:
                     "message": {"role": "user", "content": interface_message},
                 }
             )
-            self.interface.system_message(interface_message)
+            self.interface.memory_message(interface_message)
 
             self.memory_pressure_warning_alr_given = True
             heartbeat_request = True
@@ -535,10 +535,11 @@ class Agent:
             )
 
         return [
-            {"role": "system", "content": get_summarise_system_prompt}
+            {"role": "system", "content": get_summarise_system_prompt()}
         ] + translated_messages
 
-    def summarise_messages_in_place(self):
+    def summarise_messages_in_place(self): #TODO: Find a way to fix a bug here
+        self.interface.memory_message(f'Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue...')
         assert self.memory.main_ctx_message_seq[0]["role"] == "system"
 
         messages_to_be_summarised = deque()
@@ -549,13 +550,13 @@ class Agent:
             and len(self.memory.fifo_queue) > LAST_N_MESSAGES_TO_PRESERVE
         ):
             if (
-                len(self.memory.fifo_queue) + 1 > LAST_N_MESSAGES_TO_PRESERVE
+                len(self.memory.fifo_queue) <= LAST_N_MESSAGES_TO_PRESERVE + 1
                 and self.memory.fifo_queue[0]["message"]["role"] == "assistant"
             ):
                 break
             self.memory.no_messages_in_queue -= 1
-            messages_to_be_summarised.appendleft(self.memory.popleft())
-        self.memory.__write_fq_to_fq_path()
+            messages_to_be_summarised.appendleft(self.memory.fifo_queue.popleft())
+        self.memory.write_fq_to_fq_path()
 
         summary_message_seq = Agent.summary_message_seq(messages_to_be_summarised)
 

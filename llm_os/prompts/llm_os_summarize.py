@@ -16,4 +16,4 @@ Only output the summary, do NOT include anything else in your output.
 
 
 def get_summarise_system_prompt():
-    return SYSTEM.replace("<<SUMMARY_WORD_LIMIT>>", SUMMARY_WORD_LIMIT)
+    return SYSTEM.replace("<<SUMMARY_WORD_LIMIT>>", str(SUMMARY_WORD_LIMIT))

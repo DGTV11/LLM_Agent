@@ -93,7 +93,7 @@ class Agent:
     @memory_pressure_warning_alr_given.setter
     def memory_pressure_warning_alr_given(self, value):
         self.__memory_pressure_warning_alr_given = value
-        self.__write_misc_info_vars_to_misc_info_path()
+        self.__write_misc_info_vars_to_misc_info_path_dat()
 
     @staticmethod
     def package_tool_response(result, has_error):
@@ -328,12 +328,12 @@ class Agent:
             > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
         ):
             interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage after responding to the user's query (if any)."
-            res_messageds.append(
+            res_messageds = [
                 {
                     "type": "system",
                     "message": {"role": "user", "content": interface_message},
                 }
-            )
+            ]
             self.interface.system_message(interface_message)
 
             self.memory_pressure_warning_alr_given = True

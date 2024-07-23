@@ -182,6 +182,9 @@ class Agent:
             called_function_required_parameter_names
         ):
             interface_message = f'Function "{called_function_name}" requires at least {len(called_function_required_parameter_names)} arguments ({len(called_function_arguments)} given).'
+            if function_call.get("request_heartbeat", (None, 0)) != (None, 0) and "request_heartbeat" in called_function_required_parameter_names:
+                interface_message += ' Please move the "request_heartbeat" argument into the "arguments" field.'
+
             res_messageds.append(Agent.package_tool_response(interface_message, True))
             self.interface.function_res_message(interface_message, True)
 

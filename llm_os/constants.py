@@ -1,5 +1,6 @@
 # Interface constants
 SHOW_DEBUG_MESSAGES = True  # Set to True when testing new models
+READ_SENT_MESSAGES = True
 
 # Function constants
 SEND_MESSAGE_FUNCTION_NAME = "send_message"

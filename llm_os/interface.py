@@ -1,4 +1,5 @@
 import os
+from time import time
 
 from emoji import emojize
 from gtts import gTTS

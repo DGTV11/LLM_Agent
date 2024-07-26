@@ -1,4 +1,4 @@
-import os
+import os, subprocess
 from time import time
 
 from emoji import emojize

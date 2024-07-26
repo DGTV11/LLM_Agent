@@ -61,7 +61,7 @@ class CLIInterface:
         CLIInterface.system_message("Reading response... (Use Ctrl-C to skip)")
 
         start_time = time()
-        successfully_read = read_response(res_stream)
+        successfully_read = read_response(msg)
         end_time = time()
 
         if successfully_read:

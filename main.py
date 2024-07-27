@@ -232,7 +232,7 @@ if __name__ == "__main__":
                     agent.interface.user_message(input_message)
                     agent.memory.append_messaged_to_fq_and_rs(
                         {
-                            "type": "system",
+                            "type": "user",
                             "message": {"role": "user", "content": input_message},
                         }
                     )

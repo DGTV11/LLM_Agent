@@ -104,6 +104,89 @@ class CLIInterface:
             flush=True,
         )
 
-    @staticmethod
-    def append_to_message(msg: str):
-        print(msg, end="", flush=True)
+class ServerInterface:
+    def __init__(self):
+        self.server_message_stack = []
+
+    def warning_message(self, msg: str, end="\n"):
+        self.server_message_stack.append({
+            'type': 'warning_message', 
+            'arguments': {
+                'msg': msg,
+                'end': end
+            }
+        })
+
+    def debug_message(self, msg: str, end="\n"):
+        self.server_message_stack.append({
+            'type': 'debug_message',
+            'arguments': {
+                'msg': msg,
+                'end': end
+            }
+        })
+
+    def internal_monologue(self, msg: str, end="\n"):
+        self.server_message_stack.append({
+            'type': 'internal_monologue',
+            'arguments': {
+                'msg': msg,
+                'end': end
+            }
+        })
+
+    def assistant_message(self, msg: str, end="\n"):
+        self.server_message_stack.append({
+            'type': 'assistant_message',
+            'arguments': {
+                'msg': msg,
+                'end': end
+            }
+        })
+
+    def memory_message(self, msg: str, end="\n"):
+        self.server_message_stack.append({
+            'type': 'memory_message',
+            'arguments': {
+                'msg': msg,
+                'end': end
+            }
+        })
+
+    def system_message(self, msg: str, end="\n"):
+        self.server_message_stack.append({
+            'type': 'system_message',
+            'arguments': {
+                'msg': msg,
+                'end': end
+            }
+        })
+
+    def user_message(self, msg: str, end="\n"):
+        self.server_message_stack.append({
+            'type': 'user_message',
+            'arguments': {
+                'msg': msg,
+                'end': end
+            }
+        })
+
+    def function_call_message(self, func_name: str, func_args: dict, end="\n"):
+        self.server_message_stack.append({
+            'type': 'function_call_message',
+            'arguments': {
+                'func_name': func_name,
+                'func_args': func_args,
+                'end': end
+            }
+        })
+
+    def function_res_message(self, msg: str, has_error: bool, end="\n"):
+        self.server_message_stack.append({
+            'type': 'function_res_message',
+            'arguments': {
+                'msg': msg,
+                'has_error': has_error,
+                'end': end
+            }
+        })

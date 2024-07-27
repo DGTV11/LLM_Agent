@@ -358,18 +358,11 @@ class Agent:
         )
         result_content = ""
 
+        for chunk in result:
+            result_content += chunk["message"]["content"]
+
         if SHOW_DEBUG_MESSAGES:
-            self.interface.debug_message(f"Got result:")
-
-            for chunk in result:
-                chunk_content = chunk["message"]["content"]
-                result_content += chunk_content
-                self.interface.append_to_message(chunk_content)
-
-            self.interface.append_to_message("\n")
-        else:
-            for chunk in result:
-                result_content += chunk["message"]["content"]
+            self.interface.debug_message(f"Got result:\n{result_content}")
 
         try:
             json_object_finder = regex.compile(r"\{(?:[^{}]|(?R))*\}")

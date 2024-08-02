@@ -310,8 +310,8 @@ class Agent:
             )
             called_function_result = called_function(**called_function_arguments)
         except Exception as e:
-            res_messageds.append(Agent.package_tool_response(e, True))
-            self.interface.function_res_message(e, True)
+            res_messageds.append(Agent.package_tool_response(str(e), True))
+            self.interface.function_res_message(str(e), True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 

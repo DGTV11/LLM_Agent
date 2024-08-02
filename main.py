@@ -159,7 +159,7 @@ if __name__ == "__main__":
         conv_name = f"{chosen_agent_persona.split('.')[0]}--{chosen_human_persona.split('.')[0]}@{uuid4().hex}-{uuid4().hex}"
 
         while conv_name in ps_folders:
-            conv_name = f"{chosen_agent_persona}--{chosen_human_persona}@{uuid4().hex}-{uuid4().hex}"
+            conv_name = f"{chosen_agent_persona.split('.'[0])}--{chosen_human_persona.split('.'[0])}@{uuid4().hex}-{uuid4().hex}"
 
         mkdir(path.join(path.dirname(__file__), "persistent_storage", conv_name))
 

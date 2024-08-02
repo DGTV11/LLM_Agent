@@ -2,44 +2,8 @@ import os, subprocess
 from time import time
 
 from emoji import emojize
-from gtts import gTTS
-from playsound import playsound
 
-from llm_os.constants import SHOW_DEBUG_MESSAGES, READ_SENT_MESSAGES
-
-GTTS_OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "tmp.mp3")
-GTTS_SPED_UP_PATH = os.path.join(os.path.dirname(__file__), "tmp2.mp3")
-
-GTTS_SPEED_UP_ATEMPO = 1.2
-GTTS_SPEED_UP_COMMAND = [
-    "ffmpeg",
-    "-y",
-    "-i",
-    GTTS_OUTPUT_PATH,
-    "-filter:a",
-    f"atempo={GTTS_SPEED_UP_ATEMPO}",
-    GTTS_SPED_UP_PATH,
-]
-
-def read_response(response):
-    try:
-        tts = gTTS(response, lang="en")
-        tts.save(GTTS_OUTPUT_PATH)
-        subprocess.run(
-            GTTS_SPEED_UP_COMMAND, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-        )
-        playsound(GTTS_SPED_UP_PATH)
-
-        os.remove(GTTS_OUTPUT_PATH)
-        os.remove(GTTS_SPED_UP_PATH)
-
-        return True
-    except KeyboardInterrupt:
-        if os.path.exists(GTTS_OUTPUT_PATH):
-            os.remove(GTTS_OUTPUT_PATH)
-        if os.path.exists(GTTS_SPED_UP_PATH):
-            os.remove(GTTS_SPED_UP_PATH)
-        return False
+from llm_os.constants import SHOW_DEBUG_MESSAGES
 
 class CLIInterface:
     @staticmethod
@@ -58,15 +22,6 @@ class CLIInterface:
     def assistant_message(msg: str, end="\n"):
         print(emojize(f":robot: {msg}"), end=end, flush=True)
 
-        CLIInterface.system_message("Reading response... (Use Ctrl-C to skip)")
-
-        start_time = time()
-        successfully_read = read_response(msg)
-        end_time = time()
-
-        if successfully_read:
-            CLIInterface.system_message(f"Successfully read response in {round(end_time - start_time, 2)}s")
-
     @staticmethod
     def memory_message(msg: str, end="\n"):
         print(emojize(f":brain: {msg}"), end=end, flush=True)
@@ -82,6 +37,10 @@ class CLIInterface:
     @staticmethod
     def function_call_message(func_name: str, func_args: dict, end="\n"):
         if SHOW_DEBUG_MESSAGES:
+            func_args = func_args.copy()
+            if func_args.get('self', None):
+                del func_args['self']
+
             print(
                 emojize(
                     f":high_voltage: Called function '{func_name}' with arguments {func_args}"
@@ -172,6 +131,10 @@ class ServerInterface:
         })
 
     def function_call_message(self, func_name: str, func_args: dict, end="\n"):
+        func_args = func_args.copy()
+        if func_args.get('self', None):
+            del func_args['self']
+
         self.server_message_stack.append({
             'type': 'function_call_message',
             'arguments': {

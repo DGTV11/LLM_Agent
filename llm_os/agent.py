@@ -132,7 +132,7 @@ class Agent:
                 )  # Sends heartbeat request so LLM can retry
 
             called_function_arguments = function_call["arguments"]
-        except KeyError, TypeError as e:
+        except (KeyError, TypeError) as e:
             interface_message = f"Failed to parse function call: Missing {e} field."
             if "arguments" in str(e) and "parameters" in function_call:
                 interface_message += (

@@ -25,8 +25,7 @@ def send_message(self: Agent, message: str) -> Optional[str]:
     Returns:
         Optional[str]: None is always returned as this function does not produce a response.
     """
-    # FIXME passing of msg_obj here is a hack, unclear if guaranteed to be the correct reference
-    self.interface.assistant_message(message)  # , msg_obj=self._messages[-1])
+    self.interface.assistant_message(message)
     return None
 
 
@@ -121,7 +120,7 @@ def conversation_search(
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"timestamp: {d['timestamp']}, {d['message']['role']} - {d['message']['content']}"
+            f"timestamp: '{d['timestamp']}', role: '{d['message']['role']}' - {d['message']['content']}"
             for d in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
@@ -160,7 +159,7 @@ def conversation_search_date(
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"timestamp: {d['timestamp']}, {d['message']['role']} - {d['message']['content']}"
+            f"timestamp: '{d['timestamp']}', role: '{d['message']['role']}' message: {d['message']['content']}"
             for d in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
@@ -212,7 +211,7 @@ def archival_memory_search(
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"timestamp: {d['timestamp']}, memory: {d['content']}" for d in results
+            f"timestamp: '{d['timestamp']}', memory: '{d['content']}'" for d in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str

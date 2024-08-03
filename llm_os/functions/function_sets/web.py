@@ -12,7 +12,7 @@ from llm_os.constants import (
 
 def google_search(self: Agent, query: str, page: Optional[int] = 0) -> Optional[str]:
     """
-    Retrieves possible website urls from search queries from Google's Custom Search JSON API (don't query this too many times - just query this as little as required to get factually correct information). You should use the 'load_webpage_from_url' function to load specific webpages from the given search results after using this function.
+    Retrieves possible website urls from search queries from Google's Custom Search JSON API (don't query this too many times - just query this as little as required to get factually correct information). You need to use the 'load_webpage_from_url' function to load specific webpages from the given search results after using this function.
 
     Args:
         query (str): Search query.
@@ -42,7 +42,7 @@ def google_search(self: Agent, query: str, page: Optional[int] = 0) -> Optional[
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"url: {res[0]}, title: {res[1]}, snippet: {res[2]}" for res in results
+            f"url: '{res[0]}', title: '{res[1]}', snippet: '{res[2]}'" for res in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str

@@ -33,9 +33,9 @@ def get_tokeniser_and_context_window(model_name):
             ctx_window = 8192
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
-        case "qwen2:1.5b":
+        case "deepseek-v2:16b-lite-chat-q4_0":
             tokenizer = AutoTokenizer.from_pretrained(
-                "Qwen/Qwen2-1.5B",
+                "deepseek-ai/DeepSeek-V2-Lite-Chat",
                 token=CONFIG["huggingface_user_access_token"],
             )
             ctx_window = 8192 # reduced to lower RAM usage

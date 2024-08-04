@@ -54,7 +54,7 @@ if __name__ == "__main__":
             """
     Choose the model you want to use: 
     1) Llama-3 8B (default)
-    2) Qwen2 1.5B
+    2) DeepSeek-V2 16B
     3) OpenHermes (Mistral 7B finetune)
     4) Mistral 7B
     > """
@@ -66,7 +66,7 @@ if __name__ == "__main__":
         case 1:
             model_name = "llama3"
         case 2:
-            model_name = "qwen2:1.5b"
+            model_name = "deepseek-v2:16b-lite-chat-q4_0"
         case 3:
             model_name = "openhermes"
         case 4:

@@ -14,7 +14,7 @@ pip install -r requirements.txt
 ollama pull llama3
 ollama pull mistral 
 ollama pull openhermes
-ollama pull qwen2:1.5b
+ollama pull deepseek-v2:16b-lite-chat-q4_0
 ollama pull nomic-embed-text
 ```
 

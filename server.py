@@ -1,4 +1,5 @@
 from os import path, listdir, mkdir, rmdir
+import threading
 from time import time
 from datetime import timedelta
 from uuid import uuid4
@@ -25,6 +26,8 @@ from llm_os.functions.load_functions import (
 )
 
 app = Flask(__name__)
+
+sem = threading.Semaphore()
 
 @app.route('/conversation-ids', methods=['GET'])
 def get_existing_conversation_ids():
@@ -106,7 +109,7 @@ def agent_methods():
 
             # Create agent
             working_context = WorkingContext(
-                CONFIG["model_name"], conv_name, agent_persona_str, human_persona_str
+                CONFIG["model_name"], conv_name, agent_persona_str, 1, human_persona_str
             )
             recall_storage = RecallStorage(conv_name)
             archival_storage = ArchivalStorage(conv_name)
@@ -141,11 +144,52 @@ def agent_methods():
                     'success': False
                 })
 
-@app.route('/messages/send', methods=['POST'])
-def send_message():
+@app.route('/agent/humans', methods=['GET', 'POST'])
+def agent_human_methods():
     # Load data
     data = request.get_json()
     conv_name = data.get('conv_name')
+
+    # Load working context
+    working_context = WorkingContext(
+        CONFIG["model_name"], conv_name, None, None, None
+    )
+
+    # Get all registered human ids
+    human_ids = list(working_context.humans.keys())
+
+    match request.method:
+        case 'GET':
+            return jsonify({
+                'human_ids': human_ids
+            })
+        case 'POST':
+            # Load human persona
+            human_persona_name = data.get('human_persona_name')
+
+            human_persona_fp = path.join(
+                path.dirname(__file__), "llm_os", "personas", "humans", human_persona_name
+            )
+
+            with open(human_persona_fp, "r") as f:
+                human_persona_str = f.read()
+
+            # Add new user 
+            new_human_id = max(human_ids)+1
+            working_context.add_new_human_persona(new_human_id, human_persona_str)
+
+            return jsonify({
+                'new_human_id': new_human_id
+            })
+
+@app.route('/messages/send', methods=['POST'])
+def send_message():
+    sem.acquire()
+
+    # Load data
+    data = request.get_json()
+    conv_name = data.get('conv_name')
+    user_id = data.get('user_id')
     message = data.get('message')
 
     # Load system instructions
@@ -160,7 +204,7 @@ def send_message():
 
     # Load agent
     working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None
+        CONFIG["model_name"], conv_name, None, None, None
     )
     recall_storage = RecallStorage(conv_name)
     archival_storage = ArchivalStorage(conv_name)
@@ -181,6 +225,7 @@ def send_message():
     agent.memory.append_messaged_to_fq_and_rs(
         {
             "type": "user",
+            "user_id": user_id,
             "message": {"role": "user", "content": message},
         }
     )
@@ -193,7 +238,7 @@ def send_message():
         heartbeat_request = True
         while heartbeat_request:
             start_time = time()
-            _, heartbeat_request, _ = agent_obj.step()
+            _, heartbeat_request, _ = agent_obj.step(user_id)
             end_time = time()
 
             server_message_stack = agent_obj.interface.server_message_stack.copy()
@@ -214,13 +259,17 @@ def send_message():
             'total_duration': str(timedelta(seconds=round(total_end_time - total_start_time, 2)))
         }) + '\n'   
 
+    sem.release()
     return Response(generate_agent_responses(agent), mimetype='application/json')
 
 @app.route('/messages/send/first-message', methods=['POST'])
 def send_first_message():
+    sem.acquire()
+
     # Load data
     data = request.get_json()
     conv_name = data.get('conv_name')
+    user_id = data.get('user_id')
     message = data.get('message')
 
     # Load system instructions
@@ -235,7 +284,7 @@ def send_first_message():
 
     # Load agent
     working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None
+        CONFIG["model_name"], conv_name, None, None, None
     )
     recall_storage = RecallStorage(conv_name)
     archival_storage = ArchivalStorage(conv_name)
@@ -256,6 +305,7 @@ def send_first_message():
     agent.memory.append_messaged_to_fq_and_rs(
         {
             "type": "system",
+            "user_id": "user_id",
             "message": {"role": "user", "content": message},
         }
     )
@@ -268,7 +318,7 @@ def send_first_message():
         heartbeat_request = True
         while heartbeat_request:
             start_time = time()
-            _, heartbeat_request, _ = agent_obj.step(is_first_message=True)
+            _, heartbeat_request, _ = agent_obj.step(user_id, is_first_message=True)
             end_time = time()
 
             server_message_stack = agent_obj.interface.server_message_stack.copy()
@@ -289,13 +339,16 @@ def send_first_message():
             'total_duration': str(timedelta(seconds=round(total_end_time - total_start_time, 2)))
         }) + '\n'   
 
+    sem.release()
     return Response(generate_agent_responses(agent), mimetype='application/json')
 
 @app.route('/messages/send/no-heartbeat', methods=['POST'])
 def send_message_without_heartbeat():
+    sem.acquire()
     # Load data
     data = request.get_json()
     conv_name = data.get('conv_name')
+    user_id = data.get('user_id')
     message = data.get('message')
 
     # Load system instructions
@@ -310,7 +363,7 @@ def send_message_without_heartbeat():
 
     # Load agent
     working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None
+        CONFIG["model_name"], conv_name, None, None, None
     )
     recall_storage = RecallStorage(conv_name)
     archival_storage = ArchivalStorage(conv_name)
@@ -331,13 +384,17 @@ def send_message_without_heartbeat():
     agent.memory.append_messaged_to_fq_and_rs(
         {
             "type": "system",
+            "user_id": user_id,
             "message": {"role": "user", "content": message},
         }
     ) 
 
+    agent.memory.working_context.submit_used_human_id(user_id)
+
     server_message_stack = agent.interface.server_message_stack.copy()
     agent.interface.server_message_stack = []
 
+    sem.release()
     return jsonify({ 
         'server_message_stack': server_message_stack,
         'ctx_info': {

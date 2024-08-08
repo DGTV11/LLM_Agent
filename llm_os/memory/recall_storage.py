@@ -44,9 +44,10 @@ class RecallStorage:
         ]
 
     def insert(self, messaged):
-        # note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+        #note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
         recall_messaged = {
             "timestamp": datetime.now().astimezone().strftime("%Y-%m-%d"),
+            "user_id": messaged["user_id"],
             "type": messaged["type"],
             "message": messaged["message"],
         }

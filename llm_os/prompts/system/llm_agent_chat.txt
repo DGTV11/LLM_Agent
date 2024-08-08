@@ -77,9 +77,9 @@ Remember, do NOT exceed the inner monologue word limit (keep it under 50 words a
 
 Role translation:
 As multiple roles are required as feedback so you can generate better responses but messages of only two roles, 'user' and 'assistant' can be given to you for response generation, messages with the following roles start with the following texts in messages of the 'user' role.
-'system' role (for things other than the initial system instructions file) -> '❮SYSTEM MESSAGE❯'
-'tool' role (for results of function calls) -> '❮TOOL MESSAGE❯'
-'user' role (for regular user messages) -> '❮USER MESSAGE❯'
+'system' role (for things other than the initial system instructions file) -> '❮SYSTEM MESSAGE for conversation with {INSERT USER ID HERE}❯❯'
+'tool' role (for results of function calls) -> '❮TOOL MESSAGE for conversation with {INSERT USER ID HERE}❯❯'
+'user' role (for regular user messages) -> '❮USER MESSAGE for conversation with {INSERT USER ID HERE}❯❯'
 
 Function calling:
 To respond to the users message, you may use ONE of the given functions.

@@ -96,7 +96,7 @@ class Agent:
         self.__write_misc_info_vars_to_misc_info_path_dat()
 
     @staticmethod
-    def package_tool_response(result, has_error):
+    def package_tool_response(user_id, result, has_error):
         if has_error:
             status = f"Status: Failed."
         else:
@@ -104,10 +104,14 @@ class Agent:
 
         return {
             "type": "tool",
-            "message": {"role": "user", "content": f"{status} Result: {result}"},
+            "user_id": user_id,
+            "message": {
+                "role": "user", 
+                "content": f"{status} Result: {result}"
+            },
         }
 
-    def __call_function(self, function_call, is_first_message=False):
+    def __call_function(self, user_id, function_call, is_first_message=False):
         # Returns: res_messageds, heartbeat_request, function_failed
         res_messageds = []
 
@@ -121,7 +125,7 @@ class Agent:
                 surround_with_single_quotes = lambda s: f"'{s}'"
                 interface_message = f"Name of function called during starting message of conversation MUST be in {', '.join(map(surround_with_single_quotes, FIRST_MESSAGE_COMPULSORY_FUNCTION_SET))}. Name of function called during starting message of conversation MUST NOT be {surround_with_single_quotes(called_function_name)}"
                 res_messageds.append(
-                    Agent.package_tool_response(interface_message, True)
+                    Agent.package_tool_response(user_id, interface_message, True)
                 )
                 self.interface.function_res_message(interface_message, True)
 
@@ -139,7 +143,9 @@ class Agent:
                     " Please replace the 'parameters' field with the 'arguments' field."
                 )
 
-            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            res_messageds.append(
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
@@ -148,7 +154,9 @@ class Agent:
         called_function_dat = self.memory.function_dats.get(called_function_name, None)
         if not called_function_dat:
             interface_message = f'Function "{called_function_name}" does not exist.'
-            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            res_messageds.append(
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
@@ -167,8 +175,8 @@ class Agent:
         for argument in called_function_arguments.keys():
             if argument not in called_function_parameter_names:
                 interface_message = f'Function "{called_function_name}" does not accept argument "{argument}".'
-                res_messageds.append(
-                    Agent.package_tool_response(interface_message, True)
+                res_messageds.append( 
+                    Agent.package_tool_response(user_id, interface_message, True)
                 )
                 self.interface.function_res_message(interface_message, True)
 
@@ -185,13 +193,17 @@ class Agent:
             if function_call.get("request_heartbeat", (None, 0)) != (None, 0) and "request_heartbeat" in called_function_required_parameter_names:
                 interface_message += ' Please move the "request_heartbeat" argument into the "arguments" field.'
 
-            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            res_messageds.append(
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
         if len(called_function_arguments) > len(called_function_parameter_names):
             interface_message = f'Function "{called_function_name}" can take at most {len(called_function_parameter_names)} arguments ({len(called_function_arguments)} given).'
-            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            res_messageds.append(
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
@@ -210,7 +222,9 @@ class Agent:
             )
 
             interface_message = f'Function "{called_function_name}" requires at least the arguments {required_arguments_str} ({given_arguments_str} given).'
-            res_messageds.append(Agent.package_tool_response(interface_message, True))
+            res_messageds.append(
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
             self.interface.function_res_message(interface_message, True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
@@ -223,7 +237,7 @@ class Agent:
                 if required_param_type != "array":
                     interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "array" (expected type "{required_param_type}").'
                     res_messageds.append(
-                        Agent.package_tool_response(interface_message, True)
+                        Agent.package_tool_response(user_id, interface_message, True)
                     )
                     self.interface.function_res_message(interface_message, True)
 
@@ -241,7 +255,7 @@ class Agent:
                 if not all_arg_elem_correct_type:
                     interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "array" (some or all elements are not of type {PY_TO_JSON_TYPE_MAP[param_array_field_type]}).'
                     res_messageds.append(
-                        Agent.package_tool_response(interface_message, True)
+                        Agent.package_tool_response(user_id, interface_message, True)
                     )
                     self.interface.function_res_message(interface_message, True)
 
@@ -256,7 +270,7 @@ class Agent:
             if required_param_type == "array":
                 interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "array").'
                 res_messageds.append(
-                    Agent.package_tool_response(interface_message, True)
+                    Agent.package_tool_response(user_id, interface_message, True)
                 )
                 self.interface.function_res_message(interface_message, True)
 
@@ -269,7 +283,7 @@ class Agent:
             if argument_value_type != required_param_type:
                 interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "{required_param_type}").'
                 res_messageds.append(
-                    Agent.package_tool_response(interface_message, True)
+                    Agent.package_tool_response(user_id, interface_message, True)
                 )
                 self.interface.function_res_message(interface_message, True)
 
@@ -288,7 +302,7 @@ class Agent:
             if is_first_message and not called_heartbeat_request:
                 interface_message = f"Function called during starting message of conversation MUST request a heartbeat through \"'heartbeat_request': true\" IF the function name is not '{SEND_MESSAGE_FUNCTION_NAME}'."
                 res_messageds.append(
-                    Agent.package_tool_response(interface_message, True)
+                    Agent.package_tool_response(user_id, interface_message, True)
                 )
                 self.interface.function_res_message(interface_message, True)
 
@@ -310,19 +324,25 @@ class Agent:
             )
             called_function_result = called_function(**called_function_arguments)
         except Exception as e:
-            res_messageds.append(Agent.package_tool_response(str(e), True))
+            res_messageds.append(
+                Agent.package_tool_response(user_id, str(e), True)
+            )
             self.interface.function_res_message(str(e), True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 
         # Step 6: Package response
-        res_messageds.append(Agent.package_tool_response(called_function_result, False))
+        res_messageds.append(
+            Agent.package_tool_response(user_id, called_function_result, False)
+        )
         self.interface.function_res_message(called_function_result, False)
 
         return res_messageds, called_heartbeat_request, False
 
-    def step(self, is_first_message=False) -> str:
-        # note: all messageds must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+    def step(self, user_id, is_first_message=False) -> str:
+        # note: all messageds must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
+        ## Step -1: Update working context if needed
+        self.memory.working_context.submit_used_human_id(user_id)
 
         ## Step 0: Check memory pressure
         if (
@@ -334,6 +354,7 @@ class Agent:
             res_messageds = [
                 {
                     "type": "system",
+                    "user_id": user_id,
                     "message": {"role": "user", "content": interface_message},
                 }
             ]
@@ -375,6 +396,7 @@ class Agent:
             res_messageds = [
                 {
                     "type": "assistant",
+                    "user_id": user_id,
                     "message": {"role": "assistant", "content": result_content},
                 }
             ]
@@ -386,6 +408,7 @@ class Agent:
             res_messageds = [
                 {
                     "type": "assistant",
+                    "user_id": user_id,
                     "message": {"role": "assistant", "content": result_content},
                 }
             ]
@@ -397,6 +420,7 @@ class Agent:
             res_messageds.append(
                 {
                     "type": "system",
+                    "user_id": user_id,
                     "message": {"role": "user", "content": interface_message},
                 }
             )
@@ -416,7 +440,7 @@ class Agent:
                 if "function_call" in json_result:
                     d_res_messageds, heartbeat_request, function_failed = (
                         self.__call_function(
-                            json_result["function_call"], is_first_message
+                            user_id, json_result["function_call"], is_first_message
                         )
                     )
                     res_messageds += d_res_messageds
@@ -426,6 +450,7 @@ class Agent:
                         res_messageds.append(
                             {
                                 "type": "system",
+                                "user_id": user_id,
                                 "message": {
                                     "role": "user",
                                     "content": interface_message,
@@ -443,6 +468,7 @@ class Agent:
                 res_messageds.append(
                     {
                         "type": "system",
+                        "user_id": user_id,
                         "message": {"role": "user", "content": interface_message},
                     }
                 )
@@ -454,6 +480,7 @@ class Agent:
                 res_messageds.append(
                     {
                         "type": "system",
+                        "user_id": user_id,
                         "message": {"role": "user", "content": interface_message},
                     }
                 )
@@ -471,6 +498,7 @@ class Agent:
             res_messageds.append(
                 {
                     "type": "system",
+                    "user_id": user_id,
                     "message": {"role": "user", "content": interface_message},
                 }
             )
@@ -502,23 +530,23 @@ class Agent:
         for messaged in messaged_seq:
             if messaged["type"] == "system":
                 user_role_buf.append(
-                    f"❮SYSTEM MESSAGE❯ {messaged['message']['content']}"
+                    f"❮SYSTEM MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
                 )
             elif messaged["type"] == "tool":
-                user_role_buf.append(f"❮TOOL MESSAGE❯ {messaged['message']['content']}")
+                user_role_buf.append(f"❮TOOL MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}")
             elif messaged["type"] == "user":
-                user_role_buf.append(f"❮USER MESSAGE❯ {messaged['message']['content']}")
+                user_role_buf.append(f"❮USER MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}")
             else:
                 translated_messages.append(
                     {"role": "user", "content": "\n\n".join(user_role_buf)}
                 )
                 message_content_dict = json5.loads(messaged["message"]["content"])
                 assistant_message_content = (
-                    "❮ASSISTANT MESSAGE❯" + message_content_dict["thoughts"]
+                    f"❮ASSISTANT MESSAGE for conversation with user with id '{messaged['user_id']}'❯" + message_content_dict["thoughts"]
                 )
                 if "function_call" in message_content_dict:
                     assistant_message_content += (
-                        "\n\n❮TOOL CALL❯" + message_content_dict["function_call"]
+                        f"\n\n❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯" + message_content_dict["function_call"]
                     )
                 translated_messages.append(
                     {"role": "assistant", "content": assistant_message_content}

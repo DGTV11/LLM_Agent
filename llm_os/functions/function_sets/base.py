@@ -120,7 +120,7 @@ def conversation_search(
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"timestamp: '{d['timestamp']}', role: '{d['message']['role']}' - {d['message']['content']}"
+            f"timestamp: '{d['timestamp']}', for_user_id: '{d['user_id']}', role: '{d['message']['role']}' - {d['message']['content']}"
             for d in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
@@ -159,7 +159,7 @@ def conversation_search_date(
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"timestamp: '{d['timestamp']}', role: '{d['message']['role']}' message: {d['message']['content']}"
+            f"timestamp: '{d['timestamp']}', for_user_id: '{d['user_id']}', role: '{d['message']['role']}' message: {d['message']['content']}"
             for d in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
@@ -176,7 +176,7 @@ def archival_memory_insert(self: Agent, content: str) -> Optional[str]:
     Returns:
         Optional[str]: None is always returned as this function does not produce a response.
     """
-    self.memory.archival_storage.insert(content)
+    self.memory.archival_storage.insert(Agent.memory.working_context.last_2_human_ids[-1], content)
     return None
 
 

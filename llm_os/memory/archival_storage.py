@@ -23,7 +23,7 @@ class ArchivalStorage:
         )
         self.ef = OllamaEmbeddingFunction(
             model_name="nomic-embed-text",
-            url=f"{HOST_URL}/api/embeddings",
+            url=f"{HOST_URL}/api/embed",
         )
         self.collection = self.client.get_or_create_collection(
             name="archival_storage", embedding_function=self.ef
@@ -34,7 +34,7 @@ class ArchivalStorage:
     def __len__(self):
         return self.collection.count()
 
-    def insert(self, content: str, return_ids: bool = False):
+    def insert(self, user_id: int, content: str, return_ids: bool = False):
         try:
             splitter = TextSplitter.from_huggingface_tokenizer(
                 NOMIC_EMBED_TEXT_TOKENIZER, 8192
@@ -43,7 +43,8 @@ class ArchivalStorage:
 
             hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
             ids = [hex_stringify(chunk) for chunk in chunk_list]
-            self.collection.add(documents=chunk_list, ids=ids)
+            metadatas = [{'for_user_id': user_id} for _ in range(len(chunk_list))]
+            self.collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
 
             self.cache = {}
 
@@ -55,12 +56,13 @@ class ArchivalStorage:
             print("Archival insert error", e)
             raise e
 
-    def search(self, query: str, count: str, start: str):
+    def search(self, query: str, count: str, start: str): #TODO: implement for_user_id stuff
         try:
             if query not in self.cache:
-                self.cache[query] = self.collection.query(
+                query_res = self.collection.query(
                     query_texts=[query], n_results=self.top_k
-                )["documents"][0]
+                )
+                self.cache[query] = query_res["documents"][0]
 
             start = int(start if start else 0)
             count = int(count if count else self.top_k)

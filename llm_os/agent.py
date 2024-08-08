@@ -102,12 +102,13 @@ class Agent:
         else:
             status = f"Status: OK."
 
+        trailing_message = " Please try again without acknowledging this message." if has_error else ""
         return {
             "type": "tool",
             "user_id": user_id,
             "message": {
                 "role": "user", 
-                "content": f"{status} Result: {result}"
+                "content": f"{status} Result: {result}" + trailing_message
             },
         }
 

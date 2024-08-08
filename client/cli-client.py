@@ -214,7 +214,7 @@ if __name__ == "__main__":
         s = requests.Session()
         with s.post(
             urllib.parse.urljoin(SERVER_URL_AND_PORT, '/messages/send/first-message'),
-            json={'conv_name': conv_name, 'message': f'User with username \'{conv_name.split("@")[0].split("--")[1]}\' entered the conversation. You should greet the user and start the conversation based on your persona\'s specifications{" and your previous conversation" if has_prev_conv else ""}.'},
+            json={'conv_name': conv_name, 'message': f'User with id \'{1}\' entered the conversation. You should greet the user and start the conversation based on your persona\'s specifications{" and your previous conversation" if has_prev_conv else ""}.'},
             stream=True
         ) as resp:
             for line in resp.iter_lines():
@@ -288,7 +288,7 @@ if __name__ == "__main__":
     finally:
         json_obj = requests.post(
             urllib.parse.urljoin(SERVER_URL_AND_PORT, '/messages/send/no-heartbeat'),
-            json={'conv_name': conv_name, 'message': f'User with username \'{conv_name.split("@")[0].split("--")[1]}\' exited the conversation'},
+            json={'conv_name': conv_name, 'message': f'User with id \'{1}\' exited the conversation'},
             stream=True
         ).json()
         server_message_stack = json_obj['server_message_stack']

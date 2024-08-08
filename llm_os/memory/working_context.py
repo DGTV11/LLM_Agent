@@ -107,7 +107,7 @@ class WorkingContext:
                 if self.humans.get(section):
                     return self.edit_human(section, content)
                 raise KeyError(
-                    f"Edit failed: No memory section named {section} (must be either 'persona' or a human's id)"
+                    f"Edit failed: No memory section named {section} (must be either 'persona' or a human's id like '{self.last_2_human_ids[-1]}')"
                 )
 
     def edit_append(self, section, content, sep="\n"):
@@ -120,7 +120,7 @@ class WorkingContext:
                     new_content = self.humans[section] + sep + content
                     return self.edit_human(section, new_content)
                 raise KeyError(
-                    f"Edit failed: No memory section named {section} (must be either 'persona' or human's id))"
+                    f"Edit failed: No memory section named {section} (must be either 'persona' or a human's id like '{self.last_2_human_ids[-1]}'))"
                 )
 
     def edit_replace(self, section, old_content, new_content):
@@ -146,5 +146,5 @@ class WorkingContext:
                     new_human = self.humans[section].replace(old_content, new_content)
                     return self.edit_human(section, new_human)
                 raise KeyError(
-                    f"Edit failed: No memory section named {section} (must be either 'persona' or 'human')"
+                    f"Edit failed: No memory section named {section} (must be either 'persona' or a human's id like '{self.last_2_human_ids[-1]}')"
                 )

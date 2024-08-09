@@ -118,7 +118,12 @@ class Agent:
 
         # Step 1: Parse function call
         try:
-            called_function_name = function_call["name"]
+            called_function_name = function_call.get("name", (None, 0))
+            if called_function_name == (None, 0):
+                raise KeyError("'name'")
+            if type(called_function_name) is not str:
+                raise TypeError("'name' field is not a string.")
+
             if (
                 is_first_message
                 and called_function_name not in FIRST_MESSAGE_COMPULSORY_FUNCTION_SET
@@ -136,14 +141,27 @@ class Agent:
                     True,
                 )  # Sends heartbeat request so LLM can retry
 
-            called_function_arguments = function_call["arguments"]
-        except (KeyError, TypeError) as e:
+            called_function_arguments = function_call.get("arguments", (None, 0))
+            if called_function_arguments == (None, 0):
+                raise KeyError("'arguments'")
+            if type(called_function_arguments) is not dict:
+                raise TypeError("'arguments' field is not an object.")
+
+        except KeyError as e:
             interface_message = f"Failed to parse function call: Missing {e} field."
             if "arguments" in str(e) and "parameters" in function_call:
                 interface_message += (
                     " Please replace the 'parameters' field with the 'arguments' field."
                 )
 
+            res_messageds.append(
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
+            self.interface.function_res_message(interface_message, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+        except TypeError as e:
+            interface_message = f"Failed to parse function call: {e}"
             res_messageds.append(
                 Agent.package_tool_response(user_id, interface_message, True)
             )
@@ -173,32 +191,19 @@ class Agent:
         # Step 4: Valiate arguments
         ## Check if required arguments are present
         called_function_parameter_names = called_function_parameters.keys()
-        try:
-            for argument in called_function_arguments.keys():
-                if argument not in called_function_parameter_names:
-                    interface_message = f'Function "{called_function_name}" does not accept argument "{argument}".'
-                    res_messageds.append( 
-                        Agent.package_tool_response(user_id, interface_message, True)
-                    )
-                    self.interface.function_res_message(interface_message, True)
+        for argument in called_function_arguments.keys():
+            if argument not in called_function_parameter_names:
+                interface_message = f'Function "{called_function_name}" does not accept argument "{argument}".'
+                res_messageds.append( 
+                    Agent.package_tool_response(user_id, interface_message, True)
+                )
+                self.interface.function_res_message(interface_message, True)
 
-                    return (
-                        res_messageds,
-                        True,
-                        True,
-                    )  # Sends heartbeat request so LLM can retry
-        except AttributeError:
-            interface_message = f"'arguments' field MUST be an object, NOT a string or any other type."
-            res_messageds.append( 
-                Agent.package_tool_response(user_id, interface_message, True)
-            )
-            self.interface.function_res_message(interface_message, True)
-
-            return (
-                res_messageds,
-                True,
-                True,
-            )  # Sends heartbeat request so LLM can retry
+                return (
+                    res_messageds,
+                    True,
+                    True,
+                )  # Sends heartbeat request so LLM can retry
 
         if len(called_function_arguments) < len(
             called_function_required_parameter_names

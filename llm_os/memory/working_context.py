@@ -9,7 +9,7 @@ from llm_os.constants import (
 
 
 class WorkingContext:
-    def __init__(self, model_name: str, conv_name: str, persona: str, initial_human_id: int, inital_human_persona: str):
+    def __init__(self, model_name: str, conv_name: str, persona: str, initial_human_id: int, initial_human_persona: str):
         self.wc_path = path.join(
             path.dirname(path.dirname(path.dirname(__file__))),
             "persistent_storage",
@@ -24,12 +24,13 @@ class WorkingContext:
                 self.last_2_human_ids = wc_cache["last_2_human_ids"]
                 self.persona = wc_cache["persona"]
                 self.humans = {int(k): v for k, v in wc_cache["humans"].items()}
+            self.__update_working_context_ps()
         else:
             self.last_2_human_ids = []
             self.persona = persona
-            self.humans = {int(initial_human_id): inital_human_persona}
+            self.humans = {}
+            self.add_new_human_persona(initial_human_id, initial_human_persona)
 
-        self.__update_working_context_ps()
 
     def __repr__(self):
         return '\n'.join(
@@ -56,7 +57,7 @@ class WorkingContext:
                 f"Addition failed: Human persona with ID '{human_id}' already exists!"
             )
 
-        self.humans[human_id] = human
+        self.humans[int(human_id)] = human
         self.__update_working_context_ps()
 
     def submit_used_human_id(self, human_id):

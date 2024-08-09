@@ -72,7 +72,7 @@ class Memory:
             self.no_messages_in_queue = fq_info["no_messages_in_queue"]
 
     def append_messaged_to_fq_and_rs(self, messaged):
-        # note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+        #note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
         self.fifo_queue.append(messaged)
         self.recall_storage.insert(messaged)
         self.total_no_messages += 1
@@ -94,7 +94,7 @@ class Memory:
 
     @property
     def main_ctx_message_seq(self):
-        # note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+        #note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
         translated_messages = []
         user_role_buf = []
 

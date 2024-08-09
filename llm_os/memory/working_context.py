@@ -23,11 +23,11 @@ class WorkingContext:
                 wc_cache = json.loads(f.read())
                 self.last_2_human_ids = wc_cache["last_2_human_ids"]
                 self.persona = wc_cache["persona"]
-                self.humans = wc_cache["humans"]
+                self.humans = {int(k): v for k, v in wc_cache["humans"].items()}
         else:
             self.last_2_human_ids = []
             self.persona = persona
-            self.humans = {initial_human_id: inital_human_persona}
+            self.humans = {int(initial_human_id): inital_human_persona}
 
         self.__update_working_context_ps()
 

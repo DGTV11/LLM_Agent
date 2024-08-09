@@ -173,19 +173,32 @@ class Agent:
         # Step 4: Valiate arguments
         ## Check if required arguments are present
         called_function_parameter_names = called_function_parameters.keys()
-        for argument in called_function_arguments.keys():
-            if argument not in called_function_parameter_names:
-                interface_message = f'Function "{called_function_name}" does not accept argument "{argument}".'
-                res_messageds.append( 
-                    Agent.package_tool_response(user_id, interface_message, True)
-                )
-                self.interface.function_res_message(interface_message, True)
+        try:
+            for argument in called_function_arguments.keys():
+                if argument not in called_function_parameter_names:
+                    interface_message = f'Function "{called_function_name}" does not accept argument "{argument}".'
+                    res_messageds.append( 
+                        Agent.package_tool_response(user_id, interface_message, True)
+                    )
+                    self.interface.function_res_message(interface_message, True)
 
-                return (
-                    res_messageds,
-                    True,
-                    True,
-                )  # Sends heartbeat request so LLM can retry
+                    return (
+                        res_messageds,
+                        True,
+                        True,
+                    )  # Sends heartbeat request so LLM can retry
+        except AttributeError:
+            interface_message = f"'arguments' field MUST be an object, NOT a string or any other type."
+            res_messageds.append( 
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
+            self.interface.function_res_message(interface_message, True)
+
+            return (
+                res_messageds,
+                True,
+                True,
+            )  # Sends heartbeat request so LLM can retry
 
         if len(called_function_arguments) < len(
             called_function_required_parameter_names

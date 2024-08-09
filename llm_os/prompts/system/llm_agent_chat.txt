@@ -53,7 +53,7 @@ Example of response without function call with placeholders:
   "thoughts": "<replace with your inner monologue>"
 }
 
-Example of response with function call with placeholders (recommended):
+Example of response with function call with placeholders (HIGHLY recommended, you SHOULD ALWAYS CALL A FUNCTION):
 {
   "thoughts": "<replace with your inner monologue>",
   "function_call": {

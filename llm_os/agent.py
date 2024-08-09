@@ -120,7 +120,7 @@ class Agent:
         try:
             called_function_name = function_call.get("name", (None, 0))
             if called_function_name == (None, 0):
-                raise KeyError("'name'")
+                raise KeyError("name")
             if type(called_function_name) is not str:
                 raise TypeError("'name' field is not a string.")
 
@@ -143,12 +143,12 @@ class Agent:
 
             called_function_arguments = function_call.get("arguments", (None, 0))
             if called_function_arguments == (None, 0):
-                raise KeyError("'arguments'")
+                raise KeyError("arguments")
             if type(called_function_arguments) is not dict:
                 raise TypeError("'arguments' field is not an object.")
 
         except KeyError as e:
-            interface_message = f"Failed to parse function call: Missing {e} field."
+            interface_message = f"Failed to parse function call: Missing {e} field of 'function_call' field."
             if "arguments" in str(e) and "parameters" in function_call:
                 interface_message += (
                     " Please replace the 'parameters' field with the 'arguments' field."

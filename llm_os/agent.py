@@ -148,7 +148,7 @@ class Agent:
                 raise TypeError("'arguments' field is not an object.")
 
         except KeyError as e:
-            interface_message = f"Failed to parse function call: Missing {e} field of 'function_call' field. This field is required for the conversation to proceed!"
+            interface_message = f"Failed to parse function call: Missing {e} field of 'function_call' field. You need to add this field for the conversation to proceed!"
             if "arguments" in str(e) and "parameters" in function_call:
                 interface_message += (
                     " Please replace the 'parameters' field with the 'arguments' field."

@@ -16,6 +16,8 @@ from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
 from llm_os.constants import (
     SHOW_DEBUG_MESSAGES,
     SEND_MESSAGE_FUNCTION_NAME,
+    MEMORY_EDITING_FUNCTIONS,
+    WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT,
     FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,
     PY_TO_JSON_TYPE_MAP,
     JSON_TO_PY_TYPE_MAP,
@@ -64,6 +66,7 @@ class Agent:
         )
 
         self.__memory_pressure_warning_alr_given = False
+        self.__messages_since_last_conscious_memory_write = 0
         if path.exists(self.misc_info_path):
             self.__save_misc_info_path_dat_to_misc_info_vars()
         else:
@@ -75,6 +78,9 @@ class Agent:
             self.__memory_pressure_warning_alr_given = misc_info[
                 "memory_pressure_warning_alr_given"
             ]
+            self.__messages_since_last_conscious_memory_write = misc_info[
+                "messages_since_last_conscious_memory_write"
+            ]
 
     def __write_misc_info_vars_to_misc_info_path_dat(self):
         if not path.exists(self.misc_info_path):
@@ -82,7 +88,8 @@ class Agent:
             f.close()
         with open(self.misc_info_path, "w") as f:
             misc_info = {
-                "memory_pressure_warning_alr_given": self.__memory_pressure_warning_alr_given
+                "memory_pressure_warning_alr_given": self.__memory_pressure_warning_alr_given,
+                "messages_since_last_conscious_memory_write": self.__messages_since_last_conscious_memory_write
             }
             f.write(json.dumps(misc_info))
 
@@ -93,6 +100,15 @@ class Agent:
     @memory_pressure_warning_alr_given.setter
     def memory_pressure_warning_alr_given(self, value):
         self.__memory_pressure_warning_alr_given = value
+        self.__write_misc_info_vars_to_misc_info_path_dat()
+
+    @property
+    def messages_since_last_conscious_memory_write(self):
+        return self.__messages_since_last_conscious_memory_write
+
+    @messages_since_last_conscious_memory_write.setter
+    def messages_since_last_conscious_memory_write(self, value):
+        self.__messages_since_last_conscious_memory_write = value
         self.__write_misc_info_vars_to_misc_info_path_dat()
 
     @staticmethod
@@ -359,6 +375,10 @@ class Agent:
         )
         self.interface.function_res_message(called_function_result, False)
 
+        # Step 7: Check if called function is in MEMORY_EDITING_FUNCTIONS
+        if called_function_name in MEMORY_EDITING_FUNCTIONS:
+            self.messages_since_last_conscious_memory_write = -1
+
         return res_messageds, called_heartbeat_request, False
 
     def step(self, user_id, is_first_message=False) -> str:
@@ -368,25 +388,7 @@ class Agent:
 
         ## Step 0: Check memory pressure
         if (
-            not self.memory_pressure_warning_alr_given
-            and self.memory.main_ctx_message_seq_no_tokens
-            > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
-        ):
-            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage after responding to the user's query (if any)."
-            res_messageds = [
-                {
-                    "type": "system",
-                    "user_id": user_id,
-                    "message": {"role": "user", "content": interface_message},
-                }
-            ]
-            self.interface.memory_message(interface_message)
-
-            self.memory_pressure_warning_alr_given = True
-            heartbeat_request = True
-        elif (
-            self.memory_pressure_warning_alr_given
-            and self.memory.main_ctx_message_seq_no_tokens
+            self.memory.main_ctx_message_seq_no_tokens
             > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
         ):
             self.summarise_messages_in_place()
@@ -491,13 +493,16 @@ class Agent:
                 heartbeat_request = True
                 function_failed = False
 
+        self.messages_since_last_conscious_memory_write += 1
+
         ## Step 3: Check memory pressure
+        had_just_sent_mpw = False
         if (
             not self.memory_pressure_warning_alr_given
             and self.memory.main_ctx_message_seq_no_tokens
             > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
         ):
-            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Consider storing important information from your recent conversation history into your core memory or archival storage."
+            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage."
             res_messageds.append(
                 {
                     "type": "system",
@@ -509,13 +514,29 @@ class Agent:
 
             self.memory_pressure_warning_alr_given = True
             heartbeat_request = True
+            had_just_sent_mpw = True
         elif (
-            self.memory_pressure_warning_alr_given
-            and self.memory.main_ctx_message_seq_no_tokens
+            self.memory.main_ctx_message_seq_no_tokens
             > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
         ):
             self.summarise_messages_in_place()
             self.memory_pressure_warning_alr_given = False
+
+        ## Step 4: Check if it has been too long since the agent consciously updated its memory
+        if self.messages_since_last_conscious_memory_write == WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT and not had_just_sent_mpw:
+            interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage."
+            res_messageds.append(
+                {
+                    "type": "system",
+                    "user_id": user_id,
+                    "message": {"role": "user", "content": interface_message},
+                }
+            )
+            self.interface.memory_message(interface_message)
+
+            heartbeat_request = True
+
+        had_just_sent_mpw = False
 
         ## Step 4: Update memory
         for messaged in res_messageds:

@@ -3,6 +3,12 @@ SHOW_DEBUG_MESSAGES = True  # Set to True when testing new models
 
 # Function constants
 SEND_MESSAGE_FUNCTION_NAME = "send_message"
+MEMORY_EDITING_FUNCTIONS = [
+    "core_memory_append",
+    "core_memory_replace",
+    "archival_memory_insert",
+]
+WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT = 7
 
 # First message constants
 FIRST_MESSAGE_COMPULSORY_FUNCTION_SET = [

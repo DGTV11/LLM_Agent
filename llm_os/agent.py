@@ -136,12 +136,22 @@ class Agent:
         res_messageds = []
 
         # Step 1: Parse function call
+        if type(function_call) is not dict:
+            interface_message = f"Failed to parse function call: 'function_call' field's value is not an object."
+
+            res_messageds.append(
+                Agent.package_tool_response(user_id, interface_message, True)
+            )
+            self.interface.function_res_message(interface_message, True)
+
+            return res_messageds, True, True  # Sends heartbeat request so LLM can retry
+
         try:
             called_function_name = function_call.get("name", (None, 0))
             if called_function_name == (None, 0):
                 raise KeyError("name")
             if type(called_function_name) is not str:
-                raise TypeError("'name' field is not a string.")
+                raise TypeError("'name' field's value is not a string.")
 
             if (
                 is_first_message
@@ -164,7 +174,7 @@ class Agent:
             if called_function_arguments == (None, 0):
                 raise KeyError("arguments")
             if type(called_function_arguments) is not dict:
-                raise TypeError("'arguments' field is not an object.")
+                raise TypeError("'arguments' field's value is not an object.")
 
         except KeyError as e:
             interface_message = f"Failed to parse function call: Missing {e} field of 'function_call' field. You need to add this field for the conversation to proceed!"

@@ -592,7 +592,10 @@ class Agent:
             {"role": "system", "content": get_summarise_system_prompt()}
         ] + translated_messages
 
-    def summarise_messages_in_place(self):  # TODO: Find a way to fix a bug here
+    def summarise_messages_in_place(self):
+        if SHOW_DEBUG_MESSAGES:
+            print(f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue...")
+            
         self.interface.memory_message(
             f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue..."
         )
@@ -612,9 +615,11 @@ class Agent:
                 break
             self.memory.no_messages_in_queue -= 1
             messages_to_be_summarised.appendleft(self.memory.fifo_queue.popleft())
-        self.memory.write_fq_to_fq_path()
 
         summary_message_seq = Agent.summary_message_seq(messages_to_be_summarised)
+        
+        if SHOW_DEBUG_MESSAGES:
+            print('Got summary message sequence')
 
         result = HOST.chat(
             model=self.model_name,
@@ -622,6 +627,9 @@ class Agent:
             options={"num_ctx": self.memory.ctx_window},
         )
         result_content = result["message"]["content"]
+
+        if SHOW_DEBUG_MESSAGES:
+            print('Got new recursive summary')
 
         self.memory.fifo_queue.appendleft(
             {
@@ -636,3 +644,8 @@ class Agent:
             }
         )
         self.memory.no_messages_in_queue += 1
+
+        self.memory.write_fq_to_fq_path()
+        
+        if SHOW_DEBUG_MESSAGES:
+            print('summarise_messages_in_place function success!')

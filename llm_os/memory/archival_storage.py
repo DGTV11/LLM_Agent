@@ -43,7 +43,7 @@ class ArchivalStorage:
 
             hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
             ids = [hex_stringify(chunk) for chunk in chunk_list]
-            metadatas = [{'for_user_id': user_id} for _ in range(len(chunk_list))]
+            metadatas = [{"for_user_id": user_id} for _ in range(len(chunk_list))]
             self.collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
 
             self.cache = {}
@@ -56,7 +56,9 @@ class ArchivalStorage:
             print("Archival insert error", e)
             raise e
 
-    def search(self, query: str, count: str, start: str): #TODO: implement for_user_id stuff
+    def search(
+        self, query: str, count: str, start: str
+    ):  # TODO: implement for_user_id stuff
         try:
             if query not in self.cache:
                 query_res = self.collection.query(

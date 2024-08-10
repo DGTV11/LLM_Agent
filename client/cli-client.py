@@ -23,6 +23,7 @@ GTTS_SPEED_UP_COMMAND = [
     GTTS_SPED_UP_PATH,
 ]
 
+
 def read_response(response):
     try:
         tts = gTTS(response, lang="en")
@@ -42,6 +43,7 @@ def read_response(response):
         if os.path.exists(GTTS_SPED_UP_PATH):
             os.remove(GTTS_SPED_UP_PATH)
         return False
+
 
 class CLIInterface:
     @staticmethod
@@ -67,7 +69,9 @@ class CLIInterface:
         end_time = time()
 
         if successfully_read:
-            CLIInterface.system_message(f"Successfully read response in {round(end_time - start_time, 2)}s")
+            CLIInterface.system_message(
+                f"Successfully read response in {round(end_time - start_time, 2)}s"
+            )
 
     @staticmethod
     def memory_message(msg: str, end="\n"):
@@ -85,8 +89,8 @@ class CLIInterface:
     def function_call_message(func_name: str, func_args: dict, end="\n"):
         if SHOW_DEBUG_MESSAGES:
             func_args = func_args.copy()
-            if func_args.get('self', None):
-                del func_args['self']
+            if func_args.get("self", None):
+                del func_args["self"]
 
             print(
                 emojize(
@@ -110,14 +114,15 @@ class CLIInterface:
             flush=True,
         )
 
+
 # Main loop
 if __name__ == "__main__":
     conv_name = None
 
     has_prev_conv = False
     if ps_folders := requests.get(
-        urllib.parse.urljoin(SERVER_URL_AND_PORT, '/conversation-ids')
-    ).json()['conv_ids']:
+        urllib.parse.urljoin(SERVER_URL_AND_PORT, "/conversation-ids")
+    ).json()["conv_ids"]:
         use_existing_conv = (
             True if input("Use existing conv? (y/n) ").strip().lower() == "y" else False
         )
@@ -149,11 +154,11 @@ if __name__ == "__main__":
 
     if not conv_name:
         agent_persona_folder = requests.get(
-            urllib.parse.urljoin(SERVER_URL_AND_PORT, '/personas/agents')
-        ).json()['persona_names']
+            urllib.parse.urljoin(SERVER_URL_AND_PORT, "/personas/agents")
+        ).json()["persona_names"]
         human_persona_folder = requests.get(
-            urllib.parse.urljoin(SERVER_URL_AND_PORT, '/personas/humans')
-        ).json()['persona_names']
+            urllib.parse.urljoin(SERVER_URL_AND_PORT, "/personas/humans")
+        ).json()["persona_names"]
 
         # Choose agent persona
         agent_persona_folder_enum = list(enumerate(agent_persona_folder, start=1))
@@ -205,39 +210,44 @@ if __name__ == "__main__":
 
         # Create new agent
         conv_name = requests.post(
-            urllib.parse.urljoin(SERVER_URL_AND_PORT, '/agent'),
-            json={'agent_persona_name': chosen_agent_persona, 'human_persona_name': chosen_human_persona}
-        ).json()['conv_name']
+            urllib.parse.urljoin(SERVER_URL_AND_PORT, "/agent"),
+            json={
+                "agent_persona_name": chosen_agent_persona,
+                "human_persona_name": chosen_human_persona,
+            },
+        ).json()["conv_name"]
 
     # Main conversation loop
     try:
         s = requests.Session()
         with s.post(
-            urllib.parse.urljoin(SERVER_URL_AND_PORT, '/messages/send/first-message'),
-            json={'conv_name': conv_name, 'user_id': 1, 'message': f'User with id \'{1}\' entered the conversation. You should greet the user and start the conversation based on your persona\'s specifications{" and your previous conversation" if has_prev_conv else ""}.'},
-            stream=True
+            urllib.parse.urljoin(SERVER_URL_AND_PORT, "/messages/send/first-message"),
+            json={
+                "conv_name": conv_name,
+                "user_id": 1,
+                "message": f'User with id \'{1}\' entered the conversation. You should greet the user and start the conversation based on your persona\'s specifications{" and your previous conversation" if has_prev_conv else ""}.',
+            },
+            stream=True,
         ) as resp:
             for line in resp.iter_lines():
                 json_obj = json.loads(line)
-                if td := json_obj.get('total_duration', None):
-                    print(
-                        f"Time taken for agent response: {td}s"
-                    )
+                if td := json_obj.get("total_duration", None):
+                    print(f"Time taken for agent response: {td}s")
                     print("\n\n", end="")
                 else:
-                    server_message_stack = json_obj['server_message_stack']
+                    server_message_stack = json_obj["server_message_stack"]
                     for message in server_message_stack:
-                        getattr(CLIInterface, message['type'])(**message['arguments'])
+                        getattr(CLIInterface, message["type"])(**message["arguments"])
 
-                    current_ctx_token_count = json_obj['ctx_info']['current_ctx_token_count']
-                    ctx_window = json_obj['ctx_info']['ctx_window']
+                    current_ctx_token_count = json_obj["ctx_info"][
+                        "current_ctx_token_count"
+                    ]
+                    ctx_window = json_obj["ctx_info"]["ctx_window"]
                     print(
                         f"Context info: {current_ctx_token_count}/{ctx_window} tokens ({round((current_ctx_token_count/ctx_window)*100, 2)}%)"
                     )
 
-                    print(
-                        f"Time taken for agent step: {json_obj['duration']}s"
-                    )
+                    print(f"Time taken for agent step: {json_obj['duration']}s")
                     print("\n\n", end="")
 
         print("/help for commands, /exit to exit")
@@ -255,24 +265,30 @@ if __name__ == "__main__":
                 case _:
                     s = requests.Session()
                     with s.post(
-                        urllib.parse.urljoin(SERVER_URL_AND_PORT, '/messages/send'),
-                        json={'conv_name': conv_name, 'user_id': 1, 'message': input_message},
-                        stream=True
+                        urllib.parse.urljoin(SERVER_URL_AND_PORT, "/messages/send"),
+                        json={
+                            "conv_name": conv_name,
+                            "user_id": 1,
+                            "message": input_message,
+                        },
+                        stream=True,
                     ) as resp:
                         for line in resp.iter_lines():
                             json_obj = json.loads(line)
-                            if td := json_obj.get('total_duration', None):
-                                print(
-                                    f"Time taken for agent response: {td}s"
-                                )
+                            if td := json_obj.get("total_duration", None):
+                                print(f"Time taken for agent response: {td}s")
                                 print("\n\n", end="")
                             else:
-                                server_message_stack = json_obj['server_message_stack']
+                                server_message_stack = json_obj["server_message_stack"]
                                 for message in server_message_stack:
-                                    getattr(CLIInterface, message['type'])(**message['arguments'])
+                                    getattr(CLIInterface, message["type"])(
+                                        **message["arguments"]
+                                    )
 
-                                current_ctx_token_count = json_obj['ctx_info']['current_ctx_token_count']
-                                ctx_window = json_obj['ctx_info']['ctx_window']
+                                current_ctx_token_count = json_obj["ctx_info"][
+                                    "current_ctx_token_count"
+                                ]
+                                ctx_window = json_obj["ctx_info"]["ctx_window"]
                                 print(
                                     f"Context info: {current_ctx_token_count}/{ctx_window} tokens ({round((current_ctx_token_count/ctx_window)*100, 2)}%)"
                                 )
@@ -287,16 +303,20 @@ if __name__ == "__main__":
         print("Exiting due to error:", e)
     finally:
         json_obj = requests.post(
-            urllib.parse.urljoin(SERVER_URL_AND_PORT, '/messages/send/no-heartbeat'),
-            json={'conv_name': conv_name, 'user_id': 1, 'message': f'User with id \'{1}\' exited the conversation'},
-            stream=True
+            urllib.parse.urljoin(SERVER_URL_AND_PORT, "/messages/send/no-heartbeat"),
+            json={
+                "conv_name": conv_name,
+                "user_id": 1,
+                "message": f"User with id '{1}' exited the conversation",
+            },
+            stream=True,
         ).json()
-        server_message_stack = json_obj['server_message_stack']
+        server_message_stack = json_obj["server_message_stack"]
         for message in server_message_stack:
-            getattr(CLIInterface, message['type'])(**message['arguments'])
+            getattr(CLIInterface, message["type"])(**message["arguments"])
 
-        current_ctx_token_count = json_obj['ctx_info']['current_ctx_token_count']
-        ctx_window = json_obj['ctx_info']['ctx_window']
+        current_ctx_token_count = json_obj["ctx_info"]["current_ctx_token_count"]
+        ctx_window = json_obj["ctx_info"]["ctx_window"]
         print(
             f"Context info: {current_ctx_token_count}/{ctx_window} tokens ({round((current_ctx_token_count/ctx_window)*100, 2)}%)"
         )

@@ -38,7 +38,7 @@ def get_tokeniser_and_context_window(model_name):
                 "deepseek-ai/DeepSeek-V2-Lite-Chat",
                 token=CONFIG["huggingface_user_access_token"],
             )
-            ctx_window = 8192 # reduced to lower RAM usage
+            ctx_window = 8192  # reduced to lower RAM usage
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
         case "openhermes":
@@ -46,7 +46,7 @@ def get_tokeniser_and_context_window(model_name):
                 "teknium/OpenHermes-2.5-Mistral-7B",
                 token=CONFIG["huggingface_user_access_token"],
             )
-            ctx_window = 8192 # usually 32768 but reduced to lower RAM usage
+            ctx_window = 8192  # usually 32768 but reduced to lower RAM usage
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
         case "mistral":
@@ -54,7 +54,7 @@ def get_tokeniser_and_context_window(model_name):
                 "mistralai/Mistral-7B-Instruct-v0.3",
                 token=CONFIG["huggingface_user_access_token"],
             )
-            ctx_window = 8192 # usually 32768 but reduced to lower RAM usage
+            ctx_window = 8192  # usually 32768 but reduced to lower RAM usage
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(
                 tokenizer.apply_chat_template(mistral_format_system(conv))

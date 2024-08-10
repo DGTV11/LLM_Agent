@@ -72,7 +72,7 @@ class Memory:
             self.no_messages_in_queue = fq_info["no_messages_in_queue"]
 
     def append_messaged_to_fq_and_rs(self, messaged):
-        #note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
+        # note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
         self.fifo_queue.append(messaged)
         self.recall_storage.insert(messaged)
         self.total_no_messages += 1
@@ -94,7 +94,7 @@ class Memory:
 
     @property
     def main_ctx_message_seq(self):
-        #note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
+        # note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
         translated_messages = []
         user_role_buf = []
 
@@ -104,9 +104,13 @@ class Memory:
                     f"❮SYSTEM MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
                 )
             elif messaged["type"] == "tool":
-                user_role_buf.append(f"❮TOOL MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}")
+                user_role_buf.append(
+                    f"❮TOOL MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                )
             elif messaged["type"] == "user":
-                user_role_buf.append(f"❮USER MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}")
+                user_role_buf.append(
+                    f"❮USER MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                )
             else:
                 translated_messages.append(
                     {"role": "user", "content": "\n\n".join(user_role_buf)}

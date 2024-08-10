@@ -29,51 +29,65 @@ app = Flask(__name__)
 
 sem = threading.Semaphore()
 
-@app.route('/conversation-ids', methods=['GET'])
+
+@app.route("/conversation-ids", methods=["GET"])
 def get_existing_conversation_ids():
-    return jsonify({
-        'conv_ids': list(
-            filter(
-                lambda s: s[0] != ".",
-                listdir(path.join(path.dirname(__file__), "persistent_storage")),
+    return jsonify(
+        {
+            "conv_ids": list(
+                filter(
+                    lambda s: s[0] != ".",
+                    listdir(path.join(path.dirname(__file__), "persistent_storage")),
+                )
             )
-        )
-    })
+        }
+    )
 
-@app.route('/personas/agents', methods=['GET'])
+
+@app.route("/personas/agents", methods=["GET"])
 def get_agent_personas():
-    return jsonify({
-        'persona_names': listdir(
-            path.join(
-                path.dirname(__file__), "llm_os", "personas", "agents"
+    return jsonify(
+        {
+            "persona_names": listdir(
+                path.join(path.dirname(__file__), "llm_os", "personas", "agents")
             )
-        )
-    })
+        }
+    )
 
-@app.route('/personas/humans', methods=['GET'])
+
+@app.route("/personas/humans", methods=["GET"])
 def get_human_personas():
-    return jsonify({
-        'persona_names': listdir(
-            path.join(
-                path.dirname(__file__), "llm_os", "personas", "humans"
+    return jsonify(
+        {
+            "persona_names": listdir(
+                path.join(path.dirname(__file__), "llm_os", "personas", "humans")
             )
-        )
-    })
+        }
+    )
 
-@app.route('/agent', methods=['POST', 'DELETE'])
+
+@app.route("/agent", methods=["POST", "DELETE"])
 def agent_methods():
     match request.method:
-        case 'POST':
+        case "POST":
             # Load personas
             data = request.get_json()
-            agent_persona_name = data.get('agent_persona_name')
-            human_persona_name = data.get('human_persona_name')
+            agent_persona_name = data.get("agent_persona_name")
+            human_persona_name = data.get("human_persona_name")
 
             agent_persona_fp = path.join(
-                path.dirname(__file__), "llm_os", "personas", "agents", agent_persona_name
+                path.dirname(__file__),
+                "llm_os",
+                "personas",
+                "agents",
+                agent_persona_name,
             )
             human_persona_fp = path.join(
-                path.dirname(__file__), "llm_os", "personas", "humans", human_persona_name
+                path.dirname(__file__),
+                "llm_os",
+                "personas",
+                "humans",
+                human_persona_name,
             )
 
             with open(agent_persona_fp, "r") as f:
@@ -86,7 +100,9 @@ def agent_methods():
             system_instructions = get_system_text("llm_agent_chat")
 
             # Load functions
-            function_dats = get_function_dats_from_function_sets(load_all_function_sets())
+            function_dats = get_function_dats_from_function_sets(
+                load_all_function_sets()
+            )
 
             # Load interfaces
             interface = CLIInterface()
@@ -125,72 +141,68 @@ def agent_methods():
                 recall_storage,
             )
 
-            return jsonify({
-                'conv_name': conv_name
-            })
-        case 'DELETE':
+            return jsonify({"conv_name": conv_name})
+        case "DELETE":
             # Load conversation name
             data = request.get_json()
-            conv_name = data.get('conv_name')
+            conv_name = data.get("conv_name")
 
             # Remove conversation
             try:
-                rmdir(path.join(path.dirname(__file__), "persistent_storage", conv_name))
-                return jsonify({
-                    'success': True
-                })
+                rmdir(
+                    path.join(path.dirname(__file__), "persistent_storage", conv_name)
+                )
+                return jsonify({"success": True})
             except OSError as error:
-                return jsonify({
-                    'success': False
-                })
+                return jsonify({"success": False})
 
-@app.route('/agent/humans', methods=['GET', 'POST'])
+
+@app.route("/agent/humans", methods=["GET", "POST"])
 def agent_human_methods():
     # Load data
     data = request.get_json()
-    conv_name = data.get('conv_name')
+    conv_name = data.get("conv_name")
 
     # Load working context
-    working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None, None
-    )
+    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
 
     # Get all registered human ids
     human_ids = list(working_context.humans.keys())
 
     match request.method:
-        case 'GET':
-            return jsonify({
-                'human_ids': human_ids
-            })
-        case 'POST':
+        case "GET":
+            return jsonify({"human_ids": human_ids})
+        case "POST":
             # Load human persona
-            human_persona_name = data.get('human_persona_name')
+            human_persona_name = data.get("human_persona_name")
 
             human_persona_fp = path.join(
-                path.dirname(__file__), "llm_os", "personas", "humans", human_persona_name
+                path.dirname(__file__),
+                "llm_os",
+                "personas",
+                "humans",
+                human_persona_name,
             )
 
             with open(human_persona_fp, "r") as f:
                 human_persona_str = f.read()
 
-            # Add new user 
-            new_human_id = max(human_ids)+1
+            # Add new user
+            new_human_id = max(human_ids) + 1
             working_context.add_new_human_persona(new_human_id, human_persona_str)
 
-            return jsonify({
-                'new_human_id': new_human_id
-            })
+            return jsonify({"new_human_id": new_human_id})
 
-@app.route('/messages/send', methods=['POST'])
+
+@app.route("/messages/send", methods=["POST"])
 def send_message():
     sem.acquire()
 
     # Load data
     data = request.get_json()
-    conv_name = data.get('conv_name')
-    user_id = data.get('user_id')
-    message = data.get('message')
+    conv_name = data.get("conv_name")
+    user_id = data.get("user_id")
+    message = data.get("message")
 
     # Load system instructions
     system_instructions = get_system_text("llm_agent_chat")
@@ -203,9 +215,7 @@ def send_message():
     web_interface = WebInterface()
 
     # Load agent
-    working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None, None
-    )
+    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
     recall_storage = RecallStorage(conv_name)
     archival_storage = ArchivalStorage(conv_name)
     agent = Agent(
@@ -244,33 +254,40 @@ def send_message():
             server_message_stack = agent_obj.interface.server_message_stack.copy()
             agent_obj.interface.server_message_stack = []
 
-            yield json.dumps({
-                'server_message_stack': server_message_stack,
-                'ctx_info': {
-                    'current_ctx_token_count': agent_obj.memory.main_ctx_message_seq_no_tokens,
-                    'ctx_window': agent_obj.memory.ctx_window
-                },
-                'duration': str(timedelta(seconds=round(end_time - start_time, 2)))
-            }) + '\n'
+            yield json.dumps(
+                {
+                    "server_message_stack": server_message_stack,
+                    "ctx_info": {
+                        "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
+                        "ctx_window": agent_obj.memory.ctx_window,
+                    },
+                    "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                }
+            ) + "\n"
 
         total_end_time = time()
 
-        yield json.dumps({
-            'total_duration': str(timedelta(seconds=round(total_end_time - total_start_time, 2)))
-        }) + '\n'   
+        yield json.dumps(
+            {
+                "total_duration": str(
+                    timedelta(seconds=round(total_end_time - total_start_time, 2))
+                )
+            }
+        ) + "\n"
 
     sem.release()
-    return Response(generate_agent_responses(agent), mimetype='application/json')
+    return Response(generate_agent_responses(agent), mimetype="application/json")
 
-@app.route('/messages/send/first-message', methods=['POST'])
+
+@app.route("/messages/send/first-message", methods=["POST"])
 def send_first_message():
     sem.acquire()
 
     # Load data
     data = request.get_json()
-    conv_name = data.get('conv_name')
-    user_id = data.get('user_id')
-    message = data.get('message')
+    conv_name = data.get("conv_name")
+    user_id = data.get("user_id")
+    message = data.get("message")
 
     # Load system instructions
     system_instructions = get_system_text("llm_agent_chat")
@@ -283,9 +300,7 @@ def send_first_message():
     web_interface = WebInterface()
 
     # Load agent
-    working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None, None
-    )
+    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
     recall_storage = RecallStorage(conv_name)
     archival_storage = ArchivalStorage(conv_name)
     agent = Agent(
@@ -324,32 +339,39 @@ def send_first_message():
             server_message_stack = agent_obj.interface.server_message_stack.copy()
             agent_obj.interface.server_message_stack = []
 
-            yield json.dumps({
-                'server_message_stack': server_message_stack,
-                'ctx_info': {
-                    'current_ctx_token_count': agent_obj.memory.main_ctx_message_seq_no_tokens,
-                    'ctx_window': agent_obj.memory.ctx_window
-                },
-                'duration': str(timedelta(seconds=round(end_time - start_time, 2)))
-            }) + '\n'
+            yield json.dumps(
+                {
+                    "server_message_stack": server_message_stack,
+                    "ctx_info": {
+                        "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
+                        "ctx_window": agent_obj.memory.ctx_window,
+                    },
+                    "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                }
+            ) + "\n"
 
         total_end_time = time()
 
-        yield json.dumps({
-            'total_duration': str(timedelta(seconds=round(total_end_time - total_start_time, 2)))
-        }) + '\n'   
+        yield json.dumps(
+            {
+                "total_duration": str(
+                    timedelta(seconds=round(total_end_time - total_start_time, 2))
+                )
+            }
+        ) + "\n"
 
     sem.release()
-    return Response(generate_agent_responses(agent), mimetype='application/json')
+    return Response(generate_agent_responses(agent), mimetype="application/json")
 
-@app.route('/messages/send/no-heartbeat', methods=['POST'])
+
+@app.route("/messages/send/no-heartbeat", methods=["POST"])
 def send_message_without_heartbeat():
     sem.acquire()
     # Load data
     data = request.get_json()
-    conv_name = data.get('conv_name')
-    user_id = data.get('user_id')
-    message = data.get('message')
+    conv_name = data.get("conv_name")
+    user_id = data.get("user_id")
+    message = data.get("message")
 
     # Load system instructions
     system_instructions = get_system_text("llm_agent_chat")
@@ -362,9 +384,7 @@ def send_message_without_heartbeat():
     web_interface = WebInterface()
 
     # Load agent
-    working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None, None
-    )
+    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
     recall_storage = RecallStorage(conv_name)
     archival_storage = ArchivalStorage(conv_name)
     agent = Agent(
@@ -387,7 +407,7 @@ def send_message_without_heartbeat():
             "user_id": user_id,
             "message": {"role": "user", "content": message},
         }
-    ) 
+    )
 
     agent.memory.working_context.submit_used_human_id(user_id)
 
@@ -395,15 +415,18 @@ def send_message_without_heartbeat():
     agent.interface.server_message_stack = []
 
     sem.release()
-    return jsonify({ 
-        'server_message_stack': server_message_stack,
-        'ctx_info': {
-            'current_ctx_token_count': agent.memory.main_ctx_message_seq_no_tokens,
-            'ctx_window': agent.memory.ctx_window
+    return jsonify(
+        {
+            "server_message_stack": server_message_stack,
+            "ctx_info": {
+                "current_ctx_token_count": agent.memory.main_ctx_message_seq_no_tokens,
+                "ctx_window": agent.memory.ctx_window,
+            },
         }
-    })
+    )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     if not CONFIG:
         raise ValueError("Config not found, please run config.py")
-    app.run(host='0.0.0.0')
+    app.run(host="0.0.0.0")

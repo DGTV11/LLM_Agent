@@ -42,7 +42,8 @@ def google_search(self: Agent, query: str, page: Optional[int] = 0) -> Optional[
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"url: '{res[0]}', title: '{res[1]}', snippet: '{res[2]}'" for res in results
+            f"url: '{res[0]}', title: '{res[1]}', snippet: '{res[2]}'"
+            for res in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str

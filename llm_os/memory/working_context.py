@@ -9,7 +9,14 @@ from llm_os.constants import (
 
 
 class WorkingContext:
-    def __init__(self, model_name: str, conv_name: str, persona: str, initial_human_id: int, initial_human_persona: str):
+    def __init__(
+        self,
+        model_name: str,
+        conv_name: str,
+        persona: str,
+        initial_human_id: int,
+        initial_human_persona: str,
+    ):
         self.wc_path = path.join(
             path.dirname(path.dirname(path.dirname(__file__))),
             "persistent_storage",
@@ -31,18 +38,20 @@ class WorkingContext:
             self.humans = {}
             self.add_new_human_persona(initial_human_id, initial_human_persona)
 
-
     def __repr__(self):
-        return '\n'.join(
+        return "\n".join(
             [
                 f"""<persona>
                 {self.persona}
                 </persona>"""
-            ] +
-            [
+            ]
+            + [
                 f"""<human id="{id}">
                 {human}
-                </human>""" for id, human in zip(self.last_2_human_ids, map(lambda id: self.humans[id], self.humans))
+                </human>"""
+                for id, human in zip(
+                    self.last_2_human_ids, map(lambda id: self.humans[id], self.humans)
+                )
             ]
         )
 
@@ -73,7 +82,15 @@ class WorkingContext:
             f = open(self.wc_path, "x")
             f.close()
         with open(self.wc_path, "w") as f:
-            f.write(json.dumps({"last_2_human_ids": self.last_2_human_ids, "persona": self.persona, "humans": self.humans}))
+            f.write(
+                json.dumps(
+                    {
+                        "last_2_human_ids": self.last_2_human_ids,
+                        "persona": self.persona,
+                        "humans": self.humans,
+                    }
+                )
+            )
 
     def __str__(self):
         return self.__repr__()

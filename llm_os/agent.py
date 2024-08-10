@@ -102,13 +102,15 @@ class Agent:
         else:
             status = f"Status: OK."
 
-        trailing_message = " Please try again without acknowledging this message." if has_error else ""
+        trailing_message = (
+            " Please try again without acknowledging this message." if has_error else ""
+        )
         return {
             "type": "tool",
             "user_id": user_id,
             "message": {
-                "role": "user", 
-                "content": f"{status} Result: {result}" + trailing_message
+                "role": "user",
+                "content": f"{status} Result: {result}" + trailing_message,
             },
         }
 
@@ -194,7 +196,7 @@ class Agent:
         for argument in called_function_arguments.keys():
             if argument not in called_function_parameter_names:
                 interface_message = f'Function "{called_function_name}" does not accept argument "{argument}".'
-                res_messageds.append( 
+                res_messageds.append(
                     Agent.package_tool_response(user_id, interface_message, True)
                 )
                 self.interface.function_res_message(interface_message, True)
@@ -209,7 +211,10 @@ class Agent:
             called_function_required_parameter_names
         ):
             interface_message = f'Function "{called_function_name}" requires at least {len(called_function_required_parameter_names)} arguments ({len(called_function_arguments)} given, missing arguments are {list(set(called_function_parameter_names)-set(called_function_arguments))}).'
-            if function_call.get("request_heartbeat", (None, 0)) != (None, 0) and "request_heartbeat" in called_function_required_parameter_names:
+            if (
+                function_call.get("request_heartbeat", (None, 0)) != (None, 0)
+                and "request_heartbeat" in called_function_required_parameter_names
+            ):
                 interface_message += ' Please move the "request_heartbeat" argument into the "arguments" field.'
 
             res_messageds.append(
@@ -343,9 +348,7 @@ class Agent:
             )
             called_function_result = called_function(**called_function_arguments)
         except Exception as e:
-            res_messageds.append(
-                Agent.package_tool_response(user_id, str(e), True)
-            )
+            res_messageds.append(Agent.package_tool_response(user_id, str(e), True))
             self.interface.function_res_message(str(e), True)
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
@@ -395,7 +398,7 @@ class Agent:
             messages=self.memory.main_ctx_message_seq,
             options={"num_ctx": self.memory.ctx_window},
         )
-        result_content = response['message']['content']
+        result_content = response["message"]["content"]
 
         if SHOW_DEBUG_MESSAGES:
             self.interface.debug_message(f"Got result:\n{result_content}")
@@ -533,20 +536,26 @@ class Agent:
                     f"❮SYSTEM MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
                 )
             elif messaged["type"] == "tool":
-                user_role_buf.append(f"❮TOOL MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}")
+                user_role_buf.append(
+                    f"❮TOOL MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                )
             elif messaged["type"] == "user":
-                user_role_buf.append(f"❮USER MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}")
+                user_role_buf.append(
+                    f"❮USER MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                )
             else:
                 translated_messages.append(
                     {"role": "user", "content": "\n\n".join(user_role_buf)}
                 )
                 message_content_dict = json5.loads(messaged["message"]["content"])
                 assistant_message_content = (
-                    f"❮ASSISTANT MESSAGE for conversation with user with id '{messaged['user_id']}'❯" + message_content_dict["thoughts"]
+                    f"❮ASSISTANT MESSAGE for conversation with user with id '{messaged['user_id']}'❯"
+                    + message_content_dict["thoughts"]
                 )
                 if "function_call" in message_content_dict:
                     assistant_message_content += (
-                        f"\n\n❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯" + message_content_dict["function_call"]
+                        f"\n\n❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯"
+                        + message_content_dict["function_call"]
                     )
                 translated_messages.append(
                     {"role": "assistant", "content": assistant_message_content}
@@ -562,8 +571,10 @@ class Agent:
             {"role": "system", "content": get_summarise_system_prompt()}
         ] + translated_messages
 
-    def summarise_messages_in_place(self): #TODO: Find a way to fix a bug here
-        self.interface.memory_message(f'Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue...')
+    def summarise_messages_in_place(self):  # TODO: Find a way to fix a bug here
+        self.interface.memory_message(
+            f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue..."
+        )
         assert self.memory.main_ctx_message_seq[0]["role"] == "system"
 
         messages_to_be_summarised = deque()

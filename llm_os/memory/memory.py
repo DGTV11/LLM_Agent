@@ -101,15 +101,15 @@ class Memory:
         for messaged in self.fifo_queue:
             if messaged["type"] == "system":
                 user_role_buf.append(
-                    f"❮SYSTEM MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                    f"❮SYSTEM MESSAGE❯ {messaged['message']['content']}"
                 )
             elif messaged["type"] == "tool":
                 user_role_buf.append(
-                    f"❮TOOL MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                    f"❮TOOL MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
                 )
             elif messaged["type"] == "user":
                 user_role_buf.append(
-                    f"❮USER MESSAGE for conversation user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                    f"❮USER MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
                 )
             else:
                 translated_messages.append(

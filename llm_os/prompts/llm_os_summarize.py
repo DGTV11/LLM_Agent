@@ -9,7 +9,7 @@ Things the AI says starting with '❮ASSISTANT MONOLOGUE for conversation with u
 Things the AI says starting with '❮ERRONEOUS ASSISTANT MESSAGE for conversation with user with id '{INSERT USER ID HERE}'❯' are non-well-formed JSON objects the AI says. If the AI says well-formed json objects, the 'thoughts' field's value will be translated to an assistant monologue and the 'function_call' field's value will be translated to a tool message.
 The only AI messages seen by the user are from when the AI uses 'send_message'.
 Messages the user sends are in the 'user' role starting with '❮USER MESSAGE for conversation with user with id '{INSERT USER ID HERE}'}❯'.
-The 'user' role is also used for important system events and messages, such as login events, heartbeat events (heartbeats run the AI's program without user action, allowing the AI to act without prompting from the user sending them a message), memory pressure warnings, and error messages. Such events start with '❮SYSTEM MESSAGE for conversation with user with id '{INSERT USER ID HERE}'❯'.
+The 'user' role is also used for important system events and messages, such as login events, heartbeat events (heartbeats run the AI's program without user action, allowing the AI to act without prompting from the user sending them a message), memory pressure warnings, and error messages. Such events start with '❮SYSTEM MESSAGE❯'.
 Summarize what happened in the conversation from the perspective of the AI (use the first person).
 Keep your summary less than <<SUMMARY_WORD_LIMIT>> words, do NOT exceed this word limit.
 Only output the summary, do NOT include anything else in your output.

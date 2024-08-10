@@ -14,6 +14,7 @@ from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
 from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
 from llm_os.constants import (
+    USE_JSON_MODE,
     SHOW_DEBUG_MESSAGES,
     SEND_MESSAGE_FUNCTION_NAME,
     MEMORY_EDITING_FUNCTIONS,
@@ -395,11 +396,20 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ## Step 1: Generate response
-        response = HOST.chat(
-            model=self.model_name,
-            messages=self.memory.main_ctx_message_seq,
-            options={"num_ctx": self.memory.ctx_window},
-        )
+        if USE_JSON_MODE:
+            response = HOST.chat(
+                model=self.model_name,
+                messages=self.memory.main_ctx_message_seq,
+                format="json",
+                options={"num_ctx": self.memory.ctx_window},
+            )
+        else:
+            response = HOST.chat(
+                model=self.model_name,
+                messages=self.memory.main_ctx_message_seq,
+                options={"num_ctx": self.memory.ctx_window},
+            )
+
         result_content = response["message"]["content"]
 
         if SHOW_DEBUG_MESSAGES:

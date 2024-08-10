@@ -1,3 +1,6 @@
+# Inference constants
+USE_JSON_MODE = True # Likely slower but more reliable
+
 # Interface constants
 SHOW_DEBUG_MESSAGES = True  # Set to True when testing new models
 

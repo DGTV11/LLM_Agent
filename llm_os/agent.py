@@ -523,7 +523,7 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ## Step 4: Check if it has been too long since the agent consciously updated its memory
-        if self.messages_since_last_conscious_memory_write == WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT and not had_just_sent_mpw:
+        if not is_first_message and not had_just_sent_mpw and self.messages_since_last_conscious_memory_write >= WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT:
             interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage."
             res_messageds.append(
                 {

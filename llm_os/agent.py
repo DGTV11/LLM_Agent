@@ -390,48 +390,29 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ## Step 1: Generate response
-        result = HOST.chat(
+        response = HOST.chat(
             model=self.model_name,
             messages=self.memory.main_ctx_message_seq,
             options={"num_ctx": self.memory.ctx_window},
-            stream=True,
         )
-        result_content = ""
-
-        for chunk in result:
-            result_content += chunk["message"]["content"]
+        result_content = response['message']['content']
 
         if SHOW_DEBUG_MESSAGES:
             self.interface.debug_message(f"Got result:\n{result_content}")
 
+        res_messageds = [
+            {
+                "type": "assistant",
+                "user_id": user_id,
+                "message": {"role": "assistant", "content": result_content},
+            }
+        ]
+
         try:
-            json_object_finder = regex.compile(r"\{(?:[^{}]|(?R))*\}")
-            found_json_objects = json_object_finder.findall(result_content)
-            if len(found_json_objects) != 1:
-                raise RuntimeError
-
-            result_content = found_json_objects[0]
-
-            res_messageds = [
-                {
-                    "type": "assistant",
-                    "user_id": user_id,
-                    "message": {"role": "assistant", "content": result_content},
-                }
-            ]
-
             json_result = json5.loads(result_content)
             if type(json_result) is not dict:
                 raise RuntimeError
         except (RuntimeError, ValueError):
-            res_messageds = [
-                {
-                    "type": "assistant",
-                    "user_id": user_id,
-                    "message": {"role": "assistant", "content": result_content},
-                }
-            ]
-
             if is_first_message:
                 interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT JSON OBJECT that includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
             else:

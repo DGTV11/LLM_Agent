@@ -62,6 +62,9 @@ class CLIInterface:
     def assistant_message(msg: str, end="\n"):
         print(emojize(f":robot: {msg}"), end=end, flush=True)
 
+        if not msg.strip():
+            CLIInterface.system_message("Nothing to read!")
+            return
         CLIInterface.system_message("Reading response... (Use Ctrl-C to skip)")
 
         start_time = time()

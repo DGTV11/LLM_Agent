@@ -489,7 +489,7 @@ class Agent:
                     function_failed = False
             elif unidentified_keys:
                 surround_with_single_quotes = lambda s: f"'{s}'"
-                interface_message = f"Error: fields {', '.join(map(surround_with_single_quotes, unidentified_keys))} should not be included in your generated JSON object (refer to the given JSON schema!). Please try again without acknowledging this message."
+                interface_message = f"Error: fields {', '.join(map(surround_with_single_quotes, unidentified_keys))} should not be included in your generated JSON object's top level (refer to the given JSON schema!). Please try again without acknowledging this message."
                 res_messageds.append(
                     {
                         "type": "system",

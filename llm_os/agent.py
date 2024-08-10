@@ -571,14 +571,11 @@ class Agent:
                 try:
                     message_content_dict = json5.loads(messaged["message"]["content"])
                 except ValueError:
-                    assistant_message_content = f"❮ERRONEOUS ASSISTANT MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged["message"]["content"]}"
+                    assistant_message_content = f"❮ERRONEOUS ASSISTANT MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
                 else:
-                    assistant_message_content = (
-                        f"❮ASSISTANT MONOLOGUE for conversation with user with id '{messaged['user_id']}'❯"
-                        + message_content_dict["thoughts"]
-                    )
+                    assistant_message_content = f"❮ASSISTANT MONOLOGUE for conversation with user with id '{messaged['user_id']}'❯ {message_content_dict['thoughts']}"
                     if "function_call" in message_content_dict:
-                        assistant_message_content += f"\n\n❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯ {str(message_content_dict["function_call"])}"
+                        assistant_message_content += f"\n\n❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯ {str(message_content_dict['function_call'])}"
 
                 translated_messages.append(
                     {"role": "assistant", "content": assistant_message_content}

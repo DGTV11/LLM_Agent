@@ -11,10 +11,9 @@ pip install -r requirements.txt
 
 3) Install the required Ollama models
 ```sh
-ollama pull llama3
-ollama pull mistral 
 ollama pull openhermes
 ollama pull deepseek-v2:16b-lite-chat-q4_0
+ollama pull gemma2:2b
 ollama pull nomic-embed-text
 ```
 

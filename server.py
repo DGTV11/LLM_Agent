@@ -429,4 +429,4 @@ def send_message_without_heartbeat():
 if __name__ == "__main__":
     if not CONFIG:
         raise ValueError("Config not found, please run config.py")
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", port=4999)

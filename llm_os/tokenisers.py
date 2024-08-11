@@ -25,14 +25,6 @@ def mistral_format_system(conv):
 
 def get_tokeniser_and_context_window(model_name):
     match model_name:
-        case "llama3":
-            tokenizer = AutoTokenizer.from_pretrained(
-                "meta-llama/Meta-Llama-3-8B",
-                token=CONFIG["huggingface_user_access_token"],
-            )
-            ctx_window = 8192
-            num_token_func = lambda text: len(tokenizer.encode(text))
-            ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
         case "deepseek-v2:16b-lite-chat-q4_0":
             tokenizer = AutoTokenizer.from_pretrained(
                 "deepseek-ai/DeepSeek-V2-Lite-Chat",
@@ -49,17 +41,14 @@ def get_tokeniser_and_context_window(model_name):
             ctx_window = 8192  # usually 32768 but reduced to lower RAM usage
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
-        case "mistral":
+        case "gemma2:2b":
             tokenizer = AutoTokenizer.from_pretrained(
-                "mistralai/Mistral-7B-Instruct-v0.3",
+                "google/gemma-2-2b",
                 token=CONFIG["huggingface_user_access_token"],
             )
-            ctx_window = 8192  # usually 32768 but reduced to lower RAM usage
+            ctx_window = 8192
             num_token_func = lambda text: len(tokenizer.encode(text))
-            ct_num_token_func = lambda conv: len(
-                tokenizer.apply_chat_template(mistral_format_system(conv))
-            )
-
+            ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
         case _:
             raise ValueError(f"{model_name} is not a supported model.")
 

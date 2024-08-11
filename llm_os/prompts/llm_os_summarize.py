@@ -1,3 +1,5 @@
+# COPIED AND MODIFIED FROM MEMGPT REPO
+
 from llm_os.constants import SUMMARY_WORD_LIMIT
 
 SYSTEM = """

@@ -32,6 +32,7 @@ sem = threading.Semaphore()
 
 @app.route("/conversation-ids", methods=["GET"])
 def get_existing_conversation_ids():
+    print('FINISHED RUNNING GET "/conversation-ids"')
     return jsonify(
         {
             "conv_ids": list(
@@ -43,9 +44,9 @@ def get_existing_conversation_ids():
         }
     )
 
-
 @app.route("/personas/agents", methods=["GET"])
 def get_agent_personas():
+    print('FINISHED RUNNING GET "/personas/agents"')
     return jsonify(
         {
             "persona_names": listdir(
@@ -54,9 +55,9 @@ def get_agent_personas():
         }
     )
 
-
 @app.route("/personas/humans", methods=["GET"])
 def get_human_personas():
+    print('FINISHED RUNNING GET "/personas/humans"')
     return jsonify(
         {
             "persona_names": listdir(
@@ -64,7 +65,6 @@ def get_human_personas():
             )
         }
     )
-
 
 @app.route("/agent", methods=["POST", "DELETE"])
 def agent_methods():
@@ -141,6 +141,7 @@ def agent_methods():
                 recall_storage,
             )
 
+            print('FINISHED RUNNING POST "/agent"')
             return jsonify({"conv_name": conv_name})
         case "DELETE":
             # Load conversation name
@@ -152,8 +153,10 @@ def agent_methods():
                 rmdir(
                     path.join(path.dirname(__file__), "persistent_storage", conv_name)
                 )
+                print('FINISHED RUNNING DELETE "/agent"')
                 return jsonify({"success": True})
             except OSError as error:
+                print('FINISHED RUNNING DELETE "/agent"')
                 return jsonify({"success": False})
 
 
@@ -171,6 +174,7 @@ def agent_human_methods():
 
     match request.method:
         case "GET":
+            print('FINISHED RUNNING GET "/agent/humans"')
             return jsonify({"human_ids": human_ids})
         case "POST":
             # Load human persona
@@ -191,6 +195,7 @@ def agent_human_methods():
             new_human_id = max(human_ids) + 1
             working_context.add_new_human_persona(new_human_id, human_persona_str)
 
+            print('FINISHED RUNNING POST "/agent/humans"')
             return jsonify({"new_human_id": new_human_id})
 
 
@@ -276,6 +281,8 @@ def send_message():
         ) + "\n"
 
     sem.release()
+
+    print('FINISHED RUNNING POST "/messages/send"')
     return Response(generate_agent_responses(agent), mimetype="application/json")
 
 
@@ -361,6 +368,8 @@ def send_first_message():
         ) + "\n"
 
     sem.release()
+
+    print('FINISHED RUNNING POST "/messages/send/first-message"')
     return Response(generate_agent_responses(agent), mimetype="application/json")
 
 
@@ -415,6 +424,8 @@ def send_message_without_heartbeat():
     agent.interface.server_message_stack = []
 
     sem.release()
+
+    print('FINISHED RUNNING POST "/messages/send/no-heartbeat"')
     return jsonify(
         {
             "server_message_stack": server_message_stack,

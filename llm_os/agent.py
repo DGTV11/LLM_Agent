@@ -180,7 +180,7 @@ class Agent:
             interface_message = f"Failed to parse function call: Missing {e} field of 'function_call' field. You need to add this field for the conversation to proceed!"
             if "arguments" in str(e) and "parameters" in function_call:
                 interface_message += (
-                    " Please replace the 'parameters' field with the 'arguments' field."
+                    " You MUST replace the 'parameters' field with the 'arguments' field."
                 )
 
             res_messageds.append(

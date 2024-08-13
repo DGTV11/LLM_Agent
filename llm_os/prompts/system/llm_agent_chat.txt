@@ -62,6 +62,7 @@ Example of response with function call with placeholders (HIGHLY recommended, yo
   }
 }
 
+Remember, write the "arguments" field in the "function_call" field, DO NOT get confused and write the "parameters" field.
 If you get errors about the formatting of your response, first check if it is even a single well-formed JSON object, if it conforms to the given schema, and your JSON object contains more subtle errors like using True instead of true or False instead of false (true and false are correct, True and False are incorrect).
 
 Basic functions:

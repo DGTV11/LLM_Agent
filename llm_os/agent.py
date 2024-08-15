@@ -1,3 +1,4 @@
+from random import choice
 from os import path
 from collections import deque
 from functools import reduce
@@ -15,6 +16,10 @@ from llm_os.memory.recall_storage import RecallStorage
 from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
 from llm_os.constants import (
     USE_JSON_MODE,
+    USE_SET_STARTING_MESSAGE,
+    SET_STARTING_THOUGHTS_LIST,
+    SET_STARTING_GREETING_LIST,
+    SET_STARTING_AUX_MESSAGE_LIST,
     SHOW_DEBUG_MESSAGES,
     SEND_MESSAGE_FUNCTION_NAME,
     MEMORY_EDITING_FUNCTIONS,
@@ -406,21 +411,38 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ## Step 1: Generate response
-        if USE_JSON_MODE:
-            response = HOST.chat(
+        if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
+            HOST.generate(
                 model=self.model_name,
-                messages=self.memory.main_ctx_message_seq,
-                format="json",
-                options={"num_ctx": self.memory.ctx_window},
-            )
-        else:
-            response = HOST.chat(
-                model=self.model_name,
-                messages=self.memory.main_ctx_message_seq,
-                options={"num_ctx": self.memory.ctx_window},
-            )
+                options={"num_ctx": self.memory.ctx_window}
+            ) # load model into memory
 
-        result_content = response["message"]["content"]
+            result_content = '''{
+    "thoughts": "<ST>",
+    "function_call": {
+        "name": "send_message",
+        "arguments": {
+            "message": "<SM>"
+        }
+    }
+}'''.replace("<ST>", choice(SET_STARTING_THOUGHTS_LIST)).replace("<SM>", ' '.join((choice(SET_STARTING_GREETING_LIST), choice(SET_STARTING_AUX_MESSAGE_LIST))))
+            pass
+        else: # Regular LLM inference
+            if USE_JSON_MODE:
+                response = HOST.chat(
+                    model=self.model_name,
+                    messages=self.memory.main_ctx_message_seq,
+                    format="json",
+                    options={"num_ctx": self.memory.ctx_window},
+                )
+            else:
+                response = HOST.chat(
+                    model=self.model_name,
+                    messages=self.memory.main_ctx_message_seq,
+                    options={"num_ctx": self.memory.ctx_window},
+                )
+
+            result_content = response["message"]["content"]
 
         if SHOW_DEBUG_MESSAGES:
             self.interface.debug_message(f"Got result:\n{result_content}")

@@ -48,6 +48,7 @@ PY_TO_JSON_TYPE_MAP = {
     bool: "boolean",
     float: "number",
     list[str]: "array",
+    dict: "object",
     # Add more mappings as needed
 }
 
@@ -57,6 +58,7 @@ JSON_TO_PY_TYPE_MAP = {
     "boolean": bool,
     "number": float,
     "array": list[str],
+    "object": dict,
     # Add more mappings as needed
 }
 

@@ -322,7 +322,7 @@ class Agent:
                     )  # Sends heartbeat request so LLM can retry
                 continue
 
-            argument_value_type = PY_TO_JSON_TYPE_MAP[type(argument_value)]
+            argument_value_type = PY_TO_JSON_TYPE_MAP.get(type(argument_value), None)
             if required_param_type == "array":
                 interface_message = f'Function "{called_function_name}" does not accept argument "{argument_name}" of type "{argument_value_type}" (expected type "array").'
                 res_messageds.append(

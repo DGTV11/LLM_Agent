@@ -32,7 +32,7 @@ def execute_python_code(self: Agent, code: str) -> Optional[str]: # Adapted from
         runner_container = client.containers.run("python_runner")
 
     runner = AgentRun(
-        container_name = "python_runner",
+        container_name = runner_container.id,
         dependencies_whitelist = [],
         cached_dependencies = [],
         default_timeout = 3 * 60,

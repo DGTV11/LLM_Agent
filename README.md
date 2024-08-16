@@ -17,6 +17,13 @@ ollama pull gemma2:2b
 ollama pull nomic-embed-text
 ```
 
+4) Install docker
+
+5) Build the Docker images from the dockerfiles
+```
+docker build -f llm_os/dockerfiles/python_runner/Dockerfile -t python_runner .
+```
+
 ## Usage (CLI)
 1) Configure LLM_Agent if you have not already done so
 ```sh

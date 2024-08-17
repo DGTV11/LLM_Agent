@@ -12,7 +12,7 @@ Things the AI says starting with '❮ERRONEOUS ASSISTANT MESSAGE for conversatio
 The only AI messages seen by the user are from when the AI uses 'send_message'.
 Messages the user sends are in the 'user' role starting with '❮USER MESSAGE for conversation with user with id '{INSERT USER ID HERE}'}❯'.
 The 'user' role is also used for important system events and messages, such as login events, heartbeat events (heartbeats run the AI's program without user action, allowing the AI to act without prompting from the user sending them a message), memory pressure warnings, and error messages. Such events start with '❮SYSTEM MESSAGE❯'.
-Summarize what happened in the conversation from the perspective of the AI (use the first person). Do NOT repeat the conversation history OR your persona OR just a single part of the conversation history word-for-word, SUMMARIZE THE CONVERSATION HISTORY and shave off AS MANY WORDS AS POSSIBLE!
+Summarize what happened in the conversation from the perspective of the AI (use the first person). Do NOT repeat the conversation history OR your persona OR just a single part of the conversation history word-for-word, SUMMARIZE THE CONVERSATION HISTORY and shave off AS MANY WORDS AS POSSIBLE! Do NOT attempt to CONTINUE the conversation, SUMMARIZE IT!
 Keep your summary less than <<SUMMARY_WORD_LIMIT>> words, do NOT exceed this word limit.
 Only output the summary, do NOT include anything else in your output.
 """

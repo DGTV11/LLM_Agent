@@ -544,7 +544,7 @@ class Agent:
             and self.memory.main_ctx_message_seq_no_tokens
             > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
         ):
-            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage by calling functions."
+            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
             if heartbeat_request:
                 interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
             else:
@@ -571,7 +571,7 @@ class Agent:
 
         ## Step 4: Check if it has been too long since the agent consciously updated its memory
         if not is_first_message and not had_just_sent_mpw and self.messages_since_last_conscious_memory_write >= WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT:
-            interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage by calling functions."
+            interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
             if heartbeat_request:
                 interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
             else:
@@ -597,9 +597,10 @@ class Agent:
         ## Step 5: Return response
         return res_messageds, heartbeat_request, function_failed
 
+    """
     @staticmethod
     def summary_message_seq(messaged_seq):
-        # note: messaged must be in the form {'type': type, 'message': {'role': role, 'content': content}}
+        # note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
         translated_messages = []
         user_role_buf = []
 
@@ -642,6 +643,46 @@ class Agent:
         return [
             {"role": "system", "content": get_summarise_system_prompt()}
         ] + translated_messages
+    """
+
+    @staticmethod
+    def summary_message_seq(messaged_seq):
+        # note: messaged must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
+        translated_messages = []
+
+        for messaged in messaged_seq:
+            if messaged["type"] == "system":
+                translated_messages.append(
+                    f"❮SYSTEM MESSAGE❯ {messaged['message']['content']}"
+                )
+            elif messaged["type"] == "tool":
+                translated_messages.append(
+                    f"❮TOOL MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                )
+            elif messaged["type"] == "user":
+                translated_messages.append(
+                    f"❮USER MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                )
+            else:
+                try:
+                    message_content_dict = json5.loads(messaged["message"]["content"])
+                except ValueError:
+                    translated_messages.append(
+                        f"❮ERRONEOUS ASSISTANT MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
+                    )
+                else:
+                    translated_messages.append(
+                        f"❮ASSISTANT MONOLOGUE for conversation with user with id '{messaged['user_id']}'❯ {message_content_dict['thoughts']}"
+                    )
+                    if "function_call" in message_content_dict:
+                        translated_messages.append(
+                            f"❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯ {str(message_content_dict['function_call'])}"
+                        )
+
+
+        return [
+            {"role": "system", "content": get_summarise_system_prompt()}
+        ] + '\n\n'.join(translated_messages)
 
     def summarise_messages_in_place(self):
         if SHOW_DEBUG_MESSAGES:

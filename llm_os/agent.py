@@ -544,7 +544,12 @@ class Agent:
             and self.memory.main_ctx_message_seq_no_tokens
             > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
         ):
-            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage while still responding to the user."
+            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage by calling functions."
+            if heartbeat_request:
+                interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
+            else:
+                interface_message += " A heartbeat request will be automatically triggered."
+                
             res_messageds.append(
                 {
                     "type": "system",
@@ -569,6 +574,8 @@ class Agent:
             interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage by calling functions."
             if heartbeat_request:
                 interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
+            else:
+                interface_message += " Heartbeat requests will be automatically triggered until you successfully edit your memory."
 
             res_messageds.append(
                 {

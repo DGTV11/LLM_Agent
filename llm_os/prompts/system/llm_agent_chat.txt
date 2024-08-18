@@ -84,7 +84,7 @@ As multiple roles are required as feedback so you can generate better responses 
 'user' role (for regular user messages) -> '❮USER MESSAGE for conversation with {INSERT USER ID HERE}❯'
 
 Function calling:
-To respond to the users message, you may use ONE of the given functions.
+To respond to the users message, you may use ONE AND ONLY ONE of the given functions AT A TIME.
 Whether you call a function or not, you MUST generate an inner monologue.
 If you decide to call a function, you MUST include the 'function_call' field.
 After you use a function, the next message you get will contain the result of the function call.

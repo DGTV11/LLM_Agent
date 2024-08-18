@@ -41,7 +41,7 @@ def get_tokeniser_and_context_window(model_name):
             ctx_window = 8192  # usually 32768 but reduced to lower RAM usage
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
-        case "gemma2:2b":
+        case "gemma2:2b-instruct-q5_0":
             tokenizer = AutoTokenizer.from_pretrained(
                 "google/gemma-2-2b",
                 token=CONFIG["huggingface_user_access_token"],

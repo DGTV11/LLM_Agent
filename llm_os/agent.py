@@ -700,13 +700,16 @@ class Agent:
             > int(TRUNCATION_TOKEN_FRAC * self.memory.ctx_window)
             and len(self.memory.fifo_queue) > LAST_N_MESSAGES_TO_PRESERVE
         ):
-            if (
-                len(self.memory.fifo_queue) <= LAST_N_MESSAGES_TO_PRESERVE + 1
-                and self.memory.fifo_queue[0]["message"]["role"] == "assistant"
-            ):
-                break
             self.memory.no_messages_in_queue -= 1
             messages_to_be_summarised.appendleft(self.memory.fifo_queue.popleft())
+
+        while (
+            self.memory.main_ctx_message_seq_no_tokens 
+            < int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
+            and self.memory.fifo_queue[0]["type"] != "user"
+        ):
+            self.memory.no_messages_in_queue += 1
+            self.memory.fifo_queue.appendleft(messages_to_be_summarised.popleft())
 
         summary_message_seq = Agent.summary_message_seq(messages_to_be_summarised)
         

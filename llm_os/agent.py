@@ -679,10 +679,10 @@ class Agent:
                             f"❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯ {str(message_content_dict['function_call'])}"
                         )
 
-
         return [
-            {"role": "system", "content": get_summarise_system_prompt()}
-        ] + '\n\n'.join(translated_messages)
+            {"role": "system", "content": get_summarise_system_prompt()},
+            {"role": "user", "content": '\n\n'.join(translated_messages)}
+        ]
 
     def summarise_messages_in_place(self):
         if SHOW_DEBUG_MESSAGES:

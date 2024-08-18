@@ -29,7 +29,7 @@ def execute_python_code(self: Agent, code: str) -> Optional[str]: # Adapted from
             runner_container = container
             break
     else:
-        runner_container = client.containers.run("python_runner", detach=True)
+        runner_container = client.containers.run("python_runner", "tail -f /dev/null", detach=True)
 
     runner = AgentRun(
         container_name = runner_container.id,

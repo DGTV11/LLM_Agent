@@ -55,6 +55,9 @@ class WorkingContext:
             ]
         )
 
+    def __str__(self):
+        return self.__repr__()
+
     def add_new_human_persona(self, human_id, human):
         no_tokens_new_persona = self.no_token_func(human)
         if no_tokens_new_persona > WORKING_CTX_PERSONA_MAX_TOKENS:
@@ -91,9 +94,6 @@ class WorkingContext:
                     }
                 )
             )
-
-    def __str__(self):
-        return self.__repr__()
 
     def edit_persona(self, new_persona):
         no_tokens_new_persona = self.no_token_func(new_persona)

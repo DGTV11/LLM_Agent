@@ -63,7 +63,7 @@ def core_memory_append(self: Agent, section_name: str, content: str) -> Optional
     Append to the contents of core memory.
 
     Args:
-        section_name (str): Section of the memory to be edited (persona or human).
+        section_name (str): Section of the memory to be edited ('persona' to edit your persona or 'human' to edit persona of human who last sent you a message).
         content (str): Content to write to the memory. All unicode (including emojis) are supported.
 
     Returns:
@@ -80,7 +80,7 @@ def core_memory_replace(
     Replace the contents of core memory. To delete memories, use an empty string for new_content.
 
     Args:
-        section_name (str): Section of the memory to be edited (persona or human).
+        section_name (str): Section of the memory to be edited ('persona' to edit your persona or 'human' to edit persona of human who last sent you a message).
         old_content (str): String to replace. Must be an exact match.
         new_content (str): Content to write to the memory. All unicode (including emojis) are supported.
 

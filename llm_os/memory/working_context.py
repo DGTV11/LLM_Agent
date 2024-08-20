@@ -121,11 +121,11 @@ class WorkingContext:
         match section:
             case "persona":
                 return self.edit_persona(content)
+            case "human":
+                return self.edit_human(self.last_2_human_ids[-1], content)
             case _:
-                if self.humans.get(section):
-                    return self.edit_human(section, content)
                 raise KeyError(
-                    f"Edit failed: No memory section named {section} (must be either 'persona' or a human's id like '{self.last_2_human_ids[-1]}')"
+                    f"Edit failed: No memory section named {section} (must be either 'persona' or 'human')"
                 )
 
     def edit_append(self, section, content, sep="\n"):
@@ -133,12 +133,12 @@ class WorkingContext:
             case "persona":
                 new_content = self.persona + sep + content
                 return self.edit_persona(new_content)
+            case "human":
+                new_content = self.humans[self.last_2_human_ids[-1]] + sep + content
+                return self.edit_human(self.last_2_human_ids[-1], new_content)
             case _:
-                if self.humans.get(section):
-                    new_content = self.humans[section] + sep + content
-                    return self.edit_human(section, new_content)
                 raise KeyError(
-                    f"Edit failed: No memory section named {section} (must be either 'persona' or a human's id like '{self.last_2_human_ids[-1]}'))"
+                    f"Edit failed: No memory section named {section} (must be either 'persona' or 'human')"
                 )
 
     def edit_replace(self, section, old_content, new_content):
@@ -155,14 +155,14 @@ class WorkingContext:
                     )
                 new_persona = self.persona.replace(old_content, new_content)
                 return self.edit_persona(new_persona)
+            case "human":
+                if old_content not in self.humans[section]:
+                    raise ValueError(
+                        f"Edit failed: Old content not found in 'human' (make sure to use exact string)"
+                    )
+                new_human = self.humans[self.last_2_human_ids[-1]].replace(old_content, new_content)
+                return self.edit_human(self.last_2_human_ids[-1], new_human)
             case _:
-                if self.humans.get(section):
-                    if old_content not in self.humans[section]:
-                        raise ValueError(
-                            f"Edit failed: Old content not found in 'human' (make sure to use exact string)"
-                        )
-                    new_human = self.humans[section].replace(old_content, new_content)
-                    return self.edit_human(section, new_human)
                 raise KeyError(
-                    f"Edit failed: No memory section named {section} (must be either 'persona' or a human's id like '{self.last_2_human_ids[-1]}')"
+                    f"Edit failed: No memory section named {section} (must be either 'persona' or 'human')"
                 )

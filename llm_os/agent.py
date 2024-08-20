@@ -538,57 +538,58 @@ class Agent:
         self.messages_since_last_conscious_memory_write += 1
 
         ## Step 3: Check memory pressure
-        had_just_sent_mpw = False
-        if (
-            not self.memory_pressure_warning_alr_given
-            and self.memory.main_ctx_message_seq_no_tokens
-            > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
-        ):
-            interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
-            if heartbeat_request:
-                interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
-            else:
-                interface_message += " A heartbeat request will be automatically triggered."
-                
-            res_messageds.append(
-                {
-                    "type": "system",
-                    "user_id": user_id,
-                    "message": {"role": "user", "content": interface_message},
-                }
-            )
-            self.interface.memory_message(interface_message)
+        if not is_first_message: # Because first message only accepts a limited range of functions
+            had_just_sent_mpw = False
+            if (
+                not self.memory_pressure_warning_alr_given
+                and self.memory.main_ctx_message_seq_no_tokens
+                > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
+            ):
+                interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
+                if heartbeat_request:
+                    interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
+                else:
+                    interface_message += " A heartbeat request will be automatically triggered."
+                    
+                res_messageds.append(
+                    {
+                        "type": "system",
+                        "user_id": user_id,
+                        "message": {"role": "user", "content": interface_message},
+                    }
+                )
+                self.interface.memory_message(interface_message)
 
-            self.memory_pressure_warning_alr_given = True
-            heartbeat_request = True
-            had_just_sent_mpw = True
-        elif (
-            self.memory.main_ctx_message_seq_no_tokens
-            > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
-        ):
-            self.summarise_messages_in_place()
-            self.memory_pressure_warning_alr_given = False
+                self.memory_pressure_warning_alr_given = True
+                heartbeat_request = True
+                had_just_sent_mpw = True
+            elif (
+                self.memory.main_ctx_message_seq_no_tokens
+                > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
+            ):
+                self.summarise_messages_in_place()
+                self.memory_pressure_warning_alr_given = False
 
-        ## Step 4: Check if it has been too long since the agent consciously updated its memory
-        if not is_first_message and not had_just_sent_mpw and self.messages_since_last_conscious_memory_write >= WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT:
-            interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
-            if heartbeat_request:
-                interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
-            else:
-                interface_message += " Heartbeat requests will be automatically triggered until you successfully edit your memory."
+            ## Step 4: Check if it has been too long since the agent consciously updated its memory
+            if not is_first_message and not had_just_sent_mpw and self.messages_since_last_conscious_memory_write >= WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT:
+                interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
+                if heartbeat_request:
+                    interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
+                else:
+                    interface_message += " Heartbeat requests will be automatically triggered until you successfully edit your memory."
 
-            res_messageds.append(
-                {
-                    "type": "system",
-                    "user_id": user_id,
-                    "message": {"role": "user", "content": interface_message},
-                }
-            )
-            self.interface.memory_message(interface_message)
+                res_messageds.append(
+                    {
+                        "type": "system",
+                        "user_id": user_id,
+                        "message": {"role": "user", "content": interface_message},
+                    }
+                )
+                self.interface.memory_message(interface_message)
 
-            heartbeat_request = True
+                heartbeat_request = True
 
-        had_just_sent_mpw = False
+            had_just_sent_mpw = False
 
         ## Step 4: Update memory
         for messaged in res_messageds:

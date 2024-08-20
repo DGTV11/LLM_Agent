@@ -179,7 +179,7 @@ def archival_memory_insert(self: Agent, content: str) -> Optional[str]:
         Optional[str]: None is always returned as this function does not produce a response.
     """
     self.memory.archival_storage.insert(
-        Agent.memory.working_context.last_2_human_ids[-1], content
+        self.memory.working_context.last_2_human_ids[-1], content
     )
     return None
 

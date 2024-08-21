@@ -201,6 +201,8 @@ def agent_human_methods():
 
 @app.route("/messages/send", methods=["POST"])
 def send_message():
+    global sem
+
     sem.acquire()
 
     # Load data
@@ -288,6 +290,8 @@ def send_message():
 
 @app.route("/messages/send/first-message", methods=["POST"])
 def send_first_message():
+    global sem
+
     sem.acquire()
 
     # Load data
@@ -375,6 +379,8 @@ def send_first_message():
 
 @app.route("/messages/send/no-heartbeat", methods=["POST"])
 def send_message_without_heartbeat():
+    global sem
+
     sem.acquire()
     # Load data
     data = request.get_json()

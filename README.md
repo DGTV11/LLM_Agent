@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ```sh
 ollama pull openhermes
 ollama pull deepseek-v2:16b-lite-chat-q4_0
-ollama pull gemma2:2b
+ollama pull gemma2:2b-instruct-q5_0
 ollama pull nomic-embed-text
 ```
 

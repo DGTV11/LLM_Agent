@@ -9,11 +9,13 @@ import requests
 # Interface
 from constants import SERVER_URL_AND_PORT, SHOW_DEBUG_MESSAGES, READ_SENT_MESSAGES
 
-GTTS_OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "tmp.mp3")
-GTTS_SPED_UP_PATH = os.path.join(os.path.dirname(__file__), "tmp2.mp3")
+TTS_OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "tmp.mp3")
 
-GTTS_SPEED_UP_ATEMPO = 1.2
-GTTS_SPEED_UP_COMMAND = [
+'''
+TTS_SPED_UP_PATH = os.path.join(os.path.dirname(__file__), "tmp2.mp3")
+
+TTS_SPEED_UP_ATEMPO = 1.2
+TTS_SPEED_UP_COMMAND = [
     "ffmpeg",
     "-y",
     "-i",
@@ -22,28 +24,43 @@ GTTS_SPEED_UP_COMMAND = [
     f"atempo={GTTS_SPEED_UP_ATEMPO}",
     GTTS_SPED_UP_PATH,
 ]
+'''
 
-
+'''
 def read_response(response):
     try:
         tts = gTTS(response, lang="en")
-        tts.save(GTTS_OUTPUT_PATH)
+        tts.save(TTS_OUTPUT_PATH)
         subprocess.run(
-            GTTS_SPEED_UP_COMMAND, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            TTS_SPEED_UP_COMMAND, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
         )
-        playsound(GTTS_SPED_UP_PATH)
+        playsound(TTS_SPED_UP_PATH)
 
-        os.remove(GTTS_OUTPUT_PATH)
-        os.remove(GTTS_SPED_UP_PATH)
+        os.remove(TTS_OUTPUT_PATH)
+        os.remove(TTS_SPED_UP_PATH)
 
         return True
     except KeyboardInterrupt:
-        if os.path.exists(GTTS_OUTPUT_PATH):
-            os.remove(GTTS_OUTPUT_PATH)
-        if os.path.exists(GTTS_SPED_UP_PATH):
-            os.remove(GTTS_SPED_UP_PATH)
+        if os.path.exists(TTS_OUTPUT_PATH):
+            os.remove(TTS_OUTPUT_PATH)
+        if os.path.exists(TTS_SPED_UP_PATH):
+            os.remove(TTS_SPED_UP_PATH)
         return False
+'''
 
+def read_response(response):
+    try:
+        os.system(f"echo '{response.encode('unicode_escape')}' | ../piper/piper --model piper-voice/en_GB-northern_english_male-medium.onnx --output_file {TTS_OUTPUT_PATH}")
+            
+        playsound(TTS_OUTPUT_PATH)
+
+        os.remove(TTS_OUTPUT_PATH)
+
+        return True
+    except KeyboardInterrupt:
+        if os.path.exists(TTS_OUTPUT_PATH):
+            os.remove(TTS_OUTPUT_PATH)
+        return False
 
 class CLIInterface:
     @staticmethod

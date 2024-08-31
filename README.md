@@ -2,12 +2,27 @@
 A MemGPT-based conversational agent
 
 ## Installation
+### Manual installation
 1) Install Python dependencies
 ```sh
 pip install -r requirements.txt
+pip install -r client/requirements.txt
 ```
 
-2) Install ffmpeg
+2) Install Piper
+```sh
+wget https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_amd64.tar.gz -P ~/
+tar -xzf ~/piper_amd64.tar.gz -C ~/
+chmod +x ~/piper/piper
+rm ~/piper_amd64.tar.gz
+```
+
+2) Install a Piper voice
+```sh
+mkdir piper-voice
+wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_GB/northern_english_male/medium/en_GB-northern_english_male-medium.onnx -P piper-voice
+wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_GB/northern_english_male/medium/en_GB-northern_english_male-medium.onnx.json -P piper-voice
+```
 
 3) Install the required Ollama models
 ```sh
@@ -24,6 +39,20 @@ ollama pull nomic-embed-text
 docker build -f llm_os/dockerfiles/python_runner/Dockerfile -t python_runner .
 ```
 
+### Automatic installation (Arch Linux only)
+1) Run the script
+```
+bash install.sh
+```
+
+2) Install the required Ollama models (not done automatically so we don't fill up your root partition without your consent)
+```sh
+ollama pull openhermes
+ollama pull deepseek-v2:16b-lite-chat-q4_0
+ollama pull gemma2:2b-instruct-q5_0
+ollama pull nomic-embed-text
+```
+
 ## Usage (CLI)
 1) Configure LLM_Agent if you have not already done so
 ```sh
@@ -36,7 +65,7 @@ python3 main.py
 ```
 
 ## Troubleshooting
-If you are on Linux and playsound freezes up and doesn't play anything, run the following commands:
+If you are on Linux (non-arch) and playsound freezes up and doesn't play anything, run the following commands:
 ```sh
 sudo apt-get install libx264-dev libjpeg-dev
 sudo apt-get install libgstreamer1.0-dev \
@@ -57,7 +86,8 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - The base function set has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/function_sets/base.py) with few edits
 
 ## TODO
-- Upgrade LLM_Agent's archival memory (add KG)
+- Finish up auto install script, get better tts solution
+- Upgrade LLM_Agent's archival memory (add KG? File Storage)
 - Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions
 - Allow LLM_Agent to use end-to-end speech-to-speech (we need faster SLMS!)
 - Allow LLM_Agent to speak to multiple users (group chat/conversation)

@@ -12,7 +12,9 @@ from llm_os.constants import (
 )
 
 
-def execute_python_code(self: Agent, code: str) -> Optional[str]: # Adapted from: https://github.com/Jonathan-Adly/AgentRun
+def execute_python_code(
+    self: Agent, code: str
+) -> Optional[str]:  # Adapted from: https://github.com/Jonathan-Adly/AgentRun
     """
     Sends a Python code snippet to the code execution environment and returns the output. The code execution environment can automatically import any library or package by importing. Your Python environment only allows for 512MB of RAM and 1GB of swap. Your Python code snippet has 3 minutes to run.
 
@@ -25,22 +27,24 @@ def execute_python_code(self: Agent, code: str) -> Optional[str]: # Adapted from
 
     client = docker.from_env()
     for container in client.containers.list():
-        if "python_runner" in container.attrs['Config']['Image']:
+        if "python_runner" in container.attrs["Config"]["Image"]:
             runner_container = container
             break
     else:
-        runner_container = client.containers.run("python_runner", "tail -f /dev/null", detach=True)
+        runner_container = client.containers.run(
+            "python_runner", "tail -f /dev/null", detach=True
+        )
 
     runner = AgentRun(
-        container_name = runner_container.id,
-        dependencies_whitelist = [],
-        cached_dependencies = [],
-        default_timeout = 3 * 60,
-        memory_limit = "512mb",
-        memswap_limit = "1gb"
+        container_name=runner_container.id,
+        dependencies_whitelist=[],
+        cached_dependencies=[],
+        default_timeout=3 * 60,
+        memory_limit="512mb",
+        memswap_limit="1gb",
     )
     result = runner.execute_code_in_container(code)
 
     runner_container.stop()
-    
-    return result 
+
+    return result

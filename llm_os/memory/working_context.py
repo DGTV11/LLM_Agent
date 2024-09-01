@@ -160,7 +160,9 @@ class WorkingContext:
                     raise ValueError(
                         f"Edit failed: Old content not found in 'human' (make sure to use exact string)"
                     )
-                new_human = self.humans[self.last_2_human_ids[-1]].replace(old_content, new_content)
+                new_human = self.humans[self.last_2_human_ids[-1]].replace(
+                    old_content, new_content
+                )
                 return self.edit_human(self.last_2_human_ids[-1], new_human)
             case _:
                 raise KeyError(

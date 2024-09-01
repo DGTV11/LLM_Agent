@@ -44,6 +44,7 @@ def get_existing_conversation_ids():
         }
     )
 
+
 @app.route("/personas/agents", methods=["GET"])
 def get_agent_personas():
     print('FINISHED RUNNING GET "/personas/agents"')
@@ -55,6 +56,7 @@ def get_agent_personas():
         }
     )
 
+
 @app.route("/personas/humans", methods=["GET"])
 def get_human_personas():
     print('FINISHED RUNNING GET "/personas/humans"')
@@ -65,6 +67,7 @@ def get_human_personas():
             )
         }
     )
+
 
 @app.route("/agent", methods=["POST", "DELETE"])
 def agent_methods():

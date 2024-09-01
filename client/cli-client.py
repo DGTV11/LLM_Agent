@@ -11,7 +11,7 @@ from constants import SERVER_URL_AND_PORT, SHOW_DEBUG_MESSAGES, READ_SENT_MESSAG
 
 TTS_OUTPUT_PATH = os.path.join(os.path.dirname(__file__), "tmp.mp3")
 
-'''
+"""
 TTS_SPED_UP_PATH = os.path.join(os.path.dirname(__file__), "tmp2.mp3")
 
 TTS_SPEED_UP_ATEMPO = 1.2
@@ -24,9 +24,9 @@ TTS_SPEED_UP_COMMAND = [
     f"atempo={GTTS_SPEED_UP_ATEMPO}",
     GTTS_SPED_UP_PATH,
 ]
-'''
+"""
 
-'''
+"""
 def read_response(response):
     try:
         tts = gTTS(response, lang="en")
@@ -46,12 +46,15 @@ def read_response(response):
         if os.path.exists(TTS_SPED_UP_PATH):
             os.remove(TTS_SPED_UP_PATH)
         return False
-'''
+"""
+
 
 def read_response(response):
     try:
-        os.system(f"echo '{response.encode('unicode_escape')}' | ../piper/piper --model piper-voice/en_GB-northern_english_male-medium.onnx --output_file {TTS_OUTPUT_PATH}")
-            
+        os.system(
+            f"echo '{response.encode('unicode_escape')}' | ../piper/piper --model piper-voice/en_GB-northern_english_male-medium.onnx --output_file {TTS_OUTPUT_PATH}"
+        )
+
         playsound(TTS_OUTPUT_PATH)
 
         os.remove(TTS_OUTPUT_PATH)
@@ -61,6 +64,7 @@ def read_response(response):
         if os.path.exists(TTS_OUTPUT_PATH):
             os.remove(TTS_OUTPUT_PATH)
         return False
+
 
 class CLIInterface:
     @staticmethod
@@ -79,19 +83,21 @@ class CLIInterface:
     def assistant_message(msg: str, end="\n"):
         print(emojize(f":robot: {msg}"), end=end, flush=True)
 
-        if not msg.strip():
-            CLIInterface.system_message("Nothing to read!")
-            return
-        CLIInterface.system_message("Reading response... (Use Ctrl-C to skip)")
+        if READ_SENT_MESSAGES:
+            if not msg.strip():
+                CLIInterface.system_message("Nothing to read!")
+                return
 
-        start_time = time()
-        successfully_read = read_response(msg)
-        end_time = time()
+            CLIInterface.system_message("Reading response... (Use Ctrl-C to skip)")
 
-        if successfully_read:
-            CLIInterface.system_message(
-                f"Successfully read response in {round(end_time - start_time, 2)}s"
-            )
+            start_time = time()
+            successfully_read = read_response(msg)
+            end_time = time()
+
+            if successfully_read:
+                CLIInterface.system_message(
+                    f"Successfully read response in {round(end_time - start_time, 2)}s"
+                )
 
     @staticmethod
     def memory_message(msg: str, end="\n"):

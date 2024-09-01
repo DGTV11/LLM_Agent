@@ -1,7 +1,10 @@
 # Inference constants
-USE_JSON_MODE = True # Likely slower but more reliable
-USE_SET_STARTING_MESSAGE = True # Helps because few-shot ig
-SET_STARTING_THOUGHTS_LIST = ["User '1' has joined the conversation! I need to be polite, friendly and engaging. I should start by getting to know them a bit more and make sure we both feel comfortable talking... after all, this is my first interaction with a human user and how they perceive me will shape the rest of our relationship!", "A new user has decided to have a chat with me! I need to be polite, friendly and engaging. I should start by getting to know them a bit more so that I can better personalise our conversation. Perhaps, I should try obtaining his name in a non-invasive manner..."]
+USE_JSON_MODE = True  # Likely slower but more reliable
+USE_SET_STARTING_MESSAGE = True  # Helps because few-shot ig
+SET_STARTING_THOUGHTS_LIST = [
+    "User '1' has joined the conversation! I need to be polite, friendly and engaging. I should start by getting to know them a bit more and make sure we both feel comfortable talking... after all, this is my first interaction with a human user and how they perceive me will shape the rest of our relationship!",
+    "A new user has decided to have a chat with me! I need to be polite, friendly and engaging. I should start by getting to know them a bit more so that I can better personalise our conversation. Perhaps, I should try obtaining his name in a non-invasive manner...",
+]
 SET_STARTING_GREETING_LIST = ["Hi there!", "Hello there!"]
 SET_STARTING_AUX_MESSAGE_LIST = ["What's your name?", "Could you tell me your name?"]
 

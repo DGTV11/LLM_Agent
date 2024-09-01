@@ -72,7 +72,9 @@ class Agent:
         )
 
         self.__memory_pressure_warning_alr_given = False
+        self.__conscious_memory_write_alr_forced = False
         self.__messages_since_last_conscious_memory_write = 0
+        self.__memory_write_function_forced = False
         if path.exists(self.misc_info_path):
             self.__save_misc_info_path_dat_to_misc_info_vars()
         else:
@@ -84,8 +86,14 @@ class Agent:
             self.__memory_pressure_warning_alr_given = misc_info[
                 "memory_pressure_warning_alr_given"
             ]
+            self.__conscious_memory_write_alr_forced = misc_info[
+                "conscious_memory_write_alr_forced"
+            ]
             self.__messages_since_last_conscious_memory_write = misc_info[
                 "messages_since_last_conscious_memory_write"
+            ]
+            self.__memory_write_function_forced = misc_info[
+                "memory_write_function_forced"
             ]
 
     def __write_misc_info_vars_to_misc_info_path_dat(self):
@@ -95,7 +103,9 @@ class Agent:
         with open(self.misc_info_path, "w") as f:
             misc_info = {
                 "memory_pressure_warning_alr_given": self.__memory_pressure_warning_alr_given,
-                "messages_since_last_conscious_memory_write": self.__messages_since_last_conscious_memory_write
+                "conscious_memory_write_alr_forced": self.__conscious_memory_write_alr_forced,
+                "messages_since_last_conscious_memory_write": self.__messages_since_last_conscious_memory_write,
+                "memory_write_function_forced": self.__memory_write_function_forced,
             }
             f.write(json.dumps(misc_info))
 
@@ -109,12 +119,30 @@ class Agent:
         self.__write_misc_info_vars_to_misc_info_path_dat()
 
     @property
+    def conscious_memory_write_alr_forced(self):
+        return self.__conscious_memory_write_alr_forced
+
+    @conscious_memory_write_alr_forced.setter
+    def conscious_memory_write_alr_forced(self, value):
+        self.__conscious_memory_write_alr_forced = value
+        self.__write_misc_info_vars_to_misc_info_path_dat()
+
+    @property
     def messages_since_last_conscious_memory_write(self):
         return self.__messages_since_last_conscious_memory_write
 
     @messages_since_last_conscious_memory_write.setter
     def messages_since_last_conscious_memory_write(self, value):
         self.__messages_since_last_conscious_memory_write = value
+        self.__write_misc_info_vars_to_misc_info_path_dat()
+
+    @property
+    def memory_write_function_forced(self):
+        return self.__memory_write_function_forced
+
+    @memory_write_function_forced.setter
+    def memory_write_function_forced(self, value):
+        self.__memory_write_function_forced = value
         self.__write_misc_info_vars_to_misc_info_path_dat()
 
     @staticmethod
@@ -174,6 +202,28 @@ class Agent:
                     True,
                     True,
                 )  # Sends heartbeat request so LLM can retry
+            elif (
+                self.conscious_memory_write_alr_forced
+                and called_function_name not in MEMORY_EDITING_FUNCTIONS
+            ):
+                if self.memory_pressure_warning_alr_given:
+                    reason = "a memory pressure warning"
+                elif self.conscious_memory_write_alr_forced:
+                    reason = "too many agent steps without memory editing"
+                else:
+                    reason = "user intervention"
+                surround_with_single_quotes = lambda s: f"'{s}'"
+                interface_message = f"Name of function called MUST be in {', '.join(map(surround_with_single_quotes, MEMORY_EDITING_FUNCTIONS))} due to you needing to edit your memory because of {reason}. Name of function called during starting message of conversation MUST NOT be {surround_with_single_quotes(called_function_name)}"
+                res_messageds.append(
+                    Agent.package_tool_response(user_id, interface_message, True)
+                )
+                self.interface.function_res_message(interface_message, True)
+
+                return (
+                    res_messageds,
+                    True,
+                    True,
+                )  # Sends heartbeat request so LLM can retry
 
             called_function_arguments = function_call.get("arguments", (None, 0))
             if called_function_arguments == (None, 0):
@@ -184,9 +234,7 @@ class Agent:
         except KeyError as e:
             interface_message = f"Failed to parse function call: Missing {e} field of 'function_call' field. You need to add this field for the conversation to proceed!"
             if "arguments" in str(e) and "parameters" in function_call:
-                interface_message += (
-                    " You MUST replace the 'parameters' field with the 'arguments' field in your NEXT message!!!"
-                )
+                interface_message += " You MUST replace the 'parameters' field with the 'arguments' field in your NEXT message!!!"
 
             res_messageds.append(
                 Agent.package_tool_response(user_id, interface_message, True)
@@ -394,6 +442,8 @@ class Agent:
         # Step 7: Check if called function is in MEMORY_EDITING_FUNCTIONS
         if called_function_name in MEMORY_EDITING_FUNCTIONS:
             self.messages_since_last_conscious_memory_write = -1
+            self.memory_write_function_forced = False
+            self.conscious_memory_write_alr_forced = False
 
         return res_messageds, called_heartbeat_request, False
 
@@ -403,9 +453,8 @@ class Agent:
         self.memory.working_context.submit_used_human_id(user_id)
 
         ## Step 0: Check memory pressure
-        if (
-            self.memory.main_ctx_message_seq_no_tokens
-            > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
+        if self.memory.main_ctx_message_seq_no_tokens > int(
+            FLUSH_TOKEN_FRAC * self.memory.ctx_window
         ):
             self.summarise_messages_in_place()
             self.memory_pressure_warning_alr_given = False
@@ -413,11 +462,10 @@ class Agent:
         ## Step 1: Generate response
         if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
             HOST.generate(
-                model=self.model_name,
-                options={"num_ctx": self.memory.ctx_window}
-            ) # load model into memory
+                model=self.model_name, options={"num_ctx": self.memory.ctx_window}
+            )  # load model into memory
 
-            result_content = '''{
+            result_content = """{
     "thoughts": "<ST>",
     "function_call": {
         "name": "send_message",
@@ -425,9 +473,19 @@ class Agent:
             "message": "<SM>"
         }
     }
-}'''.replace("<ST>", choice(SET_STARTING_THOUGHTS_LIST)).replace("<SM>", ' '.join((choice(SET_STARTING_GREETING_LIST), choice(SET_STARTING_AUX_MESSAGE_LIST))))
+}""".replace(
+                "<ST>", choice(SET_STARTING_THOUGHTS_LIST)
+            ).replace(
+                "<SM>",
+                " ".join(
+                    (
+                        choice(SET_STARTING_GREETING_LIST),
+                        choice(SET_STARTING_AUX_MESSAGE_LIST),
+                    )
+                ),
+            )
             pass
-        else: # Regular LLM inference
+        else:  # Regular LLM inference
             if USE_JSON_MODE:
                 response = HOST.chat(
                     model=self.model_name,
@@ -538,19 +596,23 @@ class Agent:
         self.messages_since_last_conscious_memory_write += 1
 
         ## Step 3: Check memory pressure
-        if not is_first_message: # Because first message only accepts a limited range of functions
+        if (
+            not is_first_message
+        ):  # Because first message only accepts a limited range of functions
             had_just_sent_mpw = False
             if (
                 not self.memory_pressure_warning_alr_given
                 and self.memory.main_ctx_message_seq_no_tokens
                 > int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
             ):
-                interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
+                interface_message = f"Warning: Memory pressure has exceeded {WARNING_TOKEN_FRAC*100}% of the context window. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You MUST finish updating your memory before doing other necessary tasks!"
                 if heartbeat_request:
                     interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
                 else:
-                    interface_message += " A heartbeat request will be automatically triggered."
-                    
+                    interface_message += (
+                        " A heartbeat request will be automatically triggered."
+                    )
+
                 res_messageds.append(
                     {
                         "type": "system",
@@ -561,18 +623,23 @@ class Agent:
                 self.interface.memory_message(interface_message)
 
                 self.memory_pressure_warning_alr_given = True
+                self.memory_write_function_forced = True
                 heartbeat_request = True
                 had_just_sent_mpw = True
-            elif (
-                self.memory.main_ctx_message_seq_no_tokens
-                > int(FLUSH_TOKEN_FRAC * self.memory.ctx_window)
+            elif self.memory.main_ctx_message_seq_no_tokens > int(
+                FLUSH_TOKEN_FRAC * self.memory.ctx_window
             ):
                 self.summarise_messages_in_place()
                 self.memory_pressure_warning_alr_given = False
 
             ## Step 4: Check if it has been too long since the agent consciously updated its memory
-            if not is_first_message and not had_just_sent_mpw and self.messages_since_last_conscious_memory_write >= WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT:
-                interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You should not speak to the user before you finish updating your memory."
+            if (
+                not self.conscious_memory_write_alr_forced
+                and not had_just_sent_mpw
+                and self.messages_since_last_conscious_memory_write
+                >= WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT
+            ):
+                interface_message = f"Warning: It has been {self.messages_since_last_conscious_memory_write} messages since you last SUCCESSFULLY edited your memory. Please store important information from your recent conversation history into your core memory or archival storage by calling functions. You MUST finish updating your memory before doing other necessary tasks!"
                 if heartbeat_request:
                     interface_message += " After writing important information into your long-term memory, you should call the necessary functions based on the user's query before responding to the user."
                 else:
@@ -587,6 +654,8 @@ class Agent:
                 )
                 self.interface.memory_message(interface_message)
 
+                self.conscious_memory_write_alr_forced = True
+                self.memory_write_function_forced = True
                 heartbeat_request = True
 
             had_just_sent_mpw = False
@@ -682,13 +751,15 @@ class Agent:
 
         return [
             {"role": "system", "content": get_summarise_system_prompt()},
-            {"role": "user", "content": '\n\n'.join(translated_messages)}
+            {"role": "user", "content": "\n\n".join(translated_messages)},
         ]
 
     def summarise_messages_in_place(self):
         if SHOW_DEBUG_MESSAGES:
-            print(f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue...")
-            
+            print(
+                f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue..."
+            )
+
         self.interface.memory_message(
             f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue..."
         )
@@ -705,7 +776,7 @@ class Agent:
             messages_to_be_summarised.appendleft(self.memory.fifo_queue.popleft())
 
         while (
-            self.memory.main_ctx_message_seq_no_tokens 
+            self.memory.main_ctx_message_seq_no_tokens
             < int(WARNING_TOKEN_FRAC * self.memory.ctx_window)
             and self.memory.fifo_queue[0]["type"] != "user"
         ):
@@ -713,9 +784,9 @@ class Agent:
             self.memory.fifo_queue.appendleft(messages_to_be_summarised.popleft())
 
         summary_message_seq = Agent.summary_message_seq(messages_to_be_summarised)
-        
+
         if SHOW_DEBUG_MESSAGES:
-            print('Got summary message sequence')
+            print("Got summary message sequence")
 
         result = HOST.chat(
             model=self.model_name,
@@ -725,7 +796,7 @@ class Agent:
         result_content = result["message"]["content"]
 
         if SHOW_DEBUG_MESSAGES:
-            print('Got new recursive summary')
+            print("Got new recursive summary")
 
         self.memory.fifo_queue.appendleft(
             {
@@ -742,6 +813,6 @@ class Agent:
         self.memory.no_messages_in_queue += 1
 
         self.memory.write_fq_to_fq_path()
-        
+
         if SHOW_DEBUG_MESSAGES:
-            print('summarise_messages_in_place function success!')
+            print("summarise_messages_in_place function success!")

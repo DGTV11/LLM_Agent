@@ -56,7 +56,6 @@ if __name__ == "__main__":
     1) DeepSeek-V2 16B (Default, Q4_0 quant)
     2) OpenHermes (Mistral 7B finetune, default quant)
     3) Gemma 2 2B (Q5_0 quant)
-    4) Dolphin Gemma2 (Gemma 2 2B finetune. Q5_0 quant)
     > """
         )
         or 1
@@ -69,8 +68,6 @@ if __name__ == "__main__":
             model_name = "openhermes"
         case 3:
             model_name = "gemma2:2b-instruct-q5_0"
-        case 4:
-            model_name = "CognitiveComputations/dolphin-gemma2:2b-v2.9.4-Q5_0"
         case _:
             model_name = "deepseek-v2:16b-lite-chat-q4_0"
 

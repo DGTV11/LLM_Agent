@@ -49,14 +49,6 @@ def get_tokeniser_and_context_window(model_name):
             ctx_window = 8192
             num_token_func = lambda text: len(tokenizer.encode(text))
             ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
-        case "CognitiveComputations/dolphin-gemma2:2b-v2.9.4-Q5_0":
-            tokenizer = AutoTokenizer.from_pretrained(
-                "cognitivecomputations/dolphin-2.9.4-gemma2-2b",
-                token=CONFIG["huggingface_user_access_token"],
-            )
-            ctx_window = 8192
-            num_token_func = lambda text: len(tokenizer.encode(text))
-            ct_num_token_func = lambda conv: len(tokenizer.apply_chat_template(conv))
         case _:
             raise ValueError(f"{model_name} is not a supported model.")
 

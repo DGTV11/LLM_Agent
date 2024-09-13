@@ -34,6 +34,18 @@ from llm_os.constants import (
     LAST_N_MESSAGES_TO_PRESERVE,
 )
 
+class DuplicateKeyError(Exception):
+    pass
+
+def dict_raise_on_duplicates(ordered_pairs):
+    """Reject duplicate keys."""
+    d = {}
+    for k, v in ordered_pairs:
+        if k in d:
+           raise DuplicateKeyError(f"'{k}'")
+        else:
+           d[k] = v
+    return d
 
 class Agent:
     def __init__(
@@ -514,7 +526,7 @@ class Agent:
         ]
 
         try:
-            json_result = json5.loads(result_content)
+            json_result = json5.loads(result_content, object_pairs_hook=dict_raise_on_duplicates)
             if type(json_result) is not dict:
                 raise RuntimeError
         except (RuntimeError, ValueError):
@@ -522,6 +534,19 @@ class Agent:
                 interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT JSON OBJECT that includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
             else:
                 interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
+            res_messageds.append(
+                {
+                    "type": "system",
+                    "user_id": user_id,
+                    "message": {"role": "user", "content": interface_message},
+                }
+            )
+            self.interface.system_message(interface_message)
+            heartbeat_request = True
+            function_failed = False
+        except DuplicateKeyError as e:
+            interface_message = f"Error: There is more than ONE {e} field in your JSON object. You need to remove UNNECESSARY EXTRA {e} fields until there is only ONE {e} field for the conversation to proceed!"
+
             res_messageds.append(
                 {
                     "type": "system",

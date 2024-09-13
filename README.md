@@ -50,6 +50,7 @@ bash install.sh
 ollama pull openhermes
 ollama pull deepseek-v2:16b-lite-chat-q4_0
 ollama pull gemma2:2b-instruct-q5_0
+ollama pull CognitiveComputations/dolphin-gemma2:2b-v2.9.4-Q5_0
 ollama pull nomic-embed-text
 ```
 

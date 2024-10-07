@@ -29,8 +29,6 @@ class ArchivalStorage:
             name="archival_storage", embedding_function=self.ef
         )
 
-        self.cache = {}
-
     def __len__(self):
         return self.collection.count()
 
@@ -43,10 +41,8 @@ class ArchivalStorage:
 
             hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
             ids = [hex_stringify(chunk) for chunk in chunk_list]
-            metadatas = [{"for_user_id": user_id} for _ in range(len(chunk_list))]
+            metadatas = [{"user_id": user_id, "timestamp": datetime.now().astimezone().strftime("%Y-%m-%d")} for _ in range(len(chunk_list))]
             self.collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
-
-            self.cache = {}
 
             if return_ids:
                 return ids
@@ -57,31 +53,26 @@ class ArchivalStorage:
             raise e
 
     def search(
-        self, query: str, count: str, start: str
-    ):  # TODO: implement for_user_id stuff
+        self, query: str, user_id: int, count: str, start: str
+    ):
         try:
-            if query not in self.cache:
-                query_res = self.collection.query(
-                    query_texts=[query], n_results=self.top_k
-                )
-                self.cache[query] = query_res["documents"][0]
-
-            start = int(start if start else 0)
-            count = int(count if count else self.top_k)
-            end = min(count + start, len(self.cache[query]))
-
-            local_time = (
-                datetime.now()
-                .astimezone()
-                .strftime("%Y-%m-%d %I:%M:%S %p %Z%z")
-                .strip()
+            query_res = self.collection.query(
+                query_texts=[query], n_results=self.top_k, where={"user_id": user_id}
             )
+            documents = query_res["documents"]
+            metadatas = query_res["metadatas"]
+
+            start = int(start) if start else 0
+            count = int(count) if count else self.top_k
+            end = min(count + start, len(documents))
+
             results = [
-                {"timestamp": local_time, "content": document}
-                for document in self.cache[query][start:end]
+                {"timestamp": metadata["timestamp"], "content": document}
+                for metadata, document in zip(metadatas[start:end], documents[start:end])
             ]
 
-            return results, len(self.cache[query])
+            return results, len(documents)
         except Exception as e:
             print("Archival search error", e)
             raise e
+

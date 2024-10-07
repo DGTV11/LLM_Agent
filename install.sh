@@ -5,7 +5,7 @@ sudo pacman -Syu
 
 # Install required packages
 ## Pacman
-sudo pacman -S python python-pip docker wget tar
+sudo pacman -S python python-pip docker wget tar git
 ## Shell scripts
 curl -fsSL https://ollama.com/install.sh | sh
 ## Manual

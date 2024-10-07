@@ -1,5 +1,6 @@
 import json
 import math
+from datetime import datetime
 from typing import Optional
 
 from llm_os.agent import Agent
@@ -61,3 +62,13 @@ def load_webpage_from_url(self: Agent, url: str) -> Optional[str]:
     """
 
     return self.web_interface.load_webpage_from_url(url)
+
+def get_date(self: Agent) -> Optional[str]:
+    """
+    Gets the current date.
+
+    Returns:
+        str: Current date
+    """
+
+    return datetime.now().astimezone().strftime("%Y-%m-%d")

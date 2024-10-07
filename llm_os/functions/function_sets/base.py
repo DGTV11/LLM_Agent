@@ -95,7 +95,7 @@ def conversation_search(
     self: Agent, query: str, page: Optional[int] = 0
 ) -> Optional[str]:
     """
-    Search prior conversation history using case-insensitive string matching.
+    Search prior conversation history with the user you last conversed with using case-insensitive string matching.
 
     Args:
         query (str): String to search for.
@@ -112,7 +112,7 @@ def conversation_search(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.recall_storage.text_search(
-        query, count=count, start=page * count
+        query, self.memory.working_context.last_2_human_ids[-1], count=count, start=page * count
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:
@@ -122,7 +122,7 @@ def conversation_search(
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"timestamp: '{d['timestamp']}', for_user_id: '{d['user_id']}', role: '{d['message']['role']}' - {d['message']['content']}"
+            f"timestamp: '{d['timestamp']}', role: '{d['message']['role']}' - {d['message']['content']}"
             for d in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
@@ -133,7 +133,7 @@ def conversation_search_date(
     self: Agent, start_date: str, end_date: str, page: Optional[int] = 0
 ) -> Optional[str]:
     """
-    Search prior conversation history using a date range.
+    Search prior conversation history with the user you last conversed with using a date range.
 
     Args:
         start_date (str): The start of the date range to search, in the format 'YYYY-MM-DD'.
@@ -151,7 +151,7 @@ def conversation_search_date(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.recall_storage.date_search(
-        start_date, end_date, count=count, start=page * count
+        start_date, end_date, self.memory.working_context.last_2_human_ids[-1], count=count, start=page * count
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:
@@ -161,7 +161,7 @@ def conversation_search_date(
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"timestamp: '{d['timestamp']}', for_user_id: '{d['user_id']}', role: '{d['message']['role']}' message: {d['message']['content']}"
+            f"timestamp: '{d['timestamp']}', role: '{d['message']['role']}' message: {d['message']['content']}"
             for d in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"

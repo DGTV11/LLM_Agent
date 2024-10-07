@@ -53,12 +53,13 @@ class RecallStorage:
         }
         self.__save_messaged(recall_messaged)
 
-    def text_search(self, query_string, count=None, start=None):
+    def text_search(self, query_string, for_user_id, count=None, start=None):
         results = [
             messaged
             for messaged in self.conv_messageds
             if messaged["message"]["content"] is not None
             and query_string.lower() in messaged["message"]["content"].lower()
+            and messaged["user_id"] == for_user_id
         ]
 
         start = int(start if start else 0)
@@ -67,7 +68,7 @@ class RecallStorage:
 
         return results[start:end], len(results)
 
-    def date_search(self, start_date, end_date, count=None, start=None):
+    def date_search(self, start_date, end_date, for_user_id, count=None, start=None):
         start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         end_dt = datetime.strptime(end_date, "%Y-%m-%d")
 
@@ -77,6 +78,7 @@ class RecallStorage:
             if start_dt
             <= datetime.strptime(messaged["timestamp"], "%Y-%m-%d")
             <= end_dt
+            and messaged["user_id"] == for_user_id
         ]
 
         start = int(start if start else 0)

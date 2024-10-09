@@ -59,3 +59,8 @@ NOMIC_EMBED_TEXT_TOKENIZER = Tokenizer.from_pretrained(
     "nomic-ai/nomic-embed-text-v1.5",
     auth_token=CONFIG["huggingface_user_access_token"],
 )
+
+QWEN_2_5_TOKENIZER = Tokenizer.from_pretrained(
+    "Qwen/Qwen2.5-0.5B-Instruct",
+    auth_token=CONFIG["huggingface_user_access_token"],
+)

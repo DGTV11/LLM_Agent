@@ -51,6 +51,7 @@ ollama pull openhermes
 ollama pull deepseek-v2:16b-lite-chat-q4_0
 ollama pull gemma2:2b-instruct-q5_0
 ollama pull nomic-embed-text
+ollama pull qwen2.5:0.5b
 ```
 
 ## Usage (CLI)

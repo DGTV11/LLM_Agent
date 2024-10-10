@@ -215,7 +215,8 @@ class Agent:
                     True,
                 )  # Sends heartbeat request so LLM can retry
             elif (
-                self.conscious_memory_write_alr_forced
+                not is_first_message
+                and self.conscious_memory_write_alr_forced
                 and called_function_name not in MEMORY_EDITING_FUNCTIONS
             ):
                 if self.memory_pressure_warning_alr_given:
@@ -274,7 +275,7 @@ class Agent:
 
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 
-        # Step 3: Get python function and function schema
+        # Step 3: Get Python function and function schema
         called_function = called_function_dat["python_function"]
         called_function_schema = called_function_dat["json_schema"]
         called_function_parameters = called_function_schema["parameters"]["properties"]

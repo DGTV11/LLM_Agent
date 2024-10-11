@@ -112,6 +112,12 @@ class FileStorage:
 
         return summaries[file_rel_path_parts_tuple]['summary']
 
+    def browse_files(self, user_id, count, start):
+        pass
+
+    def search_files(self, user_id, query, count, start):
+        pass
+
     def make_file(self, user_id, file_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
@@ -143,3 +149,28 @@ class FileStorage:
         del summaries[file_rel_path_parts_tuple]
 
         self.__write_file_summaries(user_id, summaries, file_rel_path_parts, "Removed")
+
+    def read_file(self):
+        pass
+
+    def append_to_file(self):
+        pass
+
+    def replace_in_file(self):
+        pass
+
+    def revert_to_last_commit(self, user_id):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        heads = repo.heads
+        master = heads.master
+        log = master.log()
+        repo.git.revert(log[-1].hexsha, no_edit=True)
+
+    def get_diff(self, user_id):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        t = repo.head.commit.tree
+        return repo.git.diff(t)

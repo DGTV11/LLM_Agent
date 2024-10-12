@@ -41,7 +41,13 @@ class ArchivalStorage:
 
             hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
             ids = [hex_stringify(chunk) for chunk in chunk_list]
-            metadatas = [{"user_id": user_id, "timestamp": datetime.now().astimezone().strftime("%Y-%m-%d")} for _ in range(len(chunk_list))]
+            metadatas = [
+                {
+                    "user_id": user_id,
+                    "timestamp": datetime.now().astimezone().strftime("%Y-%m-%d"),
+                }
+                for _ in range(len(chunk_list))
+            ]
             self.collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
 
             if return_ids:
@@ -52,9 +58,7 @@ class ArchivalStorage:
             print("Archival insert error", e)
             raise e
 
-    def search(
-        self, query: str, user_id: int, count: str, start: str
-    ):
+    def search(self, query: str, user_id: int, count: str, start: str):
         try:
             query_res = self.collection.query(
                 query_texts=[query], n_results=self.top_k, where={"user_id": user_id}
@@ -68,11 +72,12 @@ class ArchivalStorage:
 
             results = [
                 {"timestamp": metadata["timestamp"], "content": document}
-                for metadata, document in zip(metadatas[start:end], documents[start:end])
+                for metadata, document in zip(
+                    metadatas[start:end], documents[start:end]
+                )
             ]
 
             return results, len(documents)
         except Exception as e:
             print("Archival search error", e)
             raise e
-

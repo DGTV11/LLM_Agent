@@ -112,7 +112,10 @@ def conversation_search(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.recall_storage.text_search(
-        query, self.memory.working_context.last_2_human_ids[-1], count=count, start=page * count
+        query,
+        self.memory.working_context.last_2_human_ids[-1],
+        count=count,
+        start=page * count,
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:
@@ -151,7 +154,11 @@ def conversation_search_date(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.recall_storage.date_search(
-        start_date, end_date, self.memory.working_context.last_2_human_ids[-1], count=count, start=page * count
+        start_date,
+        end_date,
+        self.memory.working_context.last_2_human_ids[-1],
+        count=count,
+        start=page * count,
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:

@@ -34,18 +34,21 @@ from llm_os.constants import (
     LAST_N_MESSAGES_TO_PRESERVE,
 )
 
+
 class DuplicateKeyError(Exception):
     pass
+
 
 def dict_raise_on_duplicates(ordered_pairs):
     """Reject duplicate keys."""
     d = {}
     for k, v in ordered_pairs:
         if k in d:
-           raise DuplicateKeyError(f"'{k}'")
+            raise DuplicateKeyError(f"'{k}'")
         else:
-           d[k] = v
+            d[k] = v
     return d
+
 
 class Agent:
     def __init__(
@@ -527,7 +530,9 @@ class Agent:
         ]
 
         try:
-            json_result = json5.loads(result_content, object_pairs_hook=dict_raise_on_duplicates)
+            json_result = json5.loads(
+                result_content, object_pairs_hook=dict_raise_on_duplicates
+            )
             if type(json_result) is not dict:
                 raise RuntimeError
         except (RuntimeError, ValueError):

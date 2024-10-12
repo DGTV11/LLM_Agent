@@ -63,6 +63,7 @@ def load_webpage_from_url(self: Agent, url: str) -> Optional[str]:
 
     return self.web_interface.load_webpage_from_url(url)
 
+
 def get_date(self: Agent) -> Optional[str]:
     """
     Gets the current date.

@@ -282,7 +282,10 @@ class FileStorage:
         )
 
     def make_folder(self, user_id, folder_rel_path_parts):
-        pass
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+
+        mkdir(path.join(repo_path, *folder_rel_path_parts))
+        self.make_file(user_id, folder_rel_path_parts+["placeholder_file.txt"])
 
     def remove_file(self, user_id, file_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)

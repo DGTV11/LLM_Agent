@@ -20,8 +20,9 @@ from host import HOST_URL, HOST
 
 
 class FileStorage:
-    def __init__(self, conv_name, top_k=100):
+    def __init__(self, conv_name, tokeniser, top_k=100):
         self.top_k = top_k
+        self.agent_tokeniser = tokeniser._tokenizer
 
         self.folder_path = path.join(
             path.dirname(path.dirname(path.dirname(__file__))),
@@ -188,7 +189,7 @@ class FileStorage:
 
     def populate_embedding_collection(self, user_id, collection):
         splitter = MarkdownSplitter.from_huggingface_tokenizer(
-            NOMIC_EMBED_TEXT_TOKENIZER, 8192
+            NOMIC_EMBED_TEXT_TOKENIZER, 128
         )
 
         for file_path, file_rel_path_parts in zip(
@@ -229,28 +230,26 @@ class FileStorage:
         collection = self.populate_embedding_collection(
             user_id, self.initialise_embedding_collection()
         )
-        # TODO
 
     def string_search_files(self, user_id, string, count, start):
         pass
 
     # * File Memory single file search functions
     def read_file(self, user_id, file_rel_path_parts, count, start):
-        results = self.get_file_rel_paths_parts(user_id)
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+
+        splitter = MarkdownSplitter.from_huggingface_tokenizer(
+            self.agent_tokeniser, 128
+        )
+
+        with open(path.join(repo_path, *file_rel_path_parts), "r"):
+            results = splitter.chunks(f.read())
 
         start = int(start if start else 0)
         count = int(count if count else len(results))
         end = min(count + start, len(results))
 
-        return list(
-            zip(
-                results[start:end],
-                map(
-                    lambda item: self.get_file_summary(user_id, item),
-                    results[start:end],
-                ),
-            )
-        ), len(results)
+        return results[start:end], len(results)
 
     def embedding_search_file(self, user_id, query, count, start):
         collection = self.populate_embedding_collection(

@@ -43,7 +43,7 @@ class FileStorage:
         )
 
     def __len__(self):
-        return sum(lambda id: len(self.get_file_paths(id)), self.get_all_user_ids_with_folders)
+        return sum(map(lambda id: len(self.get_file_rel_paths(id)), self.get_all_user_ids_with_folders))
 
     def get_all_user_ids_with_folders(self):
         return [f for f in os.listdir(self.folder_path) if os.path.isdir(f)]
@@ -126,10 +126,20 @@ class FileStorage:
         
         return hash_func.hexdigest()
 
-    def get_file_paths(self, user_id):
+    def get_file_rel_paths(self, user_id):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo_pathlib_dir = pathlib.Path(repo_path)
         return [str(item.relative_to(repo_pathlib_dir)) for item in repo_pathlib_dir.rglob("*") if item.is_file() and item.parts.isdisjoint(BLACKLISTED_FOLDERS_OR_FILES)]
+
+    def get_file_paths(self, user_id):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo_pathlib_dir = pathlib.Path(repo_path)
+        return [str(item) for item in repo_pathlib_dir.rglob("*") if item.is_file() and item.parts.isdisjoint(BLACKLISTED_FOLDERS_OR_FILES)]
+
+    def get_file_rel_paths_parts(self, user_id):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo_pathlib_dir = pathlib.Path(repo_path)
+        return [item.relative_to(repo_pathlib_dir).parts for item in repo_pathlib_dir.rglob("*") if item.is_file() and item.parts.isdisjoint(BLACKLISTED_FOLDERS_OR_FILES)]
 
     #* File Memory embedding functions
     def initialise_embedding_collection(self):
@@ -139,24 +149,58 @@ class FileStorage:
             url=f"{HOST_URL}/api/embed",
         )
         collection = client.get_or_create_collection(
-            name="archival_storage", embedding_function=ef
+            name="file_memory_embeddings", embedding_function=ef
         )
         return collection
     
     def populate_embedding_collection(self, user_id, collection):
-        pass
+        splitter = MarkdownSplitter.from_huggingface_tokenizer(
+            NOMIC_EMBED_TEXT_TOKENIZER, 8192
+        )
 
-    #* File Memory search functions
+        for file_path, file_rel_path_parts in zip(self.get_file_paths(user_id), self.get_file_rel_paths_parts(user_id)):
+            with open(file_path, "r") as f:
+                chunk_list = splitter.chunks(f.read())
+
+            hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
+            ids = [hex_stringify(chunk) for chunk in chunk_list]
+            metadatas = [{"file_rel_path_parts": file_rel_path_parts} for _ in range(len(chunk_list))]
+            collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
+
+        return collection
+
+    #* File Memory repository search functions
     def browse_files(self, user_id, count, start):
-        pass
+        results = self.get_file_rel_paths_parts(user_id)
 
-    def search_files(self, user_id, query, count, start):
-        pass
+        start = int(start if start else 0)
+        count = int(count if count else len(results))
+        end = min(count + start, len(results))
+
+        return list(zip(results[start:end], map(lambda item: self.get_file_summary(user_id, item), results[start:end]))), len(results)
+
+    def embedding_search_files(self, user_id, query, count, start):
+        collection = self.populate_embedding_collection(user_id, self.initialise_embedding_collection())
+        #TODO
 
     def string_search_files(self, user_id, string, count, start):
         pass
 
+    #* File Memory single file search functions
     def read_file(self, user_id, file_rel_path_parts, count, start):
+        results = self.get_file_rel_paths_parts(user_id)
+
+        start = int(start if start else 0)
+        count = int(count if count else len(results))
+        end = min(count + start, len(results))
+
+        return list(zip(results[start:end], map(lambda item: self.get_file_summary(user_id, item), results[start:end]))), len(results)
+
+
+    def embedding_search_file(self, user_id, query, count, start):
+        collection = self.populate_embedding_collection(user_id, self.initialise_embedding_collection())
+
+    def string_search_file(self, user_id, string, count, start):
         pass
 
     #* File Memory edit functions
@@ -178,6 +222,9 @@ class FileStorage:
         summaries[new_file_rel_path_parts_tuple]['summary'] = 'Empty file'
 
         self.__write_file_summaries(user_id, summaries, new_file_rel_path_parts, "Created")
+
+    def make_folder(self, user_id, folder_rel_path_parts):
+        pass
 
     def remove_file(self, user_id, file_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)

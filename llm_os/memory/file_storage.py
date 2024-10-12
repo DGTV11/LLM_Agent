@@ -38,7 +38,7 @@ class FileStorage:
         with open(summaries_path, "w") as f:
             f.write(json.dumps(hashes))
 
-        if not file_rel_path_parts:
+        if not edit_mode:
             repo.index.add([summaries_path])
             repo.index.commit(f"Updated file_summaries.json for user {user_id}")
         else:
@@ -89,7 +89,7 @@ class FileStorage:
         repo_pathlib_dir = pathlib.Path(repo_path)
         return [str(item.relative_to(repo_pathlib_dir)) for item in repo_pathlib_dir.rglob("*") if item.is_file() and item.parts.isdisjoint(BLACKLISTED_FOLDERS_OR_FILES)]
 
-    def get_file_summary(self, user_id, file_rel_path_parts):
+    def get_file_summary(self, user_id, file_rel_path_parts, edit_mode=None):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         summaries = self.__read_file_summaries(user_id)
 
@@ -108,7 +108,7 @@ class FileStorage:
 
             summaries[file_rel_path_parts_tuple]['summary'] = summary
 
-            self.__write_file_summaries(user_id, summaries)
+            self.__write_file_summaries(user_id, summaries, file_rel_path_parts, edit_mode)
 
         return summaries[file_rel_path_parts_tuple]['summary']
 
@@ -116,6 +116,12 @@ class FileStorage:
         pass
 
     def search_files(self, user_id, query, count, start):
+        pass
+
+    def string_search_files(self, user_id, string, count, start):
+        pass
+
+    def read_file(self, user_id, file_rel_path_parts, count, start):
         pass
 
     def make_file(self, user_id, file_rel_path_parts):
@@ -150,14 +156,40 @@ class FileStorage:
 
         self.__write_file_summaries(user_id, summaries, file_rel_path_parts, "Removed")
 
-    def read_file(self):
-        pass
+    def append_to_file(self, user_id, file_rel_path_parts, text):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
 
-    def append_to_file(self):
-        pass
+        file_path = path.join(repo_path, *file_rel_path_parts)
 
-    def replace_in_file(self):
-        pass
+        with open(file_path, "a") as f:
+            f.write(text)
+
+        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
+
+    def replace_first_in_file(self, user_id, file_rel_path_parts, old_text, new_text):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        file_path = path.join(repo_path, *file_rel_path_parts)
+
+        with open(file_path, "r+") as f:
+            file_contents = f.read().replace(old_text, new_text, 1)
+            f.write(file_contents)
+
+        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
+
+    def replace_all_in_file(self):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        file_path = path.join(repo_path, *file_rel_path_parts)
+
+        with open(file_path, "r+") as f:
+            file_contents = f.read().replace(old_text, new_text)
+            f.write(file_contents)
+
+        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
 
     def revert_to_last_commit(self, user_id):
         repo_path = self.__get_repo_path_from_user_id(user_id)

@@ -224,7 +224,9 @@ def send_message():
         web_interface = WebInterface()
 
         # Load agent
-        working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
+        working_context = WorkingContext(
+            CONFIG["model_name"], conv_name, None, None, None
+        )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
         agent = Agent(
@@ -270,7 +272,9 @@ def send_message():
                             "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
                             "ctx_window": agent_obj.memory.ctx_window,
                         },
-                        "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                        "duration": str(
+                            timedelta(seconds=round(end_time - start_time, 2))
+                        ),
                     }
                 ) + "\n"
 
@@ -312,7 +316,9 @@ def send_first_message():
         web_interface = WebInterface()
 
         # Load agent
-        working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
+        working_context = WorkingContext(
+            CONFIG["model_name"], conv_name, None, None, None
+        )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
         agent = Agent(
@@ -358,7 +364,9 @@ def send_first_message():
                             "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
                             "ctx_window": agent_obj.memory.ctx_window,
                         },
-                        "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                        "duration": str(
+                            timedelta(seconds=round(end_time - start_time, 2))
+                        ),
                     }
                 ) + "\n"
 
@@ -400,7 +408,9 @@ def send_message_without_heartbeat():
         web_interface = WebInterface()
 
         # Load agent
-        working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
+        working_context = WorkingContext(
+            CONFIG["model_name"], conv_name, None, None, None
+        )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
         agent = Agent(
@@ -442,6 +452,7 @@ def send_message_without_heartbeat():
         )
     finally:
         sem.release()
+
 
 if __name__ == "__main__":
     if not CONFIG:

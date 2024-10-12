@@ -57,7 +57,7 @@ class FileStorage:
         )
 
     def get_all_user_ids_with_folders(self):
-        return [f for f in os.listdir(self.folder_path) if os.path.isdir(f)]
+        return [f for f in os.listdir(self.folder_path) if path.isdir(f)]
 
     def __write_file_summaries(
         self, user_id, hashes, file_rel_path_parts=None, edit_mode=None
@@ -226,12 +226,12 @@ class FileStorage:
             )
         ), len(results)
 
-    def embedding_search_files(self, user_id, query, count, start):
+    def embedding_search_files(self, user_id, query, count, start): #TODO
         collection = self.populate_embedding_collection(
             user_id, self.initialise_embedding_collection()
         )
 
-    def string_search_files(self, user_id, string, count, start):
+    def string_search_files(self, user_id, string, count, start): #TODO
         pass
 
     # * File Memory single file search functions
@@ -251,12 +251,12 @@ class FileStorage:
 
         return results[start:end], len(results)
 
-    def embedding_search_file(self, user_id, query, count, start):
+    def embedding_search_file(self, user_id, query, count, start): #TODO
         collection = self.populate_embedding_collection(
             user_id, self.initialise_embedding_collection()
         )
 
-    def string_search_file(self, user_id, string, count, start):
+    def string_search_file(self, user_id, string, count, start): #TODO
         pass
 
     # * File Memory edit functions
@@ -323,7 +323,7 @@ class FileStorage:
 
         self.get_file_summary(user_id, file_rel_path_parts, "Modified")
 
-    def replace_all_in_file(self):
+    def replace_all_in_file(self, user_id, file_rel_path_parts, old_text, new_text):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 

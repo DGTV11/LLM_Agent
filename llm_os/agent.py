@@ -13,6 +13,7 @@ from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
+from llm_os.memory.file_storage import FileStorage
 from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
 from llm_os.constants import (
     USE_JSON_MODE,
@@ -62,6 +63,7 @@ class Agent:
         working_context: WorkingContext,
         archival_storage: ArchivalStorage,
         recall_storage: RecallStorage,
+        file_storage: FileStorage,
     ):
         self.misc_info_path = path.join(
             path.dirname(path.dirname(__file__)),
@@ -84,6 +86,7 @@ class Agent:
             working_context,
             archival_storage,
             recall_storage,
+            file_storage,
         )
 
         self.__memory_pressure_warning_alr_given = False

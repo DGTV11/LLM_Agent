@@ -20,6 +20,7 @@ class Memory:
         working_context: WorkingContext,
         archival_storage: ArchivalStorage,
         recall_storage: RecallStorage,
+        file_storage: FileStorage,
     ):
         self.fq_path = path.join(
             path.dirname(path.dirname(path.dirname(__file__))),
@@ -45,6 +46,7 @@ class Memory:
         # External context
         self.archival_storage = archival_storage
         self.recall_storage = recall_storage
+        self.file_storage = file_storage
 
         self.tokenizer, self.ctx_window, self.num_token_func, self.ct_num_token_func = (
             get_tokeniser_and_context_window(model_name)

@@ -12,11 +12,13 @@ from config import CONFIG
 from llm_os.agent import Agent
 from llm_os.interface import CLIInterface, ServerInterface
 from llm_os.web_interface import WebInterface
+from llm_os.tokenisers import get_tokeniser_and_context_window
 
 from llm_os.memory.memory import Memory
 from llm_os.memory.working_context import WorkingContext
 from llm_os.memory.recall_storage import RecallStorage
 from llm_os.memory.archival_storage import ArchivalStorage
+from llm_os.memory.file_storage import FileStorage
 
 from llm_os.prompts.gpt_system import get_system_text
 
@@ -132,6 +134,8 @@ def agent_methods():
             )
             recall_storage = RecallStorage(conv_name)
             archival_storage = ArchivalStorage(conv_name)
+            file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+
             agent = Agent(
                 interface,
                 web_interface,
@@ -142,6 +146,7 @@ def agent_methods():
                 working_context,
                 archival_storage,
                 recall_storage,
+                file_storage,
             )
 
             print('FINISHED RUNNING POST "/agent"')
@@ -229,6 +234,8 @@ def send_message():
         )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
+        file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+
         agent = Agent(
             interface,
             web_interface,
@@ -239,6 +246,7 @@ def send_message():
             working_context,
             archival_storage,
             recall_storage,
+            file_storage,
         )
 
         # Send message
@@ -321,6 +329,8 @@ def send_first_message():
         )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
+        file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+
         agent = Agent(
             interface,
             web_interface,
@@ -331,6 +341,7 @@ def send_first_message():
             working_context,
             archival_storage,
             recall_storage,
+            file_storage,
         )
 
         # Send message
@@ -413,6 +424,8 @@ def send_message_without_heartbeat():
         )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
+        file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+
         agent = Agent(
             interface,
             web_interface,
@@ -423,6 +436,7 @@ def send_message_without_heartbeat():
             working_context,
             archival_storage,
             recall_storage,
+            file_storage,
         )
 
         # Send message

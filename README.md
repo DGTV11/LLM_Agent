@@ -9,30 +9,20 @@ pip install -r requirements.txt
 pip install -r client/requirements.txt
 ```
 
-2) Install Piper
+2) Install the required Ollama models
 ```sh
-wget https://github.com/rhasspy/piper/releases/download/v1.2.0/piper_amd64.tar.gz -P ~/
-tar -xzf ~/piper_amd64.tar.gz -C ~/
-chmod +x ~/piper/piper
-rm ~/piper_amd64.tar.gz
+ollama pull nomic-embed-text
+ollama pull qwen2.5:0.5b
 ```
 
-2) Install a Piper voice
-```sh
-mkdir piper-voice
-wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_GB/northern_english_male/medium/en_GB-northern_english_male-medium.onnx -P piper-voice
-wget https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/en/en_GB/northern_english_male/medium/en_GB-northern_english_male-medium.onnx.json -P piper-voice
-```
-
-3) Install the required Ollama models
+3) Install at least one other supported Ollama model
 ```sh
 ollama pull openhermes
 ollama pull deepseek-v2:16b-lite-chat-q4_0
 ollama pull gemma2:2b-instruct-q5_0
-ollama pull nomic-embed-text
 ```
 
-4) Install docker
+4) Install Docker
 
 5) Build the Docker images from the dockerfiles
 ```
@@ -45,13 +35,12 @@ docker build -f llm_os/dockerfiles/python_runner/Dockerfile -t python_runner .
 bash install.sh
 ```
 
-2) Install the required Ollama models (not done automatically so we don't fill up your root partition without your consent)
+2) Install at least one supported Ollama model (not done automatically so we don't fill up your root partition without your consent)
 ```sh
 ollama pull openhermes
 ollama pull deepseek-v2:16b-lite-chat-q4_0
 ollama pull gemma2:2b-instruct-q5_0
-ollama pull nomic-embed-text
-ollama pull qwen2.5:0.5b
+
 ```
 
 ## Usage (CLI)

@@ -204,247 +204,244 @@ def agent_human_methods():
 
 @app.route("/messages/send", methods=["POST"])
 def send_message():
-    global sem
-
     sem.acquire()
 
-    # Load data
-    data = request.get_json()
-    conv_name = data.get("conv_name")
-    user_id = data.get("user_id")
-    message = data.get("message")
+    try:
+        # Load data
+        data = request.get_json()
+        conv_name = data.get("conv_name")
+        user_id = data.get("user_id")
+        message = data.get("message")
 
-    # Load system instructions
-    system_instructions = get_system_text("llm_agent_chat")
+        # Load system instructions
+        system_instructions = get_system_text("llm_agent_chat")
 
-    # Load functions
-    function_dats = get_function_dats_from_function_sets(load_all_function_sets())
+        # Load functions
+        function_dats = get_function_dats_from_function_sets(load_all_function_sets())
 
-    # Load interfaces
-    interface = ServerInterface()
-    web_interface = WebInterface()
+        # Load interfaces
+        interface = ServerInterface()
+        web_interface = WebInterface()
 
-    # Load agent
-    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
-    recall_storage = RecallStorage(conv_name)
-    archival_storage = ArchivalStorage(conv_name)
-    agent = Agent(
-        interface,
-        web_interface,
-        conv_name,
-        CONFIG["model_name"],
-        function_dats,
-        system_instructions,
-        working_context,
-        archival_storage,
-        recall_storage,
-    )
+        # Load agent
+        working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
+        recall_storage = RecallStorage(conv_name)
+        archival_storage = ArchivalStorage(conv_name)
+        agent = Agent(
+            interface,
+            web_interface,
+            conv_name,
+            CONFIG["model_name"],
+            function_dats,
+            system_instructions,
+            working_context,
+            archival_storage,
+            recall_storage,
+        )
 
-    # Send message
-    agent.interface.user_message(message)
-    agent.memory.append_messaged_to_fq_and_rs(
-        {
-            "type": "user",
-            "user_id": user_id,
-            "message": {"role": "user", "content": message},
-        }
-    )
+        # Send message
+        agent.interface.user_message(message)
+        agent.memory.append_messaged_to_fq_and_rs(
+            {
+                "type": "user",
+                "user_id": user_id,
+                "message": {"role": "user", "content": message},
+            }
+        )
 
-    # Generate agent responses
-    @stream_with_context
-    def generate_agent_responses(agent_obj):
-        total_start_time = time()
+        # Generate agent responses
+        @stream_with_context
+        def generate_agent_responses(agent_obj):
+            total_start_time = time()
 
-        heartbeat_request = True
-        while heartbeat_request:
-            start_time = time()
-            _, heartbeat_request, _ = agent_obj.step(user_id)
-            end_time = time()
+            heartbeat_request = True
+            while heartbeat_request:
+                start_time = time()
+                _, heartbeat_request, _ = agent_obj.step(user_id)
+                end_time = time()
 
-            server_message_stack = agent_obj.interface.server_message_stack.copy()
-            agent_obj.interface.server_message_stack = []
+                server_message_stack = agent_obj.interface.server_message_stack.copy()
+                agent_obj.interface.server_message_stack = []
+
+                yield json.dumps(
+                    {
+                        "server_message_stack": server_message_stack,
+                        "ctx_info": {
+                            "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
+                            "ctx_window": agent_obj.memory.ctx_window,
+                        },
+                        "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                    }
+                ) + "\n"
+
+            total_end_time = time()
 
             yield json.dumps(
                 {
-                    "server_message_stack": server_message_stack,
-                    "ctx_info": {
-                        "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
-                        "ctx_window": agent_obj.memory.ctx_window,
-                    },
-                    "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                    "total_duration": str(
+                        timedelta(seconds=round(total_end_time - total_start_time, 2))
+                    )
                 }
             ) + "\n"
 
-        total_end_time = time()
-
-        yield json.dumps(
-            {
-                "total_duration": str(
-                    timedelta(seconds=round(total_end_time - total_start_time, 2))
-                )
-            }
-        ) + "\n"
-
-    sem.release()
-
-    print('FINISHED RUNNING POST "/messages/send"')
-    return Response(generate_agent_responses(agent), mimetype="application/json")
+        print('FINISHED RUNNING POST "/messages/send"')
+        return Response(generate_agent_responses(agent), mimetype="application/json")
+    finally:
+        sem.release()
 
 
 @app.route("/messages/send/first-message", methods=["POST"])
 def send_first_message():
-    global sem
-
     sem.acquire()
 
-    # Load data
-    data = request.get_json()
-    conv_name = data.get("conv_name")
-    user_id = data.get("user_id")
-    message = data.get("message")
+    try:
+        # Load data
+        data = request.get_json()
+        conv_name = data.get("conv_name")
+        user_id = data.get("user_id")
+        message = data.get("message")
 
-    # Load system instructions
-    system_instructions = get_system_text("llm_agent_chat")
+        # Load system instructions
+        system_instructions = get_system_text("llm_agent_chat")
 
-    # Load functions
-    function_dats = get_function_dats_from_function_sets(load_all_function_sets())
+        # Load functions
+        function_dats = get_function_dats_from_function_sets(load_all_function_sets())
 
-    # Load interfaces
-    interface = ServerInterface()
-    web_interface = WebInterface()
+        # Load interfaces
+        interface = ServerInterface()
+        web_interface = WebInterface()
 
-    # Load agent
-    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
-    recall_storage = RecallStorage(conv_name)
-    archival_storage = ArchivalStorage(conv_name)
-    agent = Agent(
-        interface,
-        web_interface,
-        conv_name,
-        CONFIG["model_name"],
-        function_dats,
-        system_instructions,
-        working_context,
-        archival_storage,
-        recall_storage,
-    )
+        # Load agent
+        working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
+        recall_storage = RecallStorage(conv_name)
+        archival_storage = ArchivalStorage(conv_name)
+        agent = Agent(
+            interface,
+            web_interface,
+            conv_name,
+            CONFIG["model_name"],
+            function_dats,
+            system_instructions,
+            working_context,
+            archival_storage,
+            recall_storage,
+        )
 
-    # Send message
-    agent.interface.system_message(message)
-    agent.memory.append_messaged_to_fq_and_rs(
-        {
-            "type": "system",
-            "user_id": "user_id",
-            "message": {"role": "user", "content": message},
-        }
-    )
+        # Send message
+        agent.interface.system_message(message)
+        agent.memory.append_messaged_to_fq_and_rs(
+            {
+                "type": "system",
+                "user_id": "user_id",
+                "message": {"role": "user", "content": message},
+            }
+        )
 
-    # Generate agent responses
-    @stream_with_context
-    def generate_agent_responses(agent_obj):
-        total_start_time = time()
+        # Generate agent responses
+        @stream_with_context
+        def generate_agent_responses(agent_obj):
+            total_start_time = time()
 
-        heartbeat_request = True
-        while heartbeat_request:
-            start_time = time()
-            _, heartbeat_request, _ = agent_obj.step(user_id, is_first_message=True)
-            end_time = time()
+            heartbeat_request = True
+            while heartbeat_request:
+                start_time = time()
+                _, heartbeat_request, _ = agent_obj.step(user_id, is_first_message=True)
+                end_time = time()
 
-            server_message_stack = agent_obj.interface.server_message_stack.copy()
-            agent_obj.interface.server_message_stack = []
+                server_message_stack = agent_obj.interface.server_message_stack.copy()
+                agent_obj.interface.server_message_stack = []
+
+                yield json.dumps(
+                    {
+                        "server_message_stack": server_message_stack,
+                        "ctx_info": {
+                            "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
+                            "ctx_window": agent_obj.memory.ctx_window,
+                        },
+                        "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                    }
+                ) + "\n"
+
+            total_end_time = time()
 
             yield json.dumps(
                 {
-                    "server_message_stack": server_message_stack,
-                    "ctx_info": {
-                        "current_ctx_token_count": agent_obj.memory.main_ctx_message_seq_no_tokens,
-                        "ctx_window": agent_obj.memory.ctx_window,
-                    },
-                    "duration": str(timedelta(seconds=round(end_time - start_time, 2))),
+                    "total_duration": str(
+                        timedelta(seconds=round(total_end_time - total_start_time, 2))
+                    )
                 }
             ) + "\n"
 
-        total_end_time = time()
-
-        yield json.dumps(
-            {
-                "total_duration": str(
-                    timedelta(seconds=round(total_end_time - total_start_time, 2))
-                )
-            }
-        ) + "\n"
-
-    sem.release()
-
-    print('FINISHED RUNNING POST "/messages/send/first-message"')
-    return Response(generate_agent_responses(agent), mimetype="application/json")
+        print('FINISHED RUNNING POST "/messages/send/first-message"')
+        return Response(generate_agent_responses(agent), mimetype="application/json")
+    finally:
+        sem.release()
 
 
 @app.route("/messages/send/no-heartbeat", methods=["POST"])
 def send_message_without_heartbeat():
-    global sem
-
     sem.acquire()
-    # Load data
-    data = request.get_json()
-    conv_name = data.get("conv_name")
-    user_id = data.get("user_id")
-    message = data.get("message")
 
-    # Load system instructions
-    system_instructions = get_system_text("llm_agent_chat")
+    try:
+        # Load data
+        data = request.get_json()
+        conv_name = data.get("conv_name")
+        user_id = data.get("user_id")
+        message = data.get("message")
 
-    # Load functions
-    function_dats = get_function_dats_from_function_sets(load_all_function_sets())
+        # Load system instructions
+        system_instructions = get_system_text("llm_agent_chat")
 
-    # Load interfaces
-    interface = ServerInterface()
-    web_interface = WebInterface()
+        # Load functions
+        function_dats = get_function_dats_from_function_sets(load_all_function_sets())
 
-    # Load agent
-    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
-    recall_storage = RecallStorage(conv_name)
-    archival_storage = ArchivalStorage(conv_name)
-    agent = Agent(
-        interface,
-        web_interface,
-        conv_name,
-        CONFIG["model_name"],
-        function_dats,
-        system_instructions,
-        working_context,
-        archival_storage,
-        recall_storage,
-    )
+        # Load interfaces
+        interface = ServerInterface()
+        web_interface = WebInterface()
 
-    # Send message
-    agent.interface.system_message(message)
-    agent.memory.append_messaged_to_fq_and_rs(
-        {
-            "type": "system",
-            "user_id": user_id,
-            "message": {"role": "user", "content": message},
-        }
-    )
+        # Load agent
+        working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
+        recall_storage = RecallStorage(conv_name)
+        archival_storage = ArchivalStorage(conv_name)
+        agent = Agent(
+            interface,
+            web_interface,
+            conv_name,
+            CONFIG["model_name"],
+            function_dats,
+            system_instructions,
+            working_context,
+            archival_storage,
+            recall_storage,
+        )
 
-    agent.memory.working_context.submit_used_human_id(user_id)
+        # Send message
+        agent.interface.system_message(message)
+        agent.memory.append_messaged_to_fq_and_rs(
+            {
+                "type": "system",
+                "user_id": user_id,
+                "message": {"role": "user", "content": message},
+            }
+        )
 
-    server_message_stack = agent.interface.server_message_stack.copy()
-    agent.interface.server_message_stack = []
+        agent.memory.working_context.submit_used_human_id(user_id)
 
-    sem.release()
+        server_message_stack = agent.interface.server_message_stack.copy()
+        agent.interface.server_message_stack = []
 
-    print('FINISHED RUNNING POST "/messages/send/no-heartbeat"')
-    return jsonify(
-        {
-            "server_message_stack": server_message_stack,
-            "ctx_info": {
-                "current_ctx_token_count": agent.memory.main_ctx_message_seq_no_tokens,
-                "ctx_window": agent.memory.ctx_window,
-            },
-        }
-    )
-
+        print('FINISHED RUNNING POST "/messages/send/no-heartbeat"')
+        return jsonify(
+            {
+                "server_message_stack": server_message_stack,
+                "ctx_info": {
+                    "current_ctx_token_count": agent.memory.main_ctx_message_seq_no_tokens,
+                    "ctx_window": agent.memory.ctx_window,
+                },
+            }
+        )
+    finally:
+        sem.release()
 
 if __name__ == "__main__":
     if not CONFIG:

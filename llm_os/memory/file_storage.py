@@ -4,16 +4,20 @@ import json
 import pathlib
 import hashlib
 
+import chromadb
+from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 from semantic_text_splitter import MarkdownSplitter
 from git import Repo
 
-from llm_os.constants import BLACKLISTED_FOLDERS_OR_FILES, QWEN_2_5_TOKENIZER
+from llm_os.constants import BLACKLISTED_FOLDERS_OR_FILES, QWEN_2_5_TOKENIZER, NOMIC_EMBED_TOKENIZER
 from llm_os.prompts.spr.spr import spr_compress
 
-from host import HOST
+from host import HOST_URL, HOST
 
 class FileStorage:
-    def __init__(self, conv_name):
+    def __init__(self, conv_name, top_k=100):
+        self.top_k = top_k
+
         self.folder_path = path.join(
             path.dirname(path.dirname(path.dirname(__file__))),
             "persistent_storage",
@@ -22,6 +26,21 @@ class FileStorage:
         )
         if not path.exists(self.folder_path):
             mkdir(self.folder_path)
+
+        self.client = chromadb.PersistentClient(
+            path=path.join(
+                path.dirname(path.dirname(path.dirname(__file__))),
+                "persistent_storage",
+                conv_name+"-file_storage_embeddings",
+            )
+        )
+        self.ef = OllamaEmbeddingFunction(
+            model_name="nomic-embed-text",
+            url=f"{HOST_URL}/api/embed",
+        )
+        self.collection = self.client.get_or_create_collection(
+            name="file_storage_embeddings", embedding_function=self.ef
+        )
 
     def __len__(self):
         return sum(lambda id: len(self.get_file_paths(id)), self.get_all_user_ids_with_folders)
@@ -52,6 +71,29 @@ class FileStorage:
 
         with open(summaries_path, "r") as f:
             return json.loads(f)
+
+    def get_file_summary(self, user_id, file_rel_path_parts, edit_mode=None):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        summaries = self.__read_file_summaries(user_id)
+
+        file_rel_path_parts_tuple = tuple(file_rel_path_parts)
+        file_path = path.join(repo_path, *file_rel_path_parts)
+        file_hash = self.__compute_file_hash(file_path)
+
+        if not (file_rel_path_parts_tuple in summaries and summaries[file_rel_path_parts_tuple]['file_hash'] == file_hash):
+            summaries[file_rel_path_parts_tuple] = {'file_hash': file_hash}
+            splitter = MarkdownSplitter.from_huggingface_tokenizer(QWEN_2_5_TOKENIZER, 8192)
+            summary = ""
+
+            with open(file_path, "r") as f:
+                for chunk in splitter.chunks(f.read()):
+                    summary += spr_compress('qwen2.5:0.5b', 8192, chunk) + "\n"
+
+            summaries[file_rel_path_parts_tuple]['summary'] = summary
+
+            self.__write_file_summaries(user_id, summaries, file_rel_path_parts, edit_mode)
+
+        return summaries[file_rel_path_parts_tuple]['summary']
 
     def __get_repo_path_from_user_id(self, user_id):
         return path.join(self.folder_path, user_id)
@@ -89,29 +131,22 @@ class FileStorage:
         repo_pathlib_dir = pathlib.Path(repo_path)
         return [str(item.relative_to(repo_pathlib_dir)) for item in repo_pathlib_dir.rglob("*") if item.is_file() and item.parts.isdisjoint(BLACKLISTED_FOLDERS_OR_FILES)]
 
-    def get_file_summary(self, user_id, file_rel_path_parts, edit_mode=None):
-        repo_path = self.__get_repo_path_from_user_id(user_id)
-        summaries = self.__read_file_summaries(user_id)
+    #* File Memory embedding functions
+    def initialise_embedding_collection(self):
+        client = chromadb.EphemeralClient()
+        ef = OllamaEmbeddingFunction(
+            model_name="nomic-embed-text",
+            url=f"{HOST_URL}/api/embed",
+        )
+        collection = client.get_or_create_collection(
+            name="archival_storage", embedding_function=ef
+        )
+        return collection
+    
+    def populate_embedding_collection(self, user_id, collection):
+        pass
 
-        file_rel_path_parts_tuple = tuple(file_rel_path_parts)
-        file_path = path.join(repo_path, *file_rel_path_parts)
-        file_hash = self.__compute_file_hash(file_path)
-
-        if not (file_rel_path_parts_tuple in summaries and summaries[file_rel_path_parts_tuple]['file_hash'] == file_hash):
-            summaries[file_rel_path_parts_tuple] = {'file_hash': file_hash}
-            splitter = MarkdownSplitter.from_huggingface_tokenizer(QWEN_2_5_TOKENIZER, 8192)
-            summary = ""
-
-            with open(file_path, "r") as f:
-                for chunk in splitter.chunks(f.read()):
-                    summary += spr_compress('qwen2.5:0.5b', 8192, chunk) + "\n"
-
-            summaries[file_rel_path_parts_tuple]['summary'] = summary
-
-            self.__write_file_summaries(user_id, summaries, file_rel_path_parts, edit_mode)
-
-        return summaries[file_rel_path_parts_tuple]['summary']
-
+    #* File Memory search functions
     def browse_files(self, user_id, count, start):
         pass
 
@@ -124,6 +159,7 @@ class FileStorage:
     def read_file(self, user_id, file_rel_path_parts, count, start):
         pass
 
+    #* File Memory edit functions
     def make_file(self, user_id, file_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
@@ -191,6 +227,7 @@ class FileStorage:
 
         self.get_file_summary(user_id, file_rel_path_parts, "Modified")
 
+    #* File Memory version control functions
     def revert_to_last_commit(self, user_id):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)

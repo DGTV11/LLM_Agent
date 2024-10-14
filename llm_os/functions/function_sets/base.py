@@ -177,7 +177,7 @@ def conversation_search_date(
 
 def archival_memory_insert(self: Agent, content: str) -> Optional[str]:
     """
-    Add to archival memory. Make sure to phrase the memory contents such that it can be easily queried later.
+    Add to archival memory for your chat with the user you last conversed with. Make sure to phrase the memory contents such that it can be easily queried later.
 
     Args:
         content (str): Content to write to the memory. All unicode (including emojis) are supported.
@@ -195,7 +195,7 @@ def archival_memory_search(
     self: Agent, query: str, page: Optional[int] = 0
 ) -> Optional[str]:
     """
-    Search archival memory using semantic (embedding-based) search.
+    Search archival memory for your chat with the user you last conversed with using semantic (embedding-based) search.
 
     Args:
         query (str): String to search for.
@@ -212,7 +212,7 @@ def archival_memory_search(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.archival_storage.search(
-        query, count=count, start=page * count
+        query, self.memory.working_context.last_2_human_ids[-1], count=count, start=page * count
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:
@@ -226,3 +226,68 @@ def archival_memory_search(
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str
+
+
+def file_memory_make_file(
+    self: Agent, file_rel_path_parts: list[str] = 0
+) -> Optional[str]:
+    """
+    Creates a new file in the folder assigned to your chat with the user you last conversed with.
+
+    Args:
+        file_rel_path_parts (list[str]): Relative path parts of the new file with the root directory being the assigned folder.
+
+    Returns:
+        Optional[str]: None is always returned as this function does not produce a response.
+    """
+    self.memory.file_memory.make_file(
+        self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts
+    )
+
+def file_memory_make_folder(
+    self: Agent, folder_rel_path_parts: list[str] = 0
+) -> Optional[str]:
+    """
+    Creates a new folder in the folder assigned to your chat with the user you last conversed with.
+
+    Args:
+        folder_rel_path_parts (list[str]): Relative path parts of the new folder with the root directory being the assigned folder.
+
+    Returns:
+        Optional[str]: None is always returned as this function does not produce a response.
+    """
+    self.memory.file_memory.make_folder(
+        self.memory.working_context.last_2_human_ids[-1], folder_rel_path_parts
+    )
+
+def file_memory_remove_file(
+    self: Agent, file_rel_path_parts: list[str] = 0
+) -> Optional[str]:
+    """
+    Removes a file in the folder assigned to your chat with the user you last conversed with.
+
+    Args:
+        file_rel_path_parts (list[str]): Relative path parts of the file with the root directory being the assigned folder.
+
+    Returns:
+        Optional[str]: None is always returned as this function does not produce a response.
+    """
+    self.memory.file_memory.remove_file(
+        self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts
+    )
+
+def folder_memory_remove_file(
+    self: Agent, folder_rel_path_parts: list[str] = 0
+) -> Optional[str]:
+    """
+    Removes a folder in the folder assigned to your chat with the user you last conversed with.
+
+    Args:
+        folder_rel_path_parts (list[str]): Relative path parts of the folder with the root directory being the assigned folder.
+
+    Returns:
+        Optional[str]: None is always returned as this function does not produce a response.
+    """
+    self.memory.file_memory.remove_folder(
+        self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts
+    )

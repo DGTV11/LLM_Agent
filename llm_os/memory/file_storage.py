@@ -1,5 +1,6 @@
 from os import path, mkdir, remove
 from datetime import datetime
+from shutil import rmtree
 import json
 import pathlib
 import hashlib
@@ -175,7 +176,7 @@ class FileStorage:
             if item.is_file() and item.parts.isdisjoint(BLACKLISTED_FOLDERS_OR_FILES)
         ]
 
-    # * File Memory edit functions
+    # * File Memory creation functions
     def make_file(self, user_id, file_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
@@ -216,6 +217,22 @@ class FileStorage:
 
         self.__write_file_summaries(user_id, summaries, file_rel_path_parts, "Removed")
 
+    def remove_folder(self, user_id, folder_rel_path_parts):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        folder_rel_path_parts_tuple = tuple(folder_rel_path_parts)
+        folder_path = path.join(repo_path, *folder_rel_path_parts)
+
+        rmtree(folder_path)
+
+        for k, _ in summaries.items():
+            if len(k) >= len(folder_rel_path_parts_tuple) and main_tuple[:len(folder_rel_path_parts_tuple)] == folder_rel_path_parts_tuple:
+                del summaries[k]
+
+        self.__write_file_summaries(user_id, summaries, folder_rel_path_parts, "Removed")
+
+    # * File Memory edit functions
     def append_to_file(self, user_id, file_rel_path_parts, text):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)

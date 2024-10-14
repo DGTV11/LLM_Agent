@@ -291,3 +291,5 @@ def folder_memory_remove_file(
     self.memory.file_memory.remove_folder(
         self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts
     )
+
+#TODO: finish File Memory portion

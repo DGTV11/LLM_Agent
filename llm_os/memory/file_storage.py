@@ -226,13 +226,13 @@ class FileStorage:
             )
         ), len(results)
 
-    def embedding_search_files(self, user_id, query, count, start): #TODO
-        collection = self.populate_embedding_collection(
-            user_id, self.initialise_embedding_collection()
-        )
-
-    def string_search_files(self, user_id, string, count, start): #TODO
-        pass
+    # def embedding_search_files(self, user_id, query, count, start):
+    #     collection = self.populate_embedding_collection(
+    #         user_id, self.initialise_embedding_collection()
+    #     )
+    #
+    # def string_search_files(self, user_id, string, count, start):
+    #     pass
 
     # * File Memory single file search functions
     def read_file(self, user_id, file_rel_path_parts, count, start):
@@ -251,13 +251,13 @@ class FileStorage:
 
         return results[start:end], len(results)
 
-    def embedding_search_file(self, user_id, query, count, start): #TODO
-        collection = self.populate_embedding_collection(
-            user_id, self.initialise_embedding_collection()
-        )
-
-    def string_search_file(self, user_id, string, count, start): #TODO
-        pass
+    # def embedding_search_file(self, user_id, query, count, start):
+    #     collection = self.populate_embedding_collection(
+    #         user_id, self.initialise_embedding_collection()
+    #     )
+    #
+    # def string_search_file(self, user_id, string, count, start):
+    #     pass
 
     # * File Memory edit functions
     def make_file(self, user_id, file_rel_path_parts):

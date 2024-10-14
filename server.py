@@ -134,7 +134,9 @@ def agent_methods():
             )
             recall_storage = RecallStorage(conv_name)
             archival_storage = ArchivalStorage(conv_name)
-            file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+            file_storage = FileStorage(
+                conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
+            )
 
             agent = Agent(
                 interface,
@@ -234,7 +236,9 @@ def send_message():
         )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
-        file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+        file_storage = FileStorage(
+            conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
+        )
 
         agent = Agent(
             interface,
@@ -329,7 +333,9 @@ def send_first_message():
         )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
-        file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+        file_storage = FileStorage(
+            conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
+        )
 
         agent = Agent(
             interface,
@@ -424,7 +430,9 @@ def send_message_without_heartbeat():
         )
         recall_storage = RecallStorage(conv_name)
         archival_storage = ArchivalStorage(conv_name)
-        file_storage = FileStorage(conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0])
+        file_storage = FileStorage(
+            conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
+        )
 
         agent = Agent(
             interface,

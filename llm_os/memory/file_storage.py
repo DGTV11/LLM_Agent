@@ -175,6 +175,82 @@ class FileStorage:
             if item.is_file() and item.parts.isdisjoint(BLACKLISTED_FOLDERS_OR_FILES)
         ]
 
+    # * File Memory edit functions
+    def make_file(self, user_id, file_rel_path_parts):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        new_file_rel_path_parts_tuple = tuple(file_rel_path_parts)
+        new_file_path = path.join(repo_path, *file_rel_path_parts)
+        f = open(new_file_path, "x")
+        f.close()
+
+        with open(new_file_path, "w") as f:
+            f.write("Nothing here (yet)")
+
+        file_hash = self.__compute_file_hash(new_file_path)
+        summaries[new_file_rel_path_parts_tuple] = {"file_hash": file_hash}
+
+        summaries[new_file_rel_path_parts_tuple]["summary"] = "Empty file"
+
+        self.__write_file_summaries(
+            user_id, summaries, new_file_rel_path_parts, "Created"
+        )
+
+    def make_folder(self, user_id, folder_rel_path_parts):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+
+        mkdir(path.join(repo_path, *folder_rel_path_parts))
+        self.make_file(user_id, folder_rel_path_parts + ["placeholder_file.txt"])
+
+    def remove_file(self, user_id, file_rel_path_parts):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        file_rel_path_parts_tuple = tuple(file_rel_path_parts)
+        file_path = path.join(repo_path, *file_rel_path_parts)
+
+        remove(file_path)
+
+        del summaries[file_rel_path_parts_tuple]
+
+        self.__write_file_summaries(user_id, summaries, file_rel_path_parts, "Removed")
+
+    def append_to_file(self, user_id, file_rel_path_parts, text):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        file_path = path.join(repo_path, *file_rel_path_parts)
+
+        with open(file_path, "a") as f:
+            f.write(text)
+
+        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
+
+    def replace_first_in_file(self, user_id, file_rel_path_parts, old_text, new_text):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        file_path = path.join(repo_path, *file_rel_path_parts)
+
+        with open(file_path, "r+") as f:
+            file_contents = f.read().replace(old_text, new_text, 1)
+            f.write(file_contents)
+
+        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
+
+    def replace_all_in_file(self, user_id, file_rel_path_parts, old_text, new_text):
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        file_path = path.join(repo_path, *file_rel_path_parts)
+
+        with open(file_path, "r+") as f:
+            file_contents = f.read().replace(old_text, new_text)
+            f.write(file_contents)
+
+        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
+
     # * File Memory embedding functions
     def initialise_embedding_collection(self):
         client = chromadb.EphemeralClient()
@@ -258,82 +334,6 @@ class FileStorage:
     #
     # def string_search_file(self, user_id, string, count, start):
     #     pass
-
-    # * File Memory edit functions
-    def make_file(self, user_id, file_rel_path_parts):
-        repo_path = self.__get_repo_path_from_user_id(user_id)
-        repo = self.__load_repo(repo_path)
-
-        new_file_rel_path_parts_tuple = tuple(file_rel_path_parts)
-        new_file_path = path.join(repo_path, *file_rel_path_parts)
-        f = open(new_file_path, "x")
-        f.close()
-
-        with open(new_file_path, "w") as f:
-            f.write("Nothing here (yet)")
-
-        file_hash = self.__compute_file_hash(new_file_path)
-        summaries[new_file_rel_path_parts_tuple] = {"file_hash": file_hash}
-
-        summaries[new_file_rel_path_parts_tuple]["summary"] = "Empty file"
-
-        self.__write_file_summaries(
-            user_id, summaries, new_file_rel_path_parts, "Created"
-        )
-
-    def make_folder(self, user_id, folder_rel_path_parts):
-        repo_path = self.__get_repo_path_from_user_id(user_id)
-
-        mkdir(path.join(repo_path, *folder_rel_path_parts))
-        self.make_file(user_id, folder_rel_path_parts + ["placeholder_file.txt"])
-
-    def remove_file(self, user_id, file_rel_path_parts):
-        repo_path = self.__get_repo_path_from_user_id(user_id)
-        repo = self.__load_repo(repo_path)
-
-        file_rel_path_parts_tuple = tuple(file_rel_path_parts)
-        file_path = path.join(repo_path, *file_rel_path_parts)
-
-        remove(file_path)
-
-        del summaries[file_rel_path_parts_tuple]
-
-        self.__write_file_summaries(user_id, summaries, file_rel_path_parts, "Removed")
-
-    def append_to_file(self, user_id, file_rel_path_parts, text):
-        repo_path = self.__get_repo_path_from_user_id(user_id)
-        repo = self.__load_repo(repo_path)
-
-        file_path = path.join(repo_path, *file_rel_path_parts)
-
-        with open(file_path, "a") as f:
-            f.write(text)
-
-        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
-
-    def replace_first_in_file(self, user_id, file_rel_path_parts, old_text, new_text):
-        repo_path = self.__get_repo_path_from_user_id(user_id)
-        repo = self.__load_repo(repo_path)
-
-        file_path = path.join(repo_path, *file_rel_path_parts)
-
-        with open(file_path, "r+") as f:
-            file_contents = f.read().replace(old_text, new_text, 1)
-            f.write(file_contents)
-
-        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
-
-    def replace_all_in_file(self, user_id, file_rel_path_parts, old_text, new_text):
-        repo_path = self.__get_repo_path_from_user_id(user_id)
-        repo = self.__load_repo(repo_path)
-
-        file_path = path.join(repo_path, *file_rel_path_parts)
-
-        with open(file_path, "r+") as f:
-            file_contents = f.read().replace(old_text, new_text)
-            f.write(file_contents)
-
-        self.get_file_summary(user_id, file_rel_path_parts, "Modified")
 
     # * File Memory version control functions
     def revert_to_last_commit(self, user_id):

@@ -412,3 +412,35 @@ def file_memory_read_file(
         )
         results_str = f"{results_pref} {json.dumps(results, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str
+
+def file_memory_revert_to_last_commit(
+    self: Agent
+) -> Optional[str]:
+    """
+    Undos last edit in the folder assigned to your chat with the user you last conversed with.
+
+    Args:
+        None
+
+    Returns:
+        Optional[str]: None is always returned as this function does not produce a response.
+    """
+    self.memory.file_memory.revert_to_last_commit(
+        self.memory.working_context.last_2_human_ids[-1]
+    )
+
+def file_memory_get_diff(
+    self: Agent
+) -> Optional[str]:
+    """
+    Gets Git diff between HEAD and HEAD~1 in the folder assigned to your chat with the user you last conversed with.
+
+    Args:
+        None
+
+    Returns:
+        str: Retrieved diff
+    """
+    return self.memory.file_memory.get_diff(
+        self.memory.working_context.last_2_human_ids[-1]
+    )

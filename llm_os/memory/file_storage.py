@@ -353,7 +353,7 @@ class FileStorage:
     #     pass
 
     # * File Memory version control functions
-    def revert_to_last_commit(self, user_id):
+    def revert_to_last_commit(self, user_id): #TODO: revert to HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
@@ -362,9 +362,12 @@ class FileStorage:
         log = master.log()
         repo.git.revert(log[-1].hexsha, no_edit=True)
 
-    def get_diff(self, user_id):
+    def get_diff(self, user_id): #TODO: get diff between HEAD and HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
         t = repo.head.commit.tree
         return repo.git.diff(t)
+
+    def get_commit_history(self, user_id, count, start):
+        pass

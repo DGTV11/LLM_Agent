@@ -22,6 +22,7 @@ from llm_os.constants import (
     SET_STARTING_GREETING_LIST,
     SET_STARTING_AUX_MESSAGE_LIST,
     SHOW_DEBUG_MESSAGES,
+    INNER_MONOLOGUE_PARTS,
     SEND_MESSAGE_FUNCTION_NAME,
     MEMORY_EDITING_FUNCTIONS,
     WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT,
@@ -589,20 +590,40 @@ class Agent:
 
                 unidentified_thought_keys = []
                 for key in json_result.keys():
-                    if key not in ["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]:
-                        unidentified_keys.append(key)
+                    if key not in INNER_MONOLOGUE_PARTS:
+                        unidentified_thought_keys.append(key)
+                if unidentified_thought_keys:
+                    surround_with_single_quotes = lambda s: f"'{s}'"
+                    interface_message = f"Error: fields {', '.join(map(surround_with_single_quotes, unidentified_thought_keys))} should not be included in the object corresponding to your generated JSON object's 'thoughts' field (refer to the given JSON schema!). Please try again without acknowledging this message."
+                    res_messageds.append(
+                        {
+                            "type": "system",
+                            "user_id": user_id,
+                            "message": {"role": "user", "content": interface_message},
+                        }
+                    )
+                    self.interface.system_message(interface_message)
+                    heartbeat_request = True
+                    function_failed = False
 
+                if len(json_result.keys()) < len(INNER_MONOLOGUE_PARTS):
+                    surround_with_single_quotes = lambda s: f"'{s}'"
+                    interface_message = f"Object corresponding to your generated JSON object's 'thoughts' field is missing fields {', '.join(map(surround_with_single_quotes, list(set(called_function_required_parameter_names)-set(called_function_arguments))))}."
+                        
                 for key, value in json_result.items():
                     if type(value) is not str:
-                        pass
+                        interface_message = f"Value of '{key}' field of object corresponding to your generated object's 'thoughts' field is not a string."
+                        res_messageds.append(
+                            {
+                                "type": "system",
+                                "user_id": user_id,
+                                "message": {"role": "user", "content": interface_message},
+                            }
+                        )
+                        self.interface.system_message(interface_message)
+                        heartbeat_request = True
+                        function_failed = False
                         
-                try:
-                    called_function_name = function_call.get("name", (None, 0))
-                    if called_function_name == (None, 0):
-                        raise KeyError("name")
-                    if type(called_function_name) is not str:
-                        raise TypeError("'name' field's value is not a string.")
-
                 self.interface.internal_monologue(json_result["thoughts"])
 
                 ##*Step 5: Handle function call

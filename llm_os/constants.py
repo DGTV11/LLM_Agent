@@ -11,6 +11,9 @@ SET_STARTING_AUX_MESSAGE_LIST = ["What's your name?", "Could you tell me your na
 # Interface constants
 SHOW_DEBUG_MESSAGES = True  # Set to True when testing new models
 
+# Inner monologue constants
+INNER_MONOLOGUE_PARTS = ["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]
+
 # Function constants
 SEND_MESSAGE_FUNCTION_NAME = "send_message"
 MEMORY_EDITING_FUNCTIONS = [

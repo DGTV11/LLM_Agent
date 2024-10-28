@@ -7,13 +7,20 @@ SET_STARTING_THOUGHTS_LIST = [
 ]
 SET_STARTING_GREETING_LIST = ["Hi there!", "Hello there!"]
 SET_STARTING_AUX_MESSAGE_LIST = ["What's your name?", "Could you tell me your name?"]
-#TODO: update this to account for the new reasoning system
+# TODO: update this to account for the new reasoning system
 
 # Interface constants
 SHOW_DEBUG_MESSAGES = True  # Set to True when testing new models
 
 # Inner monologue constants
-INNER_MONOLOGUE_PARTS = ["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]
+INNER_MONOLOGUE_PARTS = [
+    "user_emotion_analysis",
+    "inner_emotions",
+    "long_term_planning",
+    "conversation_planning",
+    "auxiliary_reasoning",
+    "function_call_planning",
+]
 
 # Function constants
 SEND_MESSAGE_FUNCTION_NAME = "send_message"

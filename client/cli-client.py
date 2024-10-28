@@ -77,7 +77,7 @@ class CLIInterface:
 
     @staticmethod
     def internal_monologue(msg: str, internal_monologue_part: str, end="\n"):
-        match internal_monologue_part: #["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]
+        match internal_monologue_part:  # ["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]
             case "user_emotion_analysis":
                 emoji_text = "heart"
             case "inner_emotions":
@@ -87,7 +87,7 @@ class CLIInterface:
             case "conversation_planning":
                 emoji_text = "clipboard"
             case "auxiliary_reasoning":
-                emoji_text = "thought_balloon"    
+                emoji_text = "thought_balloon"
             case "function_call_planning":
                 emoji_text = "wrench"
             case _:

@@ -485,7 +485,7 @@ class Agent:
                 model=self.model_name, options={"num_ctx": self.memory.ctx_window}
             )  # Load model into memory
 
-            #TODO: update this to account for the new reasoning system
+            # TODO: update this to account for the new reasoning system
             result_content = """{
     "thoughts": "<ST>",
     "function_call": {
@@ -571,7 +571,11 @@ class Agent:
                 if key not in ["thoughts", "function_call"]:
                     unidentified_keys.append(key)
 
-            if (not unidentified_keys) and json_result.get("thoughts", None) and json_result.get("function_call", None):
+            if (
+                (not unidentified_keys)
+                and json_result.get("thoughts", None)
+                and json_result.get("function_call", None)
+            ):
                 ##*Step 4: Handle thoughts
                 ### Thpught steps: "user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"
                 thought_object = json_result["thoughts"]
@@ -610,7 +614,7 @@ class Agent:
                 if len(thought_object.keys()) < len(INNER_MONOLOGUE_PARTS):
                     surround_with_single_quotes = lambda s: f"'{s}'"
                     interface_message = f"Object corresponding to your generated JSON object's 'thoughts' field is missing fields {', '.join(map(surround_with_single_quotes, list(set(called_function_required_parameter_names)-set(called_function_arguments))))}."
-                        
+
                 for key, value in thought_object.items():
                     if type(value) is not str:
                         interface_message = f"Value of '{key}' field of object corresponding to your generated object's 'thoughts' field is not a string."
@@ -618,13 +622,16 @@ class Agent:
                             {
                                 "type": "system",
                                 "user_id": user_id,
-                                "message": {"role": "user", "content": interface_message},
+                                "message": {
+                                    "role": "user",
+                                    "content": interface_message,
+                                },
                             }
                         )
                         self.interface.system_message(interface_message)
                         heartbeat_request = True
                         function_failed = False
-                
+
                 for key, value in thought_object.items():
                     self.interface.internal_monologue(value, key)
 
@@ -667,7 +674,7 @@ class Agent:
         ##*Step 6: Check memory pressure
         if (
             not is_first_message
-        ):  #*This if statement is here because first message only accepts a limited range of functions
+        ):  # *This if statement is here because first message only accepts a limited range of functions
             had_just_sent_mpw = False
             if (
                 not self.memory_pressure_warning_alr_given

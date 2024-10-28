@@ -589,7 +589,7 @@ class Agent:
                     function_failed = False
 
                 unidentified_thought_keys = []
-                for key in json_result.keys():
+                for key in thought_object.keys():
                     if key not in INNER_MONOLOGUE_PARTS:
                         unidentified_thought_keys.append(key)
                 if unidentified_thought_keys:
@@ -606,11 +606,11 @@ class Agent:
                     heartbeat_request = True
                     function_failed = False
 
-                if len(json_result.keys()) < len(INNER_MONOLOGUE_PARTS):
+                if len(thought_object.keys()) < len(INNER_MONOLOGUE_PARTS):
                     surround_with_single_quotes = lambda s: f"'{s}'"
                     interface_message = f"Object corresponding to your generated JSON object's 'thoughts' field is missing fields {', '.join(map(surround_with_single_quotes, list(set(called_function_required_parameter_names)-set(called_function_arguments))))}."
                         
-                for key, value in json_result.items():
+                for key, value in thought_object.items():
                     if type(value) is not str:
                         interface_message = f"Value of '{key}' field of object corresponding to your generated object's 'thoughts' field is not a string."
                         res_messageds.append(
@@ -623,8 +623,9 @@ class Agent:
                         self.interface.system_message(interface_message)
                         heartbeat_request = True
                         function_failed = False
-                        
-                self.interface.internal_monologue(json_result["thoughts"])
+                
+                for key, value in thought_object.items():
+                    self.interface.internal_monologue(value, key)
 
                 ##*Step 5: Handle function call
                 d_res_messageds, heartbeat_request, function_failed = (

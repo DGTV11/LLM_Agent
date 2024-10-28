@@ -212,7 +212,10 @@ def archival_memory_search(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.archival_storage.search(
-        query, self.memory.working_context.last_2_human_ids[-1], count=count, start=page * count
+        query,
+        self.memory.working_context.last_2_human_ids[-1],
+        count=count,
+        start=page * count,
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:
@@ -244,6 +247,7 @@ def file_memory_make_file(
         self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts
     )
 
+
 def file_memory_make_folder(
     self: Agent, folder_rel_path_parts: list[str]
 ) -> Optional[str]:
@@ -259,6 +263,7 @@ def file_memory_make_folder(
     self.memory.file_memory.make_folder(
         self.memory.working_context.last_2_human_ids[-1], folder_rel_path_parts
     )
+
 
 def file_memory_remove_file(
     self: Agent, file_rel_path_parts: list[str]
@@ -276,6 +281,7 @@ def file_memory_remove_file(
         self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts
     )
 
+
 def file_memory_remove_folder(
     self: Agent, folder_rel_path_parts: list[str]
 ) -> Optional[str]:
@@ -291,6 +297,7 @@ def file_memory_remove_folder(
     self.memory.file_memory.remove_folder(
         self.memory.working_context.last_2_human_ids[-1], folder_rel_path_parts
     )
+
 
 def file_memory_append_to_file(
     self: Agent, file_rel_path_parts: list[str], text: str
@@ -309,6 +316,7 @@ def file_memory_append_to_file(
         self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts, text
     )
 
+
 def file_memory_replace_first_in_file(
     self: Agent, file_rel_path_parts: list[str], old_text: str, new_text: str
 ) -> Optional[str]:
@@ -324,8 +332,12 @@ def file_memory_replace_first_in_file(
         Optional[str]: None is always returned as this function does not produce a response.
     """
     self.memory.file_memory.replace_first_in_file(
-        self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts, old_text, new_text
+        self.memory.working_context.last_2_human_ids[-1],
+        file_rel_path_parts,
+        old_text,
+        new_text,
     )
+
 
 def file_memory_replace_all_in_file(
     self: Agent, file_rel_path_parts: list[str], old_text: str, new_text: str
@@ -342,12 +354,14 @@ def file_memory_replace_all_in_file(
         Optional[str]: None is always returned as this function does not produce a response.
     """
     self.memory.file_memory.replace_all_in_file(
-        self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts, old_text, new_text
+        self.memory.working_context.last_2_human_ids[-1],
+        file_rel_path_parts,
+        old_text,
+        new_text,
     )
 
-def file_memory_browse_files(
-    self: Agent, page: Optional[int] = 0
-) -> Optional[str]:
+
+def file_memory_browse_files(self: Agent, page: Optional[int] = 0) -> Optional[str]:
     """
     Browse through (file path parts) + (file summary) pairs in the folder assigned to your chat with the user you last conversed with.
 
@@ -365,7 +379,9 @@ def file_memory_browse_files(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.file_storage.browse_files(
-        self.memory.working_context.last_2_human_ids[-1], count=count, start=page * count
+        self.memory.working_context.last_2_human_ids[-1],
+        count=count,
+        start=page * count,
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:
@@ -379,6 +395,7 @@ def file_memory_browse_files(
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str
+
 
 def file_memory_read_file(
     self: Agent, file_rel_path_parts: list[str], page: Optional[int] = 0
@@ -401,7 +418,10 @@ def file_memory_read_file(
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
     results, total = self.memory.file_storage.read_file(
-        self.memory.working_context.last_2_human_ids[-1], file_rel_path_parts, count=count, start=page * count
+        self.memory.working_context.last_2_human_ids[-1],
+        file_rel_path_parts,
+        count=count,
+        start=page * count,
     )
     num_pages = math.ceil(total / count) - 1  # 0 index
     if len(results) == 0:
@@ -410,12 +430,13 @@ def file_memory_read_file(
         results_pref = (
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
-        results_str = f"{results_pref} {json.dumps(results, ensure_ascii=JSON_ENSURE_ASCII)}"
+        results_str = (
+            f"{results_pref} {json.dumps(results, ensure_ascii=JSON_ENSURE_ASCII)}"
+        )
     return results_str
 
-def file_memory_revert_to_last_commit(
-    self: Agent
-) -> Optional[str]:
+
+def file_memory_revert_to_last_commit(self: Agent) -> Optional[str]:
     """
     Undos last edit in the folder assigned to your chat with the user you last conversed with.
 
@@ -429,9 +450,8 @@ def file_memory_revert_to_last_commit(
         self.memory.working_context.last_2_human_ids[-1]
     )
 
-def file_memory_get_diff(
-    self: Agent
-) -> Optional[str]:
+
+def file_memory_get_diff(self: Agent) -> Optional[str]:
     """
     Gets Git diff between HEAD and HEAD~1 in the folder assigned to your chat with the user you last conversed with.
 

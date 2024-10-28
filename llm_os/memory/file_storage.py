@@ -227,10 +227,16 @@ class FileStorage:
         rmtree(folder_path)
 
         for k, _ in summaries.items():
-            if len(k) >= len(folder_rel_path_parts_tuple) and main_tuple[:len(folder_rel_path_parts_tuple)] == folder_rel_path_parts_tuple:
+            if (
+                len(k) >= len(folder_rel_path_parts_tuple)
+                and main_tuple[: len(folder_rel_path_parts_tuple)]
+                == folder_rel_path_parts_tuple
+            ):
                 del summaries[k]
 
-        self.__write_file_summaries(user_id, summaries, folder_rel_path_parts, "Removed")
+        self.__write_file_summaries(
+            user_id, summaries, folder_rel_path_parts, "Removed"
+        )
 
     # * File Memory edit functions
     def append_to_file(self, user_id, file_rel_path_parts, text):
@@ -353,7 +359,7 @@ class FileStorage:
     #     pass
 
     # * File Memory version control functions
-    def revert_to_last_commit(self, user_id): #TODO: revert to HEAD~n
+    def revert_to_last_commit(self, user_id):  # TODO: revert to HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
@@ -362,7 +368,7 @@ class FileStorage:
         log = master.log()
         repo.git.revert(log[-1].hexsha, no_edit=True)
 
-    def get_diff(self, user_id): #TODO: get diff between HEAD and HEAD~n
+    def get_diff(self, user_id):  # TODO: get diff between HEAD and HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
@@ -370,4 +376,4 @@ class FileStorage:
         return repo.git.diff(t)
 
     def get_commit_history(self, user_id, count, start):
-        pass #TODO
+        pass  # TODO

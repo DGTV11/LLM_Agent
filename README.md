@@ -77,6 +77,8 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - The writing of some code in this repository has been assisted by AI
 
 ## TODO
+- Separate LLM thoughts into multiple fields such as "long_term_planning", "conversation_planning", "emotions", "tool_call_planning"
+- Make function calling compulsory
 - Finish up auto install script, get better tts solution
 - Add File Storage
 - Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions

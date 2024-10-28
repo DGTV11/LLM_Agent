@@ -468,21 +468,21 @@ class Agent:
 
     def step(self, user_id, is_first_message=False) -> str:
         # note: all messageds must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
-        ## Step -1: Update working context if needed
+        ##*Step 1: Bring current human working memory block into context if needed
         self.memory.working_context.submit_used_human_id(user_id)
 
-        ## Step 0: Check memory pressure
+        ##*Step 2: Check memory pressure
         if self.memory.main_ctx_message_seq_no_tokens > int(
             FLUSH_TOKEN_FRAC * self.memory.ctx_window
         ):
             self.summarise_messages_in_place()
             self.memory_pressure_warning_alr_given = False
 
-        ## Step 1: Generate response
+        ##*Step 3: Generate response
         if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
             HOST.generate(
                 model=self.model_name, options={"num_ctx": self.memory.ctx_window}
-            )  # load model into memory
+            )  # Load model into memory
 
             result_content = """{
     "thoughts": "<ST>",
@@ -539,10 +539,7 @@ class Agent:
             if type(json_result) is not dict:
                 raise RuntimeError
         except (RuntimeError, ValueError):
-            if is_first_message:
-                interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT JSON OBJECT that includes the 'thoughts' field as your internal monologue and the 'function_call' field as a function call ('function_call' field is required during the starting message of a conversation and highly recommended otherwise)! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
-            else:
-                interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue! If you would like to call a function, do include the 'function_call' field. You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
+            interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue and your 'function_call' as your function call! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
             res_messageds.append(
                 {
                     "type": "system",
@@ -572,35 +569,50 @@ class Agent:
                 if key not in ["thoughts", "function_call"]:
                     unidentified_keys.append(key)
 
-            if (not unidentified_keys) and json_result.get("thoughts", None):
+            if (not unidentified_keys) and json_result.get("thoughts", None) and json_result.get("function_call", None):
+                ##*Step 4: Handle thoughts
+                ### Thpught steps: "user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"
+                thought_object = json_result["thoughts"]
+
+                if type(thought_object) is not dict:
+                    interface_message = f"Failed to parse function call: 'function_call' field's value is not an object."
+                    res_messageds.append(
+                        {
+                            "type": "system",
+                            "user_id": user_id,
+                            "message": {"role": "user", "content": interface_message},
+                        }
+                    )
+                    self.interface.system_message(interface_message)
+                    heartbeat_request = True
+                    function_failed = False
+
+                unidentified_thought_keys = []
+                for key in json_result.keys():
+                    if key not in ["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]:
+                        unidentified_keys.append(key)
+
+                for key, value in json_result.items():
+                    if type(value) is not str:
+                        pass
+                        
+                try:
+                    called_function_name = function_call.get("name", (None, 0))
+                    if called_function_name == (None, 0):
+                        raise KeyError("name")
+                    if type(called_function_name) is not str:
+                        raise TypeError("'name' field's value is not a string.")
+
                 self.interface.internal_monologue(json_result["thoughts"])
 
-                ## Step 2: Check if LLM wanted to call a function
-                if "function_call" in json_result:
-                    d_res_messageds, heartbeat_request, function_failed = (
-                        self.__call_function(
-                            user_id, json_result["function_call"], is_first_message
-                        )
+                ##*Step 5: Handle function call
+                d_res_messageds, heartbeat_request, function_failed = (
+                    self.__call_function(
+                        user_id, json_result["function_call"], is_first_message
                     )
-                    res_messageds += d_res_messageds
-                else:
-                    if is_first_message:
-                        interface_message = "Error: you MUST include a function call inside the 'function_call' field as per the given schema during the starting message of a conversation. Please try again without acknowledging this message."
-                        res_messageds.append(
-                            {
-                                "type": "system",
-                                "user_id": user_id,
-                                "message": {
-                                    "role": "user",
-                                    "content": interface_message,
-                                },
-                            }
-                        )
-                        self.interface.system_message(interface_message)
+                )
+                res_messageds += d_res_messageds
 
-                    heartbeat_request = is_first_message
-
-                    function_failed = False
             elif unidentified_keys:
                 surround_with_single_quotes = lambda s: f"'{s}'"
                 interface_message = f"Error: fields {', '.join(map(surround_with_single_quotes, unidentified_keys))} should not be included in your generated JSON object's top level (refer to the given JSON schema!). Please try again without acknowledging this message."
@@ -615,7 +627,7 @@ class Agent:
                 heartbeat_request = True
                 function_failed = False
             else:
-                interface_message = "Error: you MUST at least include the 'thoughts' field in the JSON object you respond with as your internal monologue! If you wanted to call a function, please try again while including your internal_monologue. Please try again without acknowledging this message."
+                interface_message = "Error: you MUST include BOTH the 'thoughts' field and the 'function_call' field in the JSON object you respond with! Please try again without acknowledging this message."
                 res_messageds.append(
                     {
                         "type": "system",
@@ -629,10 +641,10 @@ class Agent:
 
         self.messages_since_last_conscious_memory_write += 1
 
-        ## Step 3: Check memory pressure
+        ##*Step 6: Check memory pressure
         if (
             not is_first_message
-        ):  # Because first message only accepts a limited range of functions
+        ):  #*This if statement is here because first message only accepts a limited range of functions
             had_just_sent_mpw = False
             if (
                 not self.memory_pressure_warning_alr_given
@@ -666,7 +678,7 @@ class Agent:
                 self.summarise_messages_in_place()
                 self.memory_pressure_warning_alr_given = False
 
-            ## Step 4: Check if it has been too long since the agent consciously updated its memory
+            ##*Step 7: Check if it has been too long since the agent consciously updated its memory
             if (
                 not self.conscious_memory_write_alr_forced
                 and not had_just_sent_mpw
@@ -694,11 +706,11 @@ class Agent:
 
             had_just_sent_mpw = False
 
-        ## Step 4: Update memory
+        ##*Step 8: Update memory
         for messaged in res_messageds:
             self.memory.append_messaged_to_fq_and_rs(messaged)
 
-        ## Step 5: Return response
+        ##*Step 9: Return response
         return res_messageds, heartbeat_request, function_failed
 
     """

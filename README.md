@@ -78,7 +78,7 @@ sudo apt-get install gstreamer1.0-pulseaudio
 
 ## TODO
 - Finish up auto install script, get better tts solution
-- Upgrade LLM_Agent's archival memory (add KG? File Storage)
+- Add File Storage
 - Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions
 - Allow LLM_Agent to use end-to-end speech-to-speech (we need faster SLMS!)
 - Allow LLM_Agent to speak to multiple users (group chat/conversation)

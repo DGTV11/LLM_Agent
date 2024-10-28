@@ -485,6 +485,7 @@ class Agent:
                 model=self.model_name, options={"num_ctx": self.memory.ctx_window}
             )  # Load model into memory
 
+            #TODO: update this to account for the new reasoning system
             result_content = """{
     "thoughts": "<ST>",
     "function_call": {

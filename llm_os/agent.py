@@ -480,12 +480,13 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ##*Step 3: Generate response
-        if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
+        #if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
+        if False:
             HOST.generate(
                 model=self.model_name, options={"num_ctx": self.memory.ctx_window}
             )  # Load model into memory
 
-            # TODO: update this to account for the new reasoning system
+            # TODO: get LLM outputs and update this to account for the new reasoning system
             result_content = """{
     "thoughts": "<ST>",
     "function_call": {
@@ -505,7 +506,6 @@ class Agent:
                     )
                 ),
             )
-            pass
         else:  # Regular LLM inference
             if USE_JSON_MODE:
                 response = HOST.chat(

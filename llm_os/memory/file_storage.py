@@ -394,14 +394,17 @@ class FileStorage:
 
         return repo.git.diff(f"HEAD~{n}", "HEAD")
 
-    def view_commit_history(self, user_id, count, start): #TODO
+    def view_commit_history(self, user_id, count, start):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
-        results = [{"datetime": commit.committed_datetime, "message": commit.message} for commit in repo.iter_commits("main")]
+        commits = list(repo.iter_commits("main"))
+        commits.reverse()
 
         start = int(start if start else 0)
         count = int(count if count else len(results))
         end = min(count + start, len(results))
+
+        results = [{"no_of_commits_from_HEAD": start+i, "datetime": commit.committed_datetime, "message": commit.message} for i, commit in enumerate(commits, start=1)]
 
         return results[start:end], len(results)

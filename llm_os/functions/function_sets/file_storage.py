@@ -172,7 +172,7 @@ def file_memory_browse_files(self: Agent, page: Optional[int] = 0) -> Optional[s
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"file_path_parts: {res[0]}, file_summary: '{res[1]}'" for res in results
+            f"file_path_parts: {res[0]}, file_summary: ```{res[1]}```" for res in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str
@@ -262,7 +262,7 @@ def file_memory_get_diff(self: Agent, n: Optional[int] = 1) -> Optional[str]:
 
 def file_memory_view_commit_history(self: Agent, page: Optional[int] = 0) -> Optional[str]:
     """
-    Browse through (file path parts) + (file summary) pairs in the folder assigned to your chat with the user you last conversed with.
+    Browse through commit history of the folder assigned to your chat with the user you last conversed with.
 
     Args:
         page (Optional[int]): Allows you to page through results. Only use on a follow-up query. Defaults to 0 (first page).
@@ -277,7 +277,7 @@ def file_memory_view_commit_history(self: Agent, page: Optional[int] = 0) -> Opt
     except:
         raise ValueError(f"'page' argument must be an integer")
     count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
-    results, total = self.memory.file_storage.browse_files(
+    results, total = self.memory.file_storage.view_commit_history(
         self.memory.working_context.last_2_human_ids[-1],
         count=count,
         start=page * count,
@@ -290,8 +290,7 @@ def file_memory_view_commit_history(self: Agent, page: Optional[int] = 0) -> Opt
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
         results_formatted = [
-            f"file_path_parts: {res[0]}, file_summary: '{res[1]}'" for res in results
+            f"no_of_commits_from_HEAD: {res['file_path_parts']}, datetime: {res['datetime']}, message: ```{res['message']}```" for res in results
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str
-

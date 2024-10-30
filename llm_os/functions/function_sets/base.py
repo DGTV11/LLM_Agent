@@ -12,6 +12,7 @@ from llm_os.constants import (
     RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE,
 )
 
+
 def send_message(self: Agent, message: str) -> Optional[str]:
     """
     Sends a message to the human user. If you need to use other functions to respond to the user's query, use them before using this function.

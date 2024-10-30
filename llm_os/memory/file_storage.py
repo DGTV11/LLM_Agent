@@ -13,7 +13,7 @@ from git import Repo
 from llm_os.constants import (
     BLACKLISTED_FOLDERS_OR_FILES,
 )
-from llm_os.tokenisers import QWEN_2_5_TOKENIZER, NOMIC_EMBED_TOKENIZER
+from llm_os.tokenisers import QWEN_2_5_TOKENIZER, NOMIC_EMBED_TEXT_TOKENIZER
 from llm_os.prompts.spr.spr import spr_compress
 
 from host import HOST_URL, HOST
@@ -374,20 +374,20 @@ class FileStorage:
     #     pass
 
     # * File Memory version control functions
-    def revert_n_commits(self, user_id, n): # Reverts to HEAD~n
+    def revert_n_commits(self, user_id, n):  # Reverts to HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
-        for commit in repo.iter_commits(f'HEAD~{n}..HEAD'):
+        for commit in repo.iter_commits(f"HEAD~{n}..HEAD"):
             repo.git.revert(commit, no_edit=True)
 
-    def reset_n_commits(self, user_id, n): # Resets to HEAD~n
+    def reset_n_commits(self, user_id, n):  # Resets to HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
         repo.git.reset("--hard", f"HEAD~{n}")
 
-    def get_diff(self, user_id, n): # Returns diff between HEAD and HEAD~n
+    def get_diff(self, user_id, n):  # Returns diff between HEAD and HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
@@ -404,6 +404,13 @@ class FileStorage:
         count = int(count if count else len(results))
         end = min(count + start, len(results))
 
-        results = [{"no_of_commits_from_HEAD": start+i, "datetime": commit.committed_datetime, "message": commit.message} for i, commit in enumerate(commits, start=1)]
+        results = [
+            {
+                "no_of_commits_from_HEAD": start + i,
+                "datetime": commit.committed_datetime,
+                "message": commit.message,
+            }
+            for i, commit in enumerate(commits, start=1)
+        ]
 
         return results[start:end], len(results)

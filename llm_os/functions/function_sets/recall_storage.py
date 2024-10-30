@@ -10,6 +10,7 @@ from llm_os.constants import (
     RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE,
 )
 
+
 def conversation_search(
     self: Agent, query: str, page: Optional[int] = 0
 ) -> Optional[str]:
@@ -92,5 +93,3 @@ def conversation_search_date(
         ]
         results_str = f"{results_pref} {json.dumps(results_formatted, ensure_ascii=JSON_ENSURE_ASCII)}"
     return results_str
-
-

@@ -12,6 +12,7 @@ from llm_os.constants import (
     RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE,
 )
 
+
 def core_memory_append(self: Agent, section_name: str, content: str) -> Optional[str]:
     """
     Append to the contents of core memory.
@@ -43,5 +44,3 @@ def core_memory_replace(
     """
     self.memory.working_context.edit_replace(section_name, old_content, new_content)
     return None
-
-

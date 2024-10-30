@@ -480,7 +480,7 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ##*Step 3: Generate response
-        #if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
+        # if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
         if False:
             HOST.generate(
                 model=self.model_name, options={"num_ctx": self.memory.ctx_window}

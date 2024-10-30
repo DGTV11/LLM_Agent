@@ -180,8 +180,15 @@ class FileStorage:
     def make_file(self, user_id, file_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
+        summaries = self.__read_file_summaries(user_id)
 
         new_file_rel_path_parts_tuple = tuple(file_rel_path_parts)
+
+        if file_rel_path_parts_tuple[-1] in BLACKLISTED_FOLDERS_OR_FILES:
+            raise IOError("Blacklisted file name")
+        elif file_rel_path_parts_tuple in summaries:
+            raise IOError("File/Folder with same path already exists")
+
         new_file_path = path.join(repo_path, *file_rel_path_parts)
         f = open(new_file_path, "x")
         f.close()
@@ -201,12 +208,20 @@ class FileStorage:
     def make_folder(self, user_id, folder_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)
 
+        folder_rel_path_parts_tuple = tuple(folder_rel_path_parts)
+
+        if folder_rel_path_parts_tuple[-1] in BLACKLISTED_FOLDERS_OR_FILES:
+            raise IOError("Blacklisted  name")
+        elif folder_rel_path_parts_tuple in summaries:
+            raise IOError("File/Folder with same path already exists")
+
         mkdir(path.join(repo_path, *folder_rel_path_parts))
         self.make_file(user_id, folder_rel_path_parts + ["placeholder_file.txt"])
 
     def remove_file(self, user_id, file_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
+        summaries = self.__read_file_summaries(user_id)
 
         file_rel_path_parts_tuple = tuple(file_rel_path_parts)
         file_path = path.join(repo_path, *file_rel_path_parts)
@@ -220,6 +235,7 @@ class FileStorage:
     def remove_folder(self, user_id, folder_rel_path_parts):
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
+        summaries = self.__read_file_summaries(user_id)
 
         folder_rel_path_parts_tuple = tuple(folder_rel_path_parts)
         folder_path = path.join(repo_path, *folder_rel_path_parts)
@@ -359,21 +375,33 @@ class FileStorage:
     #     pass
 
     # * File Memory version control functions
-    def revert_to_last_commit(self, user_id):  # TODO: revert to HEAD~n
+    def revert_n_commits(self, user_id, n): # Reverts to HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
-        heads = repo.heads
-        master = heads.master
-        log = master.log()
-        repo.git.revert(log[-1].hexsha, no_edit=True)
+        for commit in repo.iter_commits(f'HEAD~{n}..HEAD'):
+            repo.git.revert(commit, no_edit=True)
 
-    def get_diff(self, user_id):  # TODO: get diff between HEAD and HEAD~n
+    def reset_n_commits(self, user_id, n): # Resets to HEAD~n
         repo_path = self.__get_repo_path_from_user_id(user_id)
         repo = self.__load_repo(repo_path)
 
-        t = repo.head.commit.tree
-        return repo.git.diff(t)
+        repo.git.reset("--hard", f"HEAD~{n}")
 
-    def get_commit_history(self, user_id, count, start):
-        pass  # TODO
+    def get_diff(self, user_id, n): # Returns diff between HEAD and HEAD~n
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        return repo.git.diff(f"HEAD~{n}", "HEAD")
+
+    def view_commit_history(self, user_id, count, start): #TODO
+        repo_path = self.__get_repo_path_from_user_id(user_id)
+        repo = self.__load_repo(repo_path)
+
+        results = [{"datetime": commit.committed_datetime, "message": commit.message} for commit in repo.iter_commits("main")]
+
+        start = int(start if start else 0)
+        count = int(count if count else len(results))
+        end = min(count + start, len(results))
+
+        return results[start:end], len(results)

@@ -8,6 +8,7 @@ from llm_os.tokenisers import get_tokeniser_and_context_window
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
 from llm_os.memory.working_context import WorkingContext
+from llm_os.memory.file_storage import FileStorage
 
 
 class Memory:

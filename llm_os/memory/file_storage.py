@@ -12,9 +12,8 @@ from git import Repo
 
 from llm_os.constants import (
     BLACKLISTED_FOLDERS_OR_FILES,
-    QWEN_2_5_TOKENIZER,
-    NOMIC_EMBED_TOKENIZER,
 )
+from llm_os.tokenisers import QWEN_2_5_TOKENIZER, NOMIC_EMBED_TOKENIZER
 from llm_os.prompts.spr.spr import spr_compress
 
 from host import HOST_URL, HOST

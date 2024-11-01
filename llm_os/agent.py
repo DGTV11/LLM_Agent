@@ -817,9 +817,10 @@ class Agent:
                         f"❮ERRONEOUS ASSISTANT MESSAGE for conversation with user with id '{messaged['user_id']}'❯ {messaged['message']['content']}"
                     )
                 else:
-                    translated_messages.append(
-                        f"❮ASSISTANT MONOLOGUE for conversation with user with id '{messaged['user_id']}'❯ {message_content_dict['thoughts']}"
-                    )
+                    if "thoughts" in message_content_dict:
+                        translated_messages.append(
+                            f"❮ASSISTANT MONOLOGUE for conversation with user with id '{messaged['user_id']}'❯ {message_content_dict['thoughts']}"
+                        )
                     if "function_call" in message_content_dict:
                         translated_messages.append(
                             f"❮TOOL CALL for conversation with user with id '{messaged['user_id']}'❯ {str(message_content_dict['function_call'])}"
@@ -833,7 +834,7 @@ class Agent:
     def summarise_messages_in_place(self):
         if SHOW_DEBUG_MESSAGES:
             print(
-                f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window. Flushing message queue..."
+                f"Memory pressure has exceeded {FLUSH_TOKEN_FRAC*100}% of the context window ({self.memory.main_ctx_message_seq_no_tokens}/{FLUSH_TOKEN_FRAC * self.memory.ctx_window} tokens). Flushing message queue..."
             )
 
         self.interface.memory_message(

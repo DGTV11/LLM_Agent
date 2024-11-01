@@ -77,13 +77,11 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - The writing of some code in this repository has been assisted by AI
 
 ## TODO
-- Separate LLM thoughts into multiple fields such as "long_term_planning", "conversation_planning", "emotions", "tool_call_planning"
-- Make function calling compulsory
-- Finish up auto install script, get better tts solution
-- Add File Storage
-- Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions
-- Allow LLM_Agent to use end-to-end speech-to-speech (we need faster SLMS!)
-- Allow LLM_Agent to speak to multiple users (group chat/conversation)
+- [ ] Finish up auto install script, get better tts solution
+- [ ] Add File Storage
+- [ ] Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions
+- [ ] Allow LLM_Agent to use end-to-end speech-to-speech (we need faster SLMS!)
+- [ ] Allow LLM_Agent to speak to multiple users (group chat/conversation)
 
 ## References
 - Packer, Charles, et al. ‘MemGPT: Towards LLMs as Operating Systems’. arXiv [Cs.AI], 2024, http://arxiv.org/abs/2310.08560. arXiv.

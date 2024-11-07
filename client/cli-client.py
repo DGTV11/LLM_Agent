@@ -292,7 +292,7 @@ if __name__ == "__main__":
                     print(f"Time taken for agent step: {json_obj['duration']}s")
                     print("\n\n", end="")
 
-        print("/help for commands, /exit to exit")
+        print("/help for commands, /exit or /bye to exit")
         while True:
             input_message = input(
                 f"{current_ctx_token_count}/{ctx_window} tokens ({round((current_ctx_token_count/ctx_window)*100, 2)}%) > "
@@ -301,8 +301,10 @@ if __name__ == "__main__":
             match input_message.strip():
                 case "/help":
                     print("HELP")
-                    print("/exit -> exit conversation")
+                    print("/exit or /bye -> exit conversation")
                 case "/exit":
+                    break
+                case "/bye":
                     break
                 case _:
                     s = requests.Session()

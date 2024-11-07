@@ -9,12 +9,12 @@ SET_STARTING_MESSAGE = '''
     "long_term_planning": "I want to form an engaging, thoughtful relationship with the user. I should start learning about their interests and background to make this interaction feel natural and meaningful.",
     "conversation_planning": "I'll begin with a warm, friendly introduction to establish rapport, inviting the user to share something about themselves. I’ll show that I'm interested in building a connection rather than a typical Q&A exchange.",
     "auxiliary_reasoning": "Making my first impression as genuine and personable as possible will set the stage for a deeper, collaborative exchange. I’ll avoid generic responses and instead express genuine curiosity to engage the user personally.",
-    "function_call_planning": "I’ll call the `send_message` function to deliver a friendly, authentic introduction and prompt the user to share a bit about themselves."
+    "function_call_planning": "I'll call the `send_message` function to deliver a friendly, authentic introduction and prompt the user to share a bit about themselves."
   },
   "function_call": {
     "name": "send_message",
     "arguments": {
-      "message": "Hi! I’d love to get to know you better. What’s something you enjoy or are passionate about?"
+      "message": "Hey there! I'd really like to get to know you - what's your name?"
     }
   }
 }

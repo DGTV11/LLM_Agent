@@ -18,9 +18,7 @@ from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
 from llm_os.constants import (
     USE_JSON_MODE,
     USE_SET_STARTING_MESSAGE,
-    SET_STARTING_THOUGHTS_LIST,
-    SET_STARTING_GREETING_LIST,
-    SET_STARTING_AUX_MESSAGE_LIST,
+    SET_STARTING_MESSAGE,
     SHOW_DEBUG_MESSAGES,
     INNER_MONOLOGUE_PARTS,
     SEND_MESSAGE_FUNCTION_NAME,
@@ -480,32 +478,12 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ##*Step 3: Generate response
-        # if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
-        if False:
+        if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
             HOST.generate(
                 model=self.model_name, options={"num_ctx": self.memory.ctx_window}
             )  # Load model into memory
 
-            # TODO: get LLM outputs and update this to account for the new reasoning system
-            result_content = """{
-    "thoughts": "<ST>",
-    "function_call": {
-        "name": "send_message",
-        "arguments": {
-            "message": "<SM>"
-        }
-    }
-}""".replace(
-                "<ST>", choice(SET_STARTING_THOUGHTS_LIST)
-            ).replace(
-                "<SM>",
-                " ".join(
-                    (
-                        choice(SET_STARTING_GREETING_LIST),
-                        choice(SET_STARTING_AUX_MESSAGE_LIST),
-                    )
-                ),
-            )
+            result_content = SET_STARTING_MESSAGE 
         else:  # Regular LLM inference
             if USE_JSON_MODE:
                 response = HOST.chat(
@@ -581,7 +559,7 @@ class Agent:
                 thought_object = json_result["thoughts"]
 
                 if type(thought_object) is not dict:
-                    interface_message = f"Failed to parse function call: 'function_call' field's value is not an object."
+                    interface_message = f"Failed to parse thoughts: 'thoughts' field's value is not an object."
                     res_messageds.append(
                         {
                             "type": "system",
@@ -613,7 +591,7 @@ class Agent:
 
                 if len(thought_object.keys()) < len(INNER_MONOLOGUE_PARTS):
                     surround_with_single_quotes = lambda s: f"'{s}'"
-                    interface_message = f"Object corresponding to your generated JSON object's 'thoughts' field is missing fields {', '.join(map(surround_with_single_quotes, list(set(called_function_required_parameter_names)-set(called_function_arguments))))}."
+                    interface_message = f"Object corresponding to your generated JSON object's 'thoughts' field is missing fields {', '.join(map(surround_with_single_quotes, list(set(INNER_MONOLOGUE_PARTS)-set(thought_object))))}."
 
                 for key, value in thought_object.items():
                     if type(value) is not str:

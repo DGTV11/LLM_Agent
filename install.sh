@@ -10,7 +10,7 @@ sudo pacman -S python python-pip docker wget tar git
 curl -fsSL https://ollama.com/install.sh | sh
 
 # Prepare pip
-sudo rm /usr/lib/python3.11/EXTERNALLY-MANAGED
+sudo rm /usr/lib/python3.12/EXTERNALLY-MANAGED
 
 # Build Docker images
 docker build -f llm_os/dockerfiles/python_runner/Dockerfile -t python_runner .

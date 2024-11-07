@@ -91,5 +91,5 @@ JSON_TO_PY_TYPE_MAP = {
 }
 
 # Memory pressure constants
-WARNING_TOKEN_FRAC = 0.75
+WARNING_TOKEN_FRAC = 0.85
 FLUSH_TOKEN_FRAC = 0.98

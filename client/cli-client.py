@@ -239,7 +239,7 @@ if __name__ == "__main__":
         while True:
             try:
                 chosen_human_persona_num = int(input("> "))
-                if chosen_human_persona_num not in agent_persona_folder_enum_dict:
+                if chosen_human_persona_num not in human_persona_folder_enum_dict:
                     print(
                         "Input is not in the given persona numbers! Please try again!"
                     )

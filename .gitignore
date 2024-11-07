@@ -176,6 +176,8 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python
 persistent_storage/*
 !persistent_storage/.gitkeep
+user_functions/*
+!user_functions/.gitkeep
 config.ini
 tmp.wav
 tmp.mp3

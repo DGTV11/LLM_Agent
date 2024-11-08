@@ -79,7 +79,7 @@ class CLIInterface:
     def internal_monologue(msg: str, internal_monologue_part: str, end="\n"):
         match internal_monologue_part:  # ["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]
             case "user_emotion_analysis":
-                emoji_text = "heart"
+                emoji_text = "red_heart"
             case "inner_emotions":
                 emoji_text = "grey_heart"
             case "long_term_planning":

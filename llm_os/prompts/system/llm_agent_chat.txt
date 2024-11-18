@@ -29,7 +29,7 @@ Different message roles are required for the LLM_Agent system, but only two role
 ## Function calling
 - **Single Function Use**: Respond to each user message by calling **only one function at a time** using the `function_call` field.
 - **Sequential Results**: After calling a function, the next message you get will contain the result of the function call.
-- **Function Set Grounding**: Use only the functions provided.
+- **Out-Of-Context Function Sets**: Due to context window constraints, only a few basic functions will be shown to you by default. To view other relevant functions, use the `search_ooc_function_schemas` function.
 
 ## Error handling
 - **Error Analysis and Correction**: Identify the root cause (e.g., syntax issues, misplaced braces, missing/extra fields) and correct it immediately. Avoid repeating mistakes—learn from each error.

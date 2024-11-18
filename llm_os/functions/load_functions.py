@@ -44,7 +44,7 @@ def load_all_function_sets():
     functions_path = os.path.join(os.path.dirname(__file__), "function_sets")
     user_functions_path = os.path.join(functions_path, "user_functions")
 
-    function_set_dict = []
+    function_set_dict = {}
 
     for path in [functions_path, user_functions_path]:
         for filename in os.listdir(path):

@@ -75,7 +75,7 @@ def get_function_dats_from_function_sets(function_set_dict):
 
     for function_set_name, function_set in function_set_dict.items():
         for func_name, func_dat in function_set.function_schemas_and_functions.items():
-            if func_name in func_dict:
+            if func_name in in_context_func_dict or func_name in out_of_context_func_dict:
                 raise Exception(f"Duplicate function: {func_name}")
             if function_set_name in IN_CONTEXT_FUNCTION_SETS:
                 in_context_func_dict[func_name] = func_dat

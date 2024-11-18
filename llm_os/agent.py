@@ -57,7 +57,8 @@ class Agent:
         web_interface: WebInterface,
         conv_name: str,
         model_name: str,
-        function_dats: dict,
+        in_context_function_dats: dict,
+        out_of_context_function_dats: dict,
         system_instructions: str,
         working_context: WorkingContext,
         archival_storage: ArchivalStorage,
@@ -80,7 +81,8 @@ class Agent:
         self.memory = Memory(
             self.model_name,
             self.conv_name,
-            function_dats,
+            in_context_function_dats,
+            out_of_context_function_dats,
             system_instructions,
             working_context,
             archival_storage,
@@ -270,7 +272,8 @@ class Agent:
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 
         # Step 2: Check if function exists
-        called_function_dat = self.memory.function_dats.get(called_function_name, None)
+        function_dats = dict(self.memory.in_context_function_dats, **self.memory.out_of_context_function_dats)
+        called_function_dat = function_dats.get(called_function_name, None)
         if not called_function_dat:
             interface_message = f'Function "{called_function_name}" does not exist.'
             res_messageds.append(

@@ -1,6 +1,7 @@
 import importlib, inspect, os, sys
 
 from llm_os.functions.schema_generator import generate_schema
+from llm_os.constants import IN_CONTEXT_FUNCTION_SETS
 
 
 class FunctionSet:
@@ -43,7 +44,7 @@ def load_all_function_sets():
     functions_path = os.path.join(os.path.dirname(__file__), "function_sets")
     user_functions_path = os.path.join(functions_path, "user_functions")
 
-    function_sets = []
+    function_set_dict = []
 
     for path in [functions_path, user_functions_path]:
         for filename in os.listdir(path):
@@ -54,7 +55,7 @@ def load_all_function_sets():
                 and not (filename.startswith("_") or filename.startswith("."))
             ):
                 try:
-                    function_sets.append(FunctionSet(filepath))
+                    function_set_dict[filename] = FunctionSet(filepath)
                     print(f"Loaded function set {filename}")
                 except SyntaxError as e:
                     print(
@@ -65,15 +66,19 @@ def load_all_function_sets():
                         f"Skipped loading function set {filename} due to an error: {e}"
                     )
 
-    return function_sets
+    return function_set_dict
 
 
-def get_function_dats_from_function_sets(function_sets):
-    func_dict = {}
+def get_function_dats_from_function_sets(function_set_dict):
+    in_context_func_dict = {}
+    out_of_context_func_dict = {}
 
-    for function_set in function_sets:
+    for function_set_name, function_set in function_sets.items():
         for func_name, func_dat in function_set.function_schemas_and_functions.items():
             if func_name in func_dict:
                 raise Exception(f"Duplicate function: {func_name}")
-            func_dict[func_name] = func_dat
-    return func_dict
+            if function_set_name in IN_CONTEXT_FUNCTION_SETS:
+                in_context_func_dict[func_name] = func_dat
+            else:
+                out_of_context_func_dict[func_name] = func_dat
+    return in_context_func_dict, out_of_context_func_dict

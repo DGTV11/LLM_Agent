@@ -3,8 +3,14 @@ from os import path
 from dataclasses import dataclass
 from collections import deque
 import json
+import hashlib
 
-from llm_os.tokenisers import get_tokeniser_and_context_window
+import chromadb
+from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
+from semantic_text_splitter import TextSplitter
+
+from host import HOST_URL
+from llm_os.tokenisers import NOMIC_EMBED_TEXT_TOKENIZER, get_tokeniser_and_context_window
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
 from llm_os.memory.working_context import WorkingContext
@@ -16,12 +22,14 @@ class Memory:
         self,
         model_name: str,
         conv_name: str,
-        function_dats: dict,
+        in_context_function_dats: dict,
+        out_of_context_function_dats: dict,
         system_instructions: str,
         working_context: WorkingContext,
         archival_storage: ArchivalStorage,
         recall_storage: RecallStorage,
         file_storage: FileStorage,
+        function_schema_search_top_k: int=10,
     ):
         self.fq_path = path.join(
             path.dirname(path.dirname(path.dirname(__file__))),
@@ -31,7 +39,19 @@ class Memory:
         )
 
         # Function data
-        self.function_dats = function_dats
+        self.in_context_function_dats = in_context_function_dats
+        self.out_of_context_function_dats = out_of_context_function_dats
+        self.function_schema_search_top_k = function_schema_search_top_k
+
+        # Function description embeddings
+        self.client = chromadb.EphemeralClient()
+        self.ef = OllamaEmbeddingFunction(
+            model_name="nomic-embed-text",
+            url=f"{HOST_URL}/api/embed",
+        )
+        self.collection = self.client.get_or_create_collection(
+            name="out_of_context_functions", embedding_function=self.ef
+        )
 
         # Main context
         self.system_instructions = system_instructions
@@ -52,6 +72,44 @@ class Memory:
         self.tokenizer, self.ctx_window, self.num_token_func, self.ct_num_token_func = (
             get_tokeniser_and_context_window(model_name)
         )
+
+    def populate_function_description_embeddings(self):
+        splitter = TextSplitter.from_huggingface_tokenizer(
+            NOMIC_EMBED_TEXT_TOKENIZER, 8192
+        )
+
+        for dat in self.out_of_context_function_dats.values():
+            content = dat["json_schema"]["description"]
+            chunk_list = splitter.chunks(content)
+
+            hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
+            ids = [hex_stringify(chunk) for chunk in chunk_list]
+            metadatas = [
+                {
+                    "function_schema": dat["json_schema"]
+                }
+                for _ in range(len(chunk_list))
+            ]
+            self.collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
+
+    def search_function_description_embeddings(self, query, count, start):
+        try:
+            query_res = self.collection.query(
+                query_texts=[query], n_results=self.function_schema_search_top_k
+            )
+            documents = query_res["documents"]
+            metadatas = query_res["metadatas"]
+
+            start = int(start) if start else 0
+            count = int(count) if count else self.function_schema_search_top_k
+            end = min(count + start, len(documents))
+
+            results = list(dict.fromkeys([metadata["function_schema"] for metadata in metadatas]))[start:end]
+
+            return results, len(results)
+        except Exception as e:
+            print("Archival search error", e)
+            raise e
 
     def write_fq_to_fq_path(self):
         plf = Path(self.fq_path)
@@ -87,8 +145,8 @@ class Memory:
         newline = "\n"
         return f"""# SYSTEM INSTRUCTIONS
         {self.system_instructions}
-        # FUNCTION JSON SCHEMAS
-        {newline.join([str(dat["json_schema"]) for dat in self.function_dats.values()])}
+        # IN-CONTEXT FUNCTION JSON SCHEMAS
+        {newline.join([str(dat["json_schema"]) for dat in self.in_context_function_dats.values()])}
         # EXTERNAL CONTEXT INFORMATION
         {len(self.recall_storage)} previous messages between you and the user are stored in recall storage (use functions to access them)
         {len(self.archival_storage)} total memories you created are stored in archival storage (use functions to access them)

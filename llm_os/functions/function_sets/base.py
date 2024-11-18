@@ -52,3 +52,36 @@ def pause_heartbeats(self: Agent, minutes: int) -> Optional[str]:
 
 pause_heartbeats.__doc__ = pause_heartbeats_docstring
 '''
+
+def search_ooc_function_schemas(self: Agent, query: str, page: Optional[int] = 0) -> Optional[str]:
+    """
+    Search out-of-context function schemas (based on their descriptions) using semantic (embedding-based) search.
+
+    Args:
+        query (str): String to search for.
+        page (Optional[int]): Allows you to page through results. Only use on a follow-up query. Defaults to 0 (first page).
+
+    Returns:
+        str: Query result string
+    """
+    if page is None or (isinstance(page, str) and page.lower().strip() == "none"):
+        page = 0
+    try:
+        page = int(page)
+    except:
+        raise ValueError(f"'page' argument must be an integer")
+    count = RETRIEVAL_QUERY_DEFAULT_PAGE_SIZE
+    results, total = self.memory.search_function_description_embeddings(
+        query,
+        count=count,
+        start=page * count,
+    )
+    num_pages = math.ceil(total / count) - 1  # 0 index
+    if len(results) == 0:
+        results_str = f"No results found."
+    else:
+        results_pref = (
+            f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
+        )
+        results_str = f"{results_pref} {json.dumps(results, ensure_ascii=JSON_ENSURE_ASCII)}"
+    return results_str

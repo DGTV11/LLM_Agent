@@ -113,7 +113,7 @@ def init_agent(agent_persona_name, human_persona_name):
     )
 
     # Load interfaces
-    interface = CLIInterface()
+    interface = ServerInterface()
     web_interface = WebInterface()
 
     # Create persistent storage directory

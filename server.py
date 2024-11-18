@@ -31,6 +31,129 @@ app = Flask(__name__)
 
 sem = threading.Semaphore()
 
+loaded_agents = {}
+def get_agent(conv_name):
+    global loaded_agents
+
+    if conv_name in loaded_agents:
+        return loaded_agents[conv_name]
+
+    # Load system instructions
+    system_instructions = get_system_text("llm_agent_chat")
+
+    # Load functions
+    in_context_function_dats, out_of_context_function_dats, = get_function_dats_from_function_sets(load_all_function_sets())
+
+    # Load interfaces
+    interface = ServerInterface()
+    web_interface = WebInterface()
+
+    # Load agent
+    working_context = WorkingContext(
+        CONFIG["model_name"], conv_name, None, None, None
+    )
+    recall_storage = RecallStorage(conv_name)
+    archival_storage = ArchivalStorage(conv_name)
+    file_storage = FileStorage(
+        conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
+    )
+
+    agent = Agent(
+        interface,
+        web_interface,
+        conv_name,
+        CONFIG["model_name"],
+        in_context_function_dats,
+        out_of_context_function_dats,
+        system_instructions,
+        working_context,
+        archival_storage,
+        recall_storage,
+        file_storage,
+    )
+
+    loaded_agents[conv_name] = agent
+
+    return agent
+
+def init_agent(agent_persona_name, human_persona_name):
+    global loaded_agents
+
+    agent_persona_fp = path.join(
+        path.dirname(__file__),
+        "llm_os",
+        "personas",
+        "agents",
+        agent_persona_name,
+    )
+    human_persona_fp = path.join(
+        path.dirname(__file__),
+        "llm_os",
+        "personas",
+        "humans",
+        human_persona_name,
+    )
+
+    with open(agent_persona_fp, "r") as f:
+        agent_persona_str = f.read()
+
+    with open(human_persona_fp, "r") as f:
+        human_persona_str = f.read()
+
+    # Load system instructions
+    system_instructions = get_system_text("llm_agent_chat")
+
+    # Load functions
+    in_context_function_dats, out_of_context_function_dats = get_function_dats_from_function_sets(
+        load_all_function_sets()
+    )
+
+    # Load interfaces
+    interface = CLIInterface()
+    web_interface = WebInterface()
+
+    # Create persistent storage directory
+    ps_folders = list(
+        filter(
+            lambda s: s[0] != ".",
+            listdir(path.join(path.dirname(__file__), "persistent_storage")),
+        )
+    )
+
+    conv_name = f"{agent_persona_name.split('.')[0]}--{human_persona_name.split('.')[0]}@{uuid4().hex}-{uuid4().hex}"
+
+    while conv_name in ps_folders:
+        conv_name = f"{agent_persona_name.split('.')[0]}--{human_persona_name.split('.')[0]}@{uuid4().hex}-{uuid4().hex}"
+
+    mkdir(path.join(path.dirname(__file__), "persistent_storage", conv_name))
+
+    # Create agent
+    working_context = WorkingContext(
+        CONFIG["model_name"], conv_name, agent_persona_str, 1, human_persona_str
+    )
+    recall_storage = RecallStorage(conv_name)
+    archival_storage = ArchivalStorage(conv_name)
+    file_storage = FileStorage(
+        conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
+    )
+
+    agent = Agent(
+        interface,
+        web_interface,
+        conv_name,
+        CONFIG["model_name"],
+        in_context_function_dats,
+        out_of_context_function_dats,
+        system_instructions,
+        working_context,
+        archival_storage,
+        recall_storage,
+        file_storage,
+    )
+
+    loaded_agents[conv_name] = agent
+
+    return agent
 
 @app.route("/conversation-ids", methods=["GET"])
 def get_existing_conversation_ids():
@@ -80,76 +203,7 @@ def agent_methods():
             agent_persona_name = data.get("agent_persona_name")
             human_persona_name = data.get("human_persona_name")
 
-            agent_persona_fp = path.join(
-                path.dirname(__file__),
-                "llm_os",
-                "personas",
-                "agents",
-                agent_persona_name,
-            )
-            human_persona_fp = path.join(
-                path.dirname(__file__),
-                "llm_os",
-                "personas",
-                "humans",
-                human_persona_name,
-            )
-
-            with open(agent_persona_fp, "r") as f:
-                agent_persona_str = f.read()
-
-            with open(human_persona_fp, "r") as f:
-                human_persona_str = f.read()
-
-            # Load system instructions
-            system_instructions = get_system_text("llm_agent_chat")
-
-            # Load functions
-            function_dats = get_function_dats_from_function_sets(
-                load_all_function_sets()
-            )
-
-            # Load interfaces
-            interface = CLIInterface()
-            web_interface = WebInterface()
-
-            # Create persistent storage directory
-            ps_folders = list(
-                filter(
-                    lambda s: s[0] != ".",
-                    listdir(path.join(path.dirname(__file__), "persistent_storage")),
-                )
-            )
-
-            conv_name = f"{agent_persona_name.split('.')[0]}--{human_persona_name.split('.')[0]}@{uuid4().hex}-{uuid4().hex}"
-
-            while conv_name in ps_folders:
-                conv_name = f"{agent_persona_name.split('.')[0]}--{human_persona_name.split('.')[0]}@{uuid4().hex}-{uuid4().hex}"
-
-            mkdir(path.join(path.dirname(__file__), "persistent_storage", conv_name))
-
-            # Create agent
-            working_context = WorkingContext(
-                CONFIG["model_name"], conv_name, agent_persona_str, 1, human_persona_str
-            )
-            recall_storage = RecallStorage(conv_name)
-            archival_storage = ArchivalStorage(conv_name)
-            file_storage = FileStorage(
-                conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
-            )
-
-            agent = Agent(
-                interface,
-                web_interface,
-                conv_name,
-                CONFIG["model_name"],
-                function_dats,
-                system_instructions,
-                working_context,
-                archival_storage,
-                recall_storage,
-                file_storage,
-            )
+            init_agent(agent_persona_name, human_persona_name)
 
             print('FINISHED RUNNING POST "/agent"')
             return jsonify({"conv_name": conv_name})
@@ -220,38 +274,8 @@ def send_message():
         user_id = data.get("user_id")
         message = data.get("message")
 
-        # Load system instructions
-        system_instructions = get_system_text("llm_agent_chat")
-
-        # Load functions
-        function_dats = get_function_dats_from_function_sets(load_all_function_sets())
-
-        # Load interfaces
-        interface = ServerInterface()
-        web_interface = WebInterface()
-
         # Load agent
-        working_context = WorkingContext(
-            CONFIG["model_name"], conv_name, None, None, None
-        )
-        recall_storage = RecallStorage(conv_name)
-        archival_storage = ArchivalStorage(conv_name)
-        file_storage = FileStorage(
-            conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
-        )
-
-        agent = Agent(
-            interface,
-            web_interface,
-            conv_name,
-            CONFIG["model_name"],
-            function_dats,
-            system_instructions,
-            working_context,
-            archival_storage,
-            recall_storage,
-            file_storage,
-        )
+        agent = get_agent(conv_name)
 
         # Send message
         agent.interface.user_message(message)
@@ -317,38 +341,8 @@ def send_first_message():
         user_id = data.get("user_id")
         message = data.get("message")
 
-        # Load system instructions
-        system_instructions = get_system_text("llm_agent_chat")
-
-        # Load functions
-        function_dats = get_function_dats_from_function_sets(load_all_function_sets())
-
-        # Load interfaces
-        interface = ServerInterface()
-        web_interface = WebInterface()
-
         # Load agent
-        working_context = WorkingContext(
-            CONFIG["model_name"], conv_name, None, None, None
-        )
-        recall_storage = RecallStorage(conv_name)
-        archival_storage = ArchivalStorage(conv_name)
-        file_storage = FileStorage(
-            conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
-        )
-
-        agent = Agent(
-            interface,
-            web_interface,
-            conv_name,
-            CONFIG["model_name"],
-            function_dats,
-            system_instructions,
-            working_context,
-            archival_storage,
-            recall_storage,
-            file_storage,
-        )
+        agent = get_agent(conv_name)
 
         # Send message
         agent.interface.system_message(message)
@@ -414,39 +408,9 @@ def send_message_without_heartbeat():
         user_id = data.get("user_id")
         message = data.get("message")
 
-        # Load system instructions
-        system_instructions = get_system_text("llm_agent_chat")
-
-        # Load functions
-        function_dats = get_function_dats_from_function_sets(load_all_function_sets())
-
-        # Load interfaces
-        interface = ServerInterface()
-        web_interface = WebInterface()
-
         # Load agent
-        working_context = WorkingContext(
-            CONFIG["model_name"], conv_name, None, None, None
-        )
-        recall_storage = RecallStorage(conv_name)
-        archival_storage = ArchivalStorage(conv_name)
-        file_storage = FileStorage(
-            conv_name, get_tokeniser_and_context_window(CONFIG["model_name"])[0]
-        )
-
-        agent = Agent(
-            interface,
-            web_interface,
-            conv_name,
-            CONFIG["model_name"],
-            function_dats,
-            system_instructions,
-            working_context,
-            archival_storage,
-            recall_storage,
-            file_storage,
-        )
-
+        agent = get_agent(conv_name)
+        
         # Send message
         agent.interface.system_message(message)
         agent.memory.append_messaged_to_fq_and_rs(

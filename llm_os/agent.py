@@ -272,7 +272,10 @@ class Agent:
             return res_messageds, True, True  # Sends heartbeat request so LLM can retry
 
         # Step 2: Check if function exists
-        function_dats = dict(self.memory.in_context_function_dats, **self.memory.out_of_context_function_dats)
+        function_dats = dict(
+            self.memory.in_context_function_dats,
+            **self.memory.out_of_context_function_dats,
+        )
         called_function_dat = function_dats.get(called_function_name, None)
         if not called_function_dat:
             interface_message = f'Function "{called_function_name}" does not exist.'
@@ -486,7 +489,7 @@ class Agent:
                 model=self.model_name, options={"num_ctx": self.memory.ctx_window}
             )  # Load model into memory
 
-            result_content = SET_STARTING_MESSAGE 
+            result_content = SET_STARTING_MESSAGE
         else:  # Regular LLM inference
             if USE_JSON_MODE:
                 response = HOST.chat(

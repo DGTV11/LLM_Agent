@@ -2,7 +2,8 @@ import json, os, subprocess, urllib.parse
 from time import time
 
 from emoji import emojize
-#from gtts import gTTS
+
+# from gtts import gTTS
 from playsound import playsound
 import requests
 

@@ -1,7 +1,7 @@
 # Inference constants
 USE_JSON_MODE = True  # Likely slower but more reliable
 USE_SET_STARTING_MESSAGE = True  # Helps because few-shot ig
-SET_STARTING_MESSAGE = '''
+SET_STARTING_MESSAGE = """
 {
   "thoughts": {
     "user_emotion_analysis": "The user likely feels curious about this unique interaction style and may be interested in seeing a highly engaging, human-like conversation.",
@@ -18,7 +18,7 @@ SET_STARTING_MESSAGE = '''
     }
   }
 }
-'''
+"""
 
 # Interface constants
 SHOW_DEBUG_MESSAGES = True  # Set to True when testing new models

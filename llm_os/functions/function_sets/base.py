@@ -53,7 +53,10 @@ def pause_heartbeats(self: Agent, minutes: int) -> Optional[str]:
 pause_heartbeats.__doc__ = pause_heartbeats_docstring
 '''
 
-def search_ooc_function_schemas(self: Agent, query: str, page: Optional[int] = 0) -> Optional[str]:
+
+def search_ooc_function_schemas(
+    self: Agent, query: str, page: Optional[int] = 0
+) -> Optional[str]:
     """
     Search out-of-context function schemas (based on their descriptions) using semantic (embedding-based) search.
 
@@ -83,5 +86,7 @@ def search_ooc_function_schemas(self: Agent, query: str, page: Optional[int] = 0
         results_pref = (
             f"Showing {len(results)} of {total} results (page {page}/{num_pages}):"
         )
-        results_str = f"{results_pref} {json.dumps(results, ensure_ascii=JSON_ENSURE_ASCII)}"
+        results_str = (
+            f"{results_pref} {json.dumps(results, ensure_ascii=JSON_ENSURE_ASCII)}"
+        )
     return results_str

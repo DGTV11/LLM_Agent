@@ -37,7 +37,8 @@ class FileStorage:
             path=path.join(
                 path.dirname(path.dirname(path.dirname(__file__))),
                 "persistent_storage",
-                conv_name, "file_storage_embeddings",
+                conv_name,
+                "file_storage_embeddings",
             )
         )
         self.ef = OllamaEmbeddingFunction(

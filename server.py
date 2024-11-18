@@ -32,6 +32,8 @@ app = Flask(__name__)
 sem = threading.Semaphore()
 
 loaded_agents = {}
+
+
 def get_agent(conv_name):
     global loaded_agents
 
@@ -42,16 +44,17 @@ def get_agent(conv_name):
     system_instructions = get_system_text("llm_agent_chat")
 
     # Load functions
-    in_context_function_dats, out_of_context_function_dats, = get_function_dats_from_function_sets(load_all_function_sets())
+    (
+        in_context_function_dats,
+        out_of_context_function_dats,
+    ) = get_function_dats_from_function_sets(load_all_function_sets())
 
     # Load interfaces
     interface = ServerInterface()
     web_interface = WebInterface()
 
     # Load agent
-    working_context = WorkingContext(
-        CONFIG["model_name"], conv_name, None, None, None
-    )
+    working_context = WorkingContext(CONFIG["model_name"], conv_name, None, None, None)
     recall_storage = RecallStorage(conv_name)
     archival_storage = ArchivalStorage(conv_name)
     file_storage = FileStorage(
@@ -75,6 +78,7 @@ def get_agent(conv_name):
     loaded_agents[conv_name] = agent
 
     return agent
+
 
 def init_agent(agent_persona_name, human_persona_name):
     global loaded_agents
@@ -104,8 +108,8 @@ def init_agent(agent_persona_name, human_persona_name):
     system_instructions = get_system_text("llm_agent_chat")
 
     # Load functions
-    in_context_function_dats, out_of_context_function_dats = get_function_dats_from_function_sets(
-        load_all_function_sets()
+    in_context_function_dats, out_of_context_function_dats = (
+        get_function_dats_from_function_sets(load_all_function_sets())
     )
 
     # Load interfaces
@@ -154,6 +158,7 @@ def init_agent(agent_persona_name, human_persona_name):
     loaded_agents[conv_name] = agent
 
     return agent
+
 
 @app.route("/conversation-ids", methods=["GET"])
 def get_existing_conversation_ids():
@@ -410,7 +415,7 @@ def send_message_without_heartbeat():
 
         # Load agent
         agent = get_agent(conv_name)
-        
+
         # Send message
         agent.interface.system_message(message)
         agent.memory.append_messaged_to_fq_and_rs(

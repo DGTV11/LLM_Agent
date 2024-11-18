@@ -10,7 +10,10 @@ from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 from semantic_text_splitter import TextSplitter
 
 from host import HOST_URL
-from llm_os.tokenisers import NOMIC_EMBED_TEXT_TOKENIZER, get_tokeniser_and_context_window
+from llm_os.tokenisers import (
+    NOMIC_EMBED_TEXT_TOKENIZER,
+    get_tokeniser_and_context_window,
+)
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.recall_storage import RecallStorage
 from llm_os.memory.working_context import WorkingContext
@@ -29,7 +32,7 @@ class Memory:
         archival_storage: ArchivalStorage,
         recall_storage: RecallStorage,
         file_storage: FileStorage,
-        function_schema_search_top_k: int=10,
+        function_schema_search_top_k: int = 10,
     ):
         self.fq_path = path.join(
             path.dirname(path.dirname(path.dirname(__file__))),
@@ -85,10 +88,7 @@ class Memory:
             hex_stringify = lambda chunk: hashlib.md5(chunk.encode("UTF-8")).hexdigest()
             ids = [hex_stringify(chunk) for chunk in chunk_list]
             metadatas = [
-                {
-                    "function_schema": dat["json_schema"]
-                }
-                for _ in range(len(chunk_list))
+                {"function_schema": dat["json_schema"]} for _ in range(len(chunk_list))
             ]
             self.collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
 
@@ -104,7 +104,9 @@ class Memory:
             count = int(count) if count else self.function_schema_search_top_k
             end = min(count + start, len(documents))
 
-            results = list(dict.fromkeys([metadata["function_schema"] for metadata in metadatas]))[start:end]
+            results = list(
+                dict.fromkeys([metadata["function_schema"] for metadata in metadatas])
+            )[start:end]
 
             return results, len(results)
         except Exception as e:

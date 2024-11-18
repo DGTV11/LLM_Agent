@@ -157,7 +157,7 @@ def init_agent(agent_persona_name, human_persona_name):
 
     loaded_agents[conv_name] = agent
 
-    return agent
+    return conv_name
 
 
 @app.route("/conversation-ids", methods=["GET"])
@@ -208,7 +208,7 @@ def agent_methods():
             agent_persona_name = data.get("agent_persona_name")
             human_persona_name = data.get("human_persona_name")
 
-            init_agent(agent_persona_name, human_persona_name)
+            conv_name = init_agent(agent_persona_name, human_persona_name)
 
             print('FINISHED RUNNING POST "/agent"')
             return jsonify({"conv_name": conv_name})

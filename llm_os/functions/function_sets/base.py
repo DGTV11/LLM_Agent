@@ -58,7 +58,7 @@ def search_ooc_function_schemas(
     self: Agent, query: str, page: Optional[int] = 0
 ) -> Optional[str]:
     """
-    Search out-of-context function schemas (based on their descriptions) using semantic (embedding-based) search.
+    Search out-of-context function schemas (based on their descriptions) using semantic (embedding-based) search. Function schemas contain function names, descriptions, return types and descriptions, and parameters with types and descriptions. To be used when you want to find out how to do certain actions or access persistent memory units using functions not included in your context window by default.
 
     Args:
         query (str): String to search for.

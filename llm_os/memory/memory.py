@@ -147,7 +147,7 @@ class Memory:
         newline = "\n"
         return f"""# SYSTEM INSTRUCTIONS
         {self.system_instructions}
-        # IN-CONTEXT FUNCTION JSON SCHEMAS
+        # IN-CONTEXT FUNCTION JSON SCHEMAS (some functions are stored out of context and not visible here)
         {newline.join([str(dat["json_schema"]) for dat in self.in_context_function_dats.values()])}
         # EXTERNAL CONTEXT INFORMATION
         {len(self.recall_storage)} previous messages between you and the user are stored in recall storage (use functions to access them)

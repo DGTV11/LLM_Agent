@@ -34,7 +34,7 @@ INNER_MONOLOGUE_PARTS = [
 ]
 
 # Function constants
-IN_CONTEXT_FUNCTION_SETS = ["base.py"]
+IN_CONTEXT_FUNCTION_SETS = ["base.py", "working_context.py", "recall_storage.py", "archival_storage.py"]
 SEND_MESSAGE_FUNCTION_NAME = "send_message"
 MEMORY_EDITING_FUNCTIONS = [
     "core_memory_append",

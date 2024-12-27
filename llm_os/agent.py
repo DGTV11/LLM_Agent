@@ -525,7 +525,7 @@ class Agent:
             if type(json_result) is not dict:
                 raise RuntimeError
         except (RuntimeError, ValueError):
-            interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue and your 'function_call' as your function call! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
+            interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue object and your 'function_call' as your function call object! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
             res_messageds.append(
                 {
                     "type": "system",

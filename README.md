@@ -29,7 +29,7 @@ ollama pull gemma2:2b-instruct-q5_0
 docker build -f llm_os/dockerfiles/python_runner/Dockerfile -t python_runner .
 ```
 
-### Automatic installation (Arch Linux only)
+### Automatic installation (Arch Linux only, may not work)
 1) Run the script
 ```
 bash install.sh
@@ -70,7 +70,7 @@ sudo apt-get install gstreamer1.0-pulseaudio
 ```
 
 ## Note
-- The code in llm_os is based on the MemGPT codebase [here](https://github.com/cpacker/MemGPT) (some parts are from the codebase, some parts are from the internet)
+- The code in llm_os is based on the MemGPT codebase [here](https://github.com/cpacker/MemGPT) (some parts are from the codebase, some parts are from the internet, some parts were from me)
 - The system instructions have been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/prompts) with few edits
 - The schema generator has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/schema_generator.py) with few edits
 - The base function set has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/function_sets/base.py) with few edits
@@ -78,10 +78,11 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - AI assistance was used during the compression of the default system prompt
 
 ## TODO
-- Finish up auto install script, get better tts solution
+- Make memory management more modular (including main system instructions)
+- Stop overwhelming the LLM with all that memory management paging stuff (abstract them away?)
 - Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions
-- Allow LLM_Agent to use end-to-end speech-to-speech (we need faster SLMS!)
 - Allow LLM_Agent to speak to multiple users (group chat/conversation)
+- Finish up auto install script
 
 ## References
 - Packer, Charles, et al. ‘MemGPT: Towards LLMs as Operating Systems’. arXiv [Cs.AI], 2024, http://arxiv.org/abs/2310.08560. arXiv.

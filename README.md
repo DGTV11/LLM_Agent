@@ -77,14 +77,6 @@ sudo apt-get install gstreamer1.0-pulseaudio
 - The writing of some code in this repository has been assisted by AI
 - AI assistance was used during the compression of the default system prompt
 
-## TODO
-- Make memory management more modular (including main system instructions)
-- Stop overwhelming the LLM with all that thought stuff (revert to usual, maybe support models like r1)
-- https://github.com/codelion/optillm?tab=readme-ov-file
-- Allow it to use function-calling to interact with its greater environment, search the web, and perform other actions
-- Allow LLM_Agent to speak to multiple users (group chat/conversation)
-- Finish up auto install script
-
 ## References
 - Packer, Charles, et al. ‘MemGPT: Towards LLMs as Operating Systems’. arXiv [Cs.AI], 2024, http://arxiv.org/abs/2310.08560. arXiv.
 - Nussbaum, Zach, et al. ‘Nomic Embed: Training a Reproducible Long Context Text Embedder’. arXiv [Cs.CL], 2024, http://arxiv.org/abs/2402.01613. arXiv.

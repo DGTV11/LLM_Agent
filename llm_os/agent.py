@@ -6,10 +6,10 @@ from random import choice
 
 import json5
 import regex
-from host import HOST
 from pydantic import BaseModel, confloat
 from typing_extensions import TypedDict
 
+from host import HOST
 from llm_os.constants import (
     FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,
     FLUSH_TOKEN_FRAC,
@@ -487,8 +487,8 @@ class Agent:
             return f"Failed to parse emotions: 'emotion' field's value is not a list."
 
         for emotion in emotion_list:
-            if (type(value) is not tuple and type(value) is not list) or len(
-                value
+            if (type(emotion) is not tuple and type(emotion) is not list) or len(
+                emotion
             ) != 2:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
 

@@ -17,6 +17,14 @@ class CLIInterface:
         print(emojize(f":lady_beetle: {msg}"), end=end, flush=True)
 
     @staticmethod
+    def inner_emotion(emotion_type: str, emotion_intensity: float, end="\n"):
+        print(
+            emojize(f":grey_heart: {emotion_type}: {emotion_intensity}"),
+            end=end,
+            flush=True,
+        )
+
+    @staticmethod
     def internal_monologue(msg: str, end="\n"):
         print(emojize(f":thought_balloon: {msg}"), end=end, flush=True)
 
@@ -78,6 +86,18 @@ class ServerInterface:
     def debug_message(self, msg: str, end="\n"):
         self.server_message_stack.append(
             {"type": "debug_message", "arguments": {"msg": msg, "end": end}}
+        )
+
+    def inner_emotion(self, emotion_type: str, emotion_intensity: float, end="\n"):
+        self.server_message_stack.append(
+            {
+                "type": "debug_message",
+                "arguments": {
+                    "emotion_type": emotion_type,
+                    "emotion_intensity": emotion_intensity,
+                    "end": end,
+                },
+            }
         )
 
     def internal_monologue(self, msg: str, internal_monologue_part: str, end="\n"):

@@ -46,7 +46,7 @@ The given expected response template must be followed exactly in your response, 
 
 2. **Emotions**:
    - **Emotions**: JSON list that contains your current emotional state.
-   - **List item content**: Each item in the list must contain a phrase of around 1-3 words detailing th type and degree of one of your emotions.
+   - **List item content**: Each item in the list must contain a tuple with the first element being the type of emotion (string) and the intensity of the emotion (float between 1 and 10 inclusive).
 
 3. **Thoughts**:
    - **Inner Monologue**: JSON list that contains analysis and planning.

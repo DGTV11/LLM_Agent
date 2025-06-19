@@ -7,7 +7,7 @@ from random import choice
 import json5
 import regex
 from host import HOST
-from pydantic import BaseModel, TypedDict
+from pydantic import BaseModel, TypedDict, confloat
 
 
 class FunctionCall(TypedDict):
@@ -16,7 +16,7 @@ class FunctionCall(TypedDict):
 
 
 class LLMResponse(TypedDict):
-    emotions: list[str]
+    emotions: list[tuple[str, confloat(ge=1.0, le=10.0)]]
     thoughts: list[str]
     function_call: FunctionCall
 
@@ -475,6 +475,38 @@ class Agent:
 
         return res_messageds, called_heartbeat_request, False
 
+    def __handle_emotions(self, emotion_list):
+        if type(emotion_list) is not list:
+            return f"Failed to parse emotions: 'emotion' field's value is not a list."
+
+        for emotion in emotion_list:
+            if type(value) is not tuple or len(value) != 2:
+                return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
+                
+        for emotion_type, emotion_intensity in emotion_list:
+            if type(emotion_type) is not str or type(emotion_degree) is not float:
+                return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
+            if not (1.0 <= emotion_degree <= 10.0):
+                return f"Intensity of emotion must be between 1 and 10 inclusive"
+
+        for emotion_type, emotion_intensity in emotion_list:
+            self.interface.inner_emotion(emotion_type, emotion_intensity)
+
+        return None
+
+    def __handle_thoughts(self, thought_list):
+        if type(thought_list) is not list:
+            return f"Failed to parse thoughts: 'thoughts' field's value is not a list."
+
+        for thought in thought_list:
+            if type(value) is not str:
+                return f"All items in your generated object's 'thoughts' field must be strings."
+
+        for thought in thought_list:
+            self.interface.internal_monologue(thought)
+
+        return None
+
     def step(self, user_id, is_first_message=False) -> str:
         # note: all messageds must be in the form {'type': type, 'user_id': user_id, 'message': {'role': role, 'content': content}}
         ##*Step 1: Bring current human working memory block into context if needed
@@ -541,7 +573,7 @@ class Agent:
             if type(json_result) is not dict:
                 raise RuntimeError
         except (RuntimeError, ValueError):
-            interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'thoughts' field as your internal monologue object and your 'function_call' as your function call object! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
+            interface_message = "Error: you MUST give a SINGLE WELL-FORMED JSON object AND ONLY THAT OBJECT that at least includes the 'emotions' field as your emotional state, the 'thoughts' field as your internal monologue object and the 'function_call' field as your function call object! You must NOT give ANY extra text other than the JSON object! You must NOT just give a single piece of regular natural language! Please try again without acknowledging this message."
             res_messageds.append(
                 {
                     "type": "system",
@@ -568,57 +600,60 @@ class Agent:
         else:
             unidentified_keys = []
             for key in json_result.keys():
-                if key not in ["thoughts", "function_call"]:
+                if key not in ["emotions", "thoughts", "function_call"]:
                     unidentified_keys.append(key)
 
             if (
                 (not unidentified_keys)
+                and json_result.get("emotions", None)
                 and json_result.get("thoughts", None)
                 and json_result.get("function_call", None)
             ):
-                ##*Step 4: Handle thoughts
-                thought_list = json_result["thoughts"]
+                ##*Step 4: Handle emotions
+                emotion_list = json_result["emotions"]
+                fail_message = __handle_emotions(emotion_list)
 
-                if type(thought_list) is not list:
-                    interface_message = f"Failed to parse thoughts: 'thoughts' field's value is not a list."
+                if fail_message:
                     res_messageds.append(
                         {
                             "type": "system",
                             "user_id": user_id,
-                            "message": {"role": "user", "content": interface_message},
+                            "message": {
+                                "role": "user",
+                                "content": fail_message,
+                            },
                         }
                     )
-                    self.interface.system_message(interface_message)
+                    self.interface.system_message(fail_message)
                     heartbeat_request = True
                     function_failed = False
+                else:
+                    ##*Step 5: Handle thoughts
+                    thought_list = json_result["thoughts"]
+                    fail_message = __handle_thoughts(thoughts_list)
 
-                for thought in thought_list:
-                    if type(value) is not str:
-                        interface_message = f"All items in your generated object's 'thoughts' field must be strings."
+                    if fail_message:
                         res_messageds.append(
                             {
                                 "type": "system",
                                 "user_id": user_id,
                                 "message": {
                                     "role": "user",
-                                    "content": interface_message,
+                                    "content": fail_message,
                                 },
                             }
                         )
-                        self.interface.system_message(interface_message)
+                        self.interface.system_message(fail_message)
                         heartbeat_request = True
                         function_failed = False
-
-                for thought in thought_list:
-                    self.interface.internal_monologue(thought)
-
-                ##*Step 5: Handle function call
-                d_res_messageds, heartbeat_request, function_failed = (
-                    self.__call_function(
-                        user_id, json_result["function_call"], is_first_message
-                    )
-                )
-                res_messageds += d_res_messageds
+                    else:
+                        ##*Step 6: Handle function call
+                        d_res_messageds, heartbeat_request, function_failed = (
+                            self.__call_function(
+                                user_id, json_result["function_call"], is_first_message
+                            )
+                        )
+                        res_messageds += d_res_messageds
 
             elif unidentified_keys:
                 surround_with_single_quotes = lambda s: f"'{s}'"
@@ -634,7 +669,7 @@ class Agent:
                 heartbeat_request = True
                 function_failed = False
             else:
-                interface_message = "Error: you MUST include BOTH the 'thoughts' field and the 'function_call' field in the JSON object you respond with! Please try again without acknowledging this message."
+                interface_message = "Error: you MUST include the 'emotions' field, the 'thoughts' field and the 'function_call' field in the JSON object you respond with! Please try again without acknowledging this message."
                 res_messageds.append(
                     {
                         "type": "system",
@@ -648,7 +683,7 @@ class Agent:
 
         self.messages_since_last_conscious_memory_write += 1
 
-        ##*Step 6: Check memory pressure
+        ##*Step 7: Check memory pressure
         if (
             not is_first_message
         ):  # *This if statement is here because first message only accepts a limited range of functions
@@ -685,7 +720,7 @@ class Agent:
                 self.summarise_messages_in_place()
                 self.memory_pressure_warning_alr_given = False
 
-            ##*Step 7: Check if it has been too long since the agent consciously updated its memory
+            ##*Step 8: Check if it has been too long since the agent consciously updated its memory
             if (
                 not self.conscious_memory_write_alr_forced
                 and not had_just_sent_mpw
@@ -713,11 +748,11 @@ class Agent:
 
             had_just_sent_mpw = False
 
-        ##*Step 8: Update memory
+        ##*Step 9: Update memory
         for messaged in res_messageds:
             self.memory.append_messaged_to_fq_and_rs(messaged)
 
-        ##*Step 9: Return response
+        ##*Step 10: Return response
         return res_messageds, heartbeat_request, function_failed
 
     """

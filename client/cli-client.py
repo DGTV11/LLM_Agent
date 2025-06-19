@@ -80,6 +80,14 @@ class CLIInterface:
         print(emojize(f":lady_beetle: {msg}"), end=end, flush=True)
 
     @staticmethod
+    def inner_emotion(emotion_type: str, emotion_intensity: float, end="\n"):
+        print(
+            emojize(f":grey_heart: {emotion_type}: {emotion_intensity}"),
+            end=end,
+            flush=True,
+        )
+
+    @staticmethod
     def internal_monologue(msg: str, end="\n"):
         print(emojize(f":thought_balloon: {msg}"), end=end, flush=True)
 

@@ -487,7 +487,9 @@ class Agent:
             return f"Failed to parse emotions: 'emotion' field's value is not a list."
 
         for emotion in emotion_list:
-            if type(value) is not tuple or len(value) != 2:
+            if (type(value) is not tuple and type(value) is not list) or len(
+                value
+            ) != 2:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
 
         for emotion_type, emotion_intensity in emotion_list:
@@ -618,7 +620,7 @@ class Agent:
             ):
                 ##*Step 4: Handle emotions
                 emotion_list = json_result["emotions"]
-                fail_message = __handle_emotions(emotion_list)
+                fail_message = self.__handle_emotions(emotion_list)
 
                 if fail_message:
                     res_messageds.append(
@@ -637,7 +639,7 @@ class Agent:
                 else:
                     ##*Step 5: Handle thoughts
                     thought_list = json_result["thoughts"]
-                    fail_message = __handle_thoughts(thoughts_list)
+                    fail_message = self.__handle_thoughts(thoughts_list)
 
                     if fail_message:
                         res_messageds.append(

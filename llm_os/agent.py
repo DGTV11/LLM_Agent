@@ -7,7 +7,8 @@ from random import choice
 import json5
 import regex
 from host import HOST
-from pydantic import BaseModel, TypedDict, confloat
+from pydantic import BaseModel, confloat
+from typing_extensions import TypedDict
 
 from llm_os.constants import (
     FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,

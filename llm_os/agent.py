@@ -9,6 +9,30 @@ import regex
 from host import HOST
 from pydantic import BaseModel, TypedDict, confloat
 
+from llm_os.constants import (
+    FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,
+    FLUSH_TOKEN_FRAC,
+    FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
+    INFERENCE_STRICTNESS,
+    JSON_TO_PY_TYPE_MAP,
+    LAST_N_MESSAGES_TO_PRESERVE,
+    MEMORY_EDITING_FUNCTIONS,
+    PY_TO_JSON_TYPE_MAP,
+    SEND_MESSAGE_FUNCTION_NAME,
+    SHOW_DEBUG_MESSAGES,
+    TRUNCATION_TOKEN_FRAC,
+    WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT,
+    WARNING_TOKEN_FRAC,
+)
+from llm_os.interface import CLIInterface
+from llm_os.memory.archival_storage import ArchivalStorage
+from llm_os.memory.file_storage import FileStorage
+from llm_os.memory.memory import Memory
+from llm_os.memory.recall_storage import RecallStorage
+from llm_os.memory.working_context import WorkingContext
+from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
+from llm_os.web_interface import WebInterface
+
 
 class FunctionCall(TypedDict):
     name: str
@@ -19,24 +43,6 @@ class LLMResponse(TypedDict):
     emotions: list[tuple[str, confloat(ge=1.0, le=10.0)]]
     thoughts: list[str]
     function_call: FunctionCall
-
-
-from llm_os.constants import (
-    FIRST_MESSAGE_COMPULSORY_FUNCTION_SET, FLUSH_TOKEN_FRAC,
-    FUNCTION_PARAM_NAME_REQ_HEARTBEAT, INFERENCE_STRICTNESS,
-    JSON_TO_PY_TYPE_MAP, LAST_N_MESSAGES_TO_PRESERVE, MEMORY_EDITING_FUNCTIONS,
-    PY_TO_JSON_TYPE_MAP, SEND_MESSAGE_FUNCTION_NAME, SHOW_DEBUG_MESSAGES,
-    TRUNCATION_TOKEN_FRAC,
-    WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT,
-    WARNING_TOKEN_FRAC)
-from llm_os.interface import CLIInterface
-from llm_os.memory.archival_storage import ArchivalStorage
-from llm_os.memory.file_storage import FileStorage
-from llm_os.memory.memory import Memory
-from llm_os.memory.recall_storage import RecallStorage
-from llm_os.memory.working_context import WorkingContext
-from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
-from llm_os.web_interface import WebInterface
 
 
 class DuplicateKeyError(Exception):
@@ -482,7 +488,7 @@ class Agent:
         for emotion in emotion_list:
             if type(value) is not tuple or len(value) != 2:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
-                
+
         for emotion_type, emotion_intensity in emotion_list:
             if type(emotion_type) is not str or type(emotion_degree) is not float:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
@@ -529,20 +535,20 @@ class Agent:
         # else:  # Regular LLM inference
 
         match INFERENCE_STRICTNESS:
-            case 0: # no constraints
+            case 0:  # no constraints
                 response = HOST.chat(
                     model=self.model_name,
                     messages=self.memory.main_ctx_message_seq,
                     options={"num_ctx": self.memory.ctx_window},
-                )    
-            case 1: # JSON mode
+                )
+            case 1:  # JSON mode
                 response = HOST.chat(
                     model=self.model_name,
                     messages=self.memory.main_ctx_message_seq,
                     format="json",
                     options={"num_ctx": self.memory.ctx_window},
                 )
-            case 2: # structured output
+            case 2:  # structured output
                 response = HOST.chat(
                     model=self.model_name,
                     messages=self.memory.main_ctx_message_seq,
@@ -551,7 +557,7 @@ class Agent:
                 )
 
             case _:
-                raise ValueError('Invalid inference strictness (must be from 0-2)')
+                raise ValueError("Invalid inference strictness (must be from 0-2)")
 
         result_content = response["message"]["content"]
 

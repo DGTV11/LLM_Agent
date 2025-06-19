@@ -496,7 +496,7 @@ class Agent:
             if type(emotion_type) is not str or type(emotion_intensity) is not float:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
             if not (1.0 <= emotion_intensity <= 10.0):
-                return f"Intensity of emotion must be between 1 and 10 inclusive"
+                return f"Intensity of all emotions must be between 1 and 10 inclusive"
 
         for emotion_type, emotion_intensity in emotion_list:
             self.interface.inner_emotion(emotion_type, emotion_intensity)
@@ -639,7 +639,7 @@ class Agent:
                 else:
                     ##*Step 5: Handle thoughts
                     thought_list = json_result["thoughts"]
-                    fail_message = self.__handle_thoughts(thoughts_list)
+                    fail_message = self.__handle_thoughts(thought_list)
 
                     if fail_message:
                         res_messageds.append(

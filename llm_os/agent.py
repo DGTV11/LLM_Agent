@@ -6,10 +6,10 @@ from random import choice
 
 import json5
 import regex
+from host import HOST
 from pydantic import BaseModel, confloat
 from typing_extensions import TypedDict
 
-from host import HOST
 from llm_os.constants import (
     FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,
     FLUSH_TOKEN_FRAC,
@@ -493,9 +493,9 @@ class Agent:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
 
         for emotion_type, emotion_intensity in emotion_list:
-            if type(emotion_type) is not str or type(emotion_degree) is not float:
+            if type(emotion_type) is not str or type(emotion_intensity) is not float:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
-            if not (1.0 <= emotion_degree <= 10.0):
+            if not (1.0 <= emotion_intensity <= 10.0):
                 return f"Intensity of emotion must be between 1 and 10 inclusive"
 
         for emotion_type, emotion_intensity in emotion_list:

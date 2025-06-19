@@ -493,7 +493,10 @@ class Agent:
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
 
         for emotion_type, emotion_intensity in emotion_list:
-            if type(emotion_type) is not str or type(emotion_intensity) is not float:
+            if type(emotion_type) is not str or (
+                type(emotion_intensity) is not float
+                and type(emotion_intensity) is not int
+            ):
                 return f"All items in your generated object's 'emotions' field must be tuples containing type of emotion (str) and its intensity (float between 1 and 10 inclusive)."
             if not (1.0 <= emotion_intensity <= 10.0):
                 return f"Intensity of all emotions must be between 1 and 10 inclusive"

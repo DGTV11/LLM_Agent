@@ -51,7 +51,11 @@ python3 config.py
 
 2) Run LLM_Agent
 ```sh
-python3 main.py
+python3 server.py
+```
+
+```sh
+python3 client/cli-client.py
 ```
 
 ## Troubleshooting

@@ -1,5 +1,8 @@
 # Inference constants
-USE_JSON_MODE = True  # Likely slower but more reliable
+INFERENCE_STRICTNESS = (
+    2  # * 0 -> no constraints, 1 -> json mode, 2 -> (RECOMMENDED) structured output
+)
+
 # USE_SET_STARTING_MESSAGE = True  # Helps because few-shot ig
 # SET_STARTING_MESSAGE = """
 # {

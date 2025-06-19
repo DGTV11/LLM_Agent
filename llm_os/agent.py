@@ -15,27 +15,20 @@ class FunctionCall(TypedDict):
     arguments: dict
 
 
-class Response(TypedDict):
+class LLMResponse(TypedDict):
     emotions: list[str]
     thoughts: list[str]
     function_call: FunctionCall
 
 
-from llm_os.constants import (  # INNER_MONOLOGUE_PARTS,; SET_STARTING_MESSAGE,; USE_SET_STARTING_MESSAGE,
-    FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,
-    FLUSH_TOKEN_FRAC,
-    FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
-    JSON_TO_PY_TYPE_MAP,
-    LAST_N_MESSAGES_TO_PRESERVE,
-    MEMORY_EDITING_FUNCTIONS,
-    PY_TO_JSON_TYPE_MAP,
-    SEND_MESSAGE_FUNCTION_NAME,
-    SHOW_DEBUG_MESSAGES,
+from llm_os.constants import (
+    FIRST_MESSAGE_COMPULSORY_FUNCTION_SET, FLUSH_TOKEN_FRAC,
+    FUNCTION_PARAM_NAME_REQ_HEARTBEAT, INFERENCE_STRICTNESS,
+    JSON_TO_PY_TYPE_MAP, LAST_N_MESSAGES_TO_PRESERVE, MEMORY_EDITING_FUNCTIONS,
+    PY_TO_JSON_TYPE_MAP, SEND_MESSAGE_FUNCTION_NAME, SHOW_DEBUG_MESSAGES,
     TRUNCATION_TOKEN_FRAC,
-    USE_JSON_MODE,
     WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT,
-    WARNING_TOKEN_FRAC,
-)
+    WARNING_TOKEN_FRAC)
 from llm_os.interface import CLIInterface
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.file_storage import FileStorage
@@ -495,28 +488,40 @@ class Agent:
             self.memory_pressure_warning_alr_given = False
 
         ##*Step 3: Generate response
-        if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
-            HOST.generate(
-                model=self.model_name, options={"num_ctx": self.memory.ctx_window}
-            )  # Load model into memory
+        # if USE_SET_STARTING_MESSAGE and self.memory.total_no_messages == 1:
+        #     HOST.generate(
+        #         model=self.model_name, options={"num_ctx": self.memory.ctx_window}
+        #     )  # Load model into memory
+        #
+        #     result_content = SET_STARTING_MESSAGE
+        # else:  # Regular LLM inference
 
-            result_content = SET_STARTING_MESSAGE
-        else:  # Regular LLM inference
-            if USE_JSON_MODE:
+        match INFERENCE_STRICTNESS:
+            case 0: # no constraints
+                response = HOST.chat(
+                    model=self.model_name,
+                    messages=self.memory.main_ctx_message_seq,
+                    options={"num_ctx": self.memory.ctx_window},
+                )    
+            case 1: # JSON mode
                 response = HOST.chat(
                     model=self.model_name,
                     messages=self.memory.main_ctx_message_seq,
                     format="json",
                     options={"num_ctx": self.memory.ctx_window},
                 )
-            else:
+            case 2: # structured output
                 response = HOST.chat(
                     model=self.model_name,
                     messages=self.memory.main_ctx_message_seq,
+                    format=LLMResponse.model_json_schema(),
                     options={"num_ctx": self.memory.ctx_window},
                 )
 
-            result_content = response["message"]["content"]
+            case _:
+                raise ValueError('Invalid inference strictness (must be from 0-2)')
+
+        result_content = response["message"]["content"]
 
         if SHOW_DEBUG_MESSAGES:
             self.interface.debug_message(f"Got result:\n{result_content}")

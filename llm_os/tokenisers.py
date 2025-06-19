@@ -1,7 +1,6 @@
-from transformers import AutoTokenizer
-from tokenizers import Tokenizer
-
 from config import CONFIG
+from tokenizers import Tokenizer
+from transformers import AutoTokenizer
 
 
 def mistral_format_system(conv):
@@ -57,10 +56,10 @@ def get_tokeniser_and_context_window(model_name):
 
 NOMIC_EMBED_TEXT_TOKENIZER = Tokenizer.from_pretrained(
     "nomic-ai/nomic-embed-text-v1.5",
-    auth_token=CONFIG["huggingface_user_access_token"],
+    token=CONFIG["huggingface_user_access_token"],
 )
 
 QWEN_2_5_TOKENIZER = Tokenizer.from_pretrained(
     "Qwen/Qwen2.5-0.5B-Instruct",
-    auth_token=CONFIG["huggingface_user_access_token"],
+    token=CONFIG["huggingface_user_access_token"],
 )

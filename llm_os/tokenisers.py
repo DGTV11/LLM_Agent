@@ -44,6 +44,19 @@ def get_tokeniser_and_context_window(model_name):
             tokenizer = AutoTokenizer.from_pretrained(
                 "google/gemma-2-2b",
                 token=CONFIG["huggingface_user_access_token"],
+                chat_template="""{% for message in Messages %}
+  {% set last = loop.last %}
+  {% if message.Role == "user" or message.Role == "system" %}
+<start_of_turn>user
+{{ message.Content }}<end_of_turn>
+    {% if last %}
+<start_of_turn>model
+    {% endif %}
+  {% elif message.Role == "assistant" %}
+<start_of_turn>model
+{{ message.Content }}{% if not last %}<end_of_turn>{% endif %}
+  {% endif %}
+{% endfor %}""",
             )
             ctx_window = 8192
             num_token_func = lambda text: len(tokenizer.encode(text))

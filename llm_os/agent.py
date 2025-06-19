@@ -40,7 +40,7 @@ class FunctionCall(TypedDict):
     arguments: dict
 
 
-class LLMResponse(TypedDict):
+class LLMResponse(BaseModel):
     emotions: list[tuple[str, confloat(ge=1.0, le=10.0)]]
     thoughts: list[str]
     function_call: FunctionCall

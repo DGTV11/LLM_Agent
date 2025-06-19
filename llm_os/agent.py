@@ -511,7 +511,7 @@ class Agent:
             return f"Failed to parse thoughts: 'thoughts' field's value is not a list."
 
         for thought in thought_list:
-            if type(value) is not str:
+            if type(thought) is not str:
                 return f"All items in your generated object's 'thoughts' field must be strings."
 
         for thought in thought_list:

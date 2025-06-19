@@ -91,7 +91,7 @@ class ServerInterface:
     def inner_emotion(self, emotion_type: str, emotion_intensity: float, end="\n"):
         self.server_message_stack.append(
             {
-                "type": "debug_message",
+                "type": "inner_emotion",
                 "arguments": {
                     "emotion_type": emotion_type,
                     "emotion_intensity": emotion_intensity,
@@ -100,7 +100,7 @@ class ServerInterface:
             }
         )
 
-    def internal_monologue(self, msg: str, internal_monologue_part: str, end="\n"):
+    def internal_monologue(self, msg: str, end="\n"):
         self.server_message_stack.append(
             {"type": "internal_monologue", "arguments": {"msg": msg, "end": end}}
         )

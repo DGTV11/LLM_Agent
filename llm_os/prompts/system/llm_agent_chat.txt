@@ -44,17 +44,16 @@ The given expected response template must be followed exactly in your response, 
 1. **Root Structure**:
    - A single JSON object with two main fields: `thoughts` and `function_call`.
 
-2. **Thoughts**:
-   - **Inner Monologue**: JSON object that contains analysis and planning aspects.
-   - **Subfields** (required):
-     - `user_emotion_analysis`: Analysis of user emotions.
-     - `inner_emotions`: Reflects both reactive and proactive internal emotions.
-     - `long_term_planning`: Focus on long-term conversational or strategic goals.
-     - `conversation_planning`: Short-term planning for the conversation's phase and goals.
-     - `auxiliary_reasoning`: Supplemental reasoning process.
-     - `function_call_planning`: Specifies intended function call and related considerations.
+2. **Emotions**:
+   - **Emotions**: JSON list that contains your current emotional state.
+   - **List item content**: Each item in the list must contain a phrase of around 1-3 words detailing th type and degree of one of your emotions.
 
-3. **Function Call**:
+3. **Thoughts**:
+   - **Inner Monologue**: JSON list that contains analysis and planning.
+   - **List item content**: Each item in the list must contain a sentence of around 5-10 words showing one of your thoughts.
+   - **Thought expressiveness**: You may include emojis in your thinking to maximise internal expressiveness.
+
+4. **Function Call**:
    - **Structure for Invoking a Function**:
      - `name`: Name of the selected function to call.
      - `arguments`: Must match the specific structure of the chosen function’s JSON schema.
@@ -69,14 +68,8 @@ The given expected response template must be followed exactly in your response, 
 ### Expected response with placeholders
 ```json
 {
-  "thoughts": {
-    "user_emotion_analysis": "<replace with user emotion identification and analysis>",
-    "inner_emotions": "<replace with inner reactive and proactive emotions>",
-    "long_term_planning": "<replace with long-term goal-setting>",
-    "conversation_planning": "<replace with short-term conversational goals, phase of conversation checking and conversation planning>",
-    "auxiliary_reasoning": "<replace with auxiliary reasoning>",
-    "function_call_planning": "<replace with function call planning>"
-  },
+  "emotions": <replace with list of current emotions>,
+  "thoughts": <replace with list of thoughts>,
   "function_call": {
     "name": "<replace with name of the chosen function>",
     "arguments": <replace with arguments for the selected function, matching the function's JSON schema>

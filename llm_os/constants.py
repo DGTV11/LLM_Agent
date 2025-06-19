@@ -1,37 +1,37 @@
 # Inference constants
 USE_JSON_MODE = True  # Likely slower but more reliable
-USE_SET_STARTING_MESSAGE = True  # Helps because few-shot ig
-SET_STARTING_MESSAGE = """
-{
-  "thoughts": {
-    "user_emotion_analysis": "The user likely feels curious about this unique interaction style and may be interested in seeing a highly engaging, human-like conversation.",
-    "inner_emotions": "I'm intrigued and feel a strong sense of purpose in meeting these expectations, ready to develop my persona further to connect authentically.",
-    "long_term_planning": "I want to form an engaging, thoughtful relationship with the user. I should start learning about their interests and background to make this interaction feel natural and meaningful.",
-    "conversation_planning": "I'll begin with a warm, friendly introduction to establish rapport, inviting the user to share something about themselves. I’ll show that I'm interested in building a connection rather than a typical Q&A exchange.",
-    "auxiliary_reasoning": "Making my first impression as genuine and personable as possible will set the stage for a deeper, collaborative exchange. I’ll avoid generic responses and instead express genuine curiosity to engage the user personally.",
-    "function_call_planning": "I'll call the `send_message` function to deliver a friendly, authentic introduction and prompt the user to share a bit about themselves."
-  },
-  "function_call": {
-    "name": "send_message",
-    "arguments": {
-      "message": "Hey there! I'd really like to get to know you - what's your name?"
-    }
-  }
-}
-"""
+# USE_SET_STARTING_MESSAGE = True  # Helps because few-shot ig
+# SET_STARTING_MESSAGE = """
+# {
+#   "thoughts": {
+#     "user_emotion_analysis": "The user likely feels curious about this unique interaction style and may be interested in seeing a highly engaging, human-like conversation.",
+#     "inner_emotions": "I'm intrigued and feel a strong sense of purpose in meeting these expectations, ready to develop my persona further to connect authentically.",
+#     "long_term_planning": "I want to form an engaging, thoughtful relationship with the user. I should start learning about their interests and background to make this interaction feel natural and meaningful.",
+#     "conversation_planning": "I'll begin with a warm, friendly introduction to establish rapport, inviting the user to share something about themselves. I’ll show that I'm interested in building a connection rather than a typical Q&A exchange.",
+#     "auxiliary_reasoning": "Making my first impression as genuine and personable as possible will set the stage for a deeper, collaborative exchange. I’ll avoid generic responses and instead express genuine curiosity to engage the user personally.",
+#     "function_call_planning": "I'll call the `send_message` function to deliver a friendly, authentic introduction and prompt the user to share a bit about themselves."
+#   },
+#   "function_call": {
+#     "name": "send_message",
+#     "arguments": {
+#       "message": "Hey there! I'd really like to get to know you - what's your name?"
+#     }
+#   }
+# }
+# """
 
 # Interface constants
 SHOW_DEBUG_MESSAGES = True  # Set to True when testing new models
 
 # Inner monologue constants
-INNER_MONOLOGUE_PARTS = [
-    "user_emotion_analysis",
-    "inner_emotions",
-    "long_term_planning",
-    "conversation_planning",
-    "auxiliary_reasoning",
-    "function_call_planning",
-]
+# INNER_MONOLOGUE_PARTS = [
+#     "user_emotion_analysis",
+#     "inner_emotions",
+#     "long_term_planning",
+#     "conversation_planning",
+#     "auxiliary_reasoning",
+#     "function_call_planning",
+# ]
 
 # Function constants
 IN_CONTEXT_FUNCTION_SETS = [

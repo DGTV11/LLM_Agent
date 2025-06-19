@@ -1,4 +1,5 @@
-import os, subprocess
+import os
+import subprocess
 from time import time
 
 from emoji import emojize
@@ -16,24 +17,8 @@ class CLIInterface:
         print(emojize(f":lady_beetle: {msg}"), end=end, flush=True)
 
     @staticmethod
-    def internal_monologue(msg: str, internal_monologue_part: str, end="\n"):
-        match internal_monologue_part:  # ["user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"]
-            case "user_emotion_analysis":
-                emoji_text = "red_heart"
-            case "inner_emotions":
-                emoji_text = "grey_heart"
-            case "long_term_planning":
-                emoji_text = "tear-off_calendar"
-            case "conversation_planning":
-                emoji_text = "clipboard"
-            case "auxiliary_reasoning":
-                emoji_text = "thought_balloon"
-            case "function_call_planning":
-                emoji_text = "wrench"
-            case _:
-                emoji_text = "thought_balloon"
-
-        print(emojize(f":{emoji_text}: {msg}"), end=end, flush=True)
+    def internal_monologue(msg: str, end="\n"):
+        print(emojize(f":thought_balloon: {msg}"), end=end, flush=True)
 
     @staticmethod
     def assistant_message(msg: str, end="\n"):
@@ -97,14 +82,7 @@ class ServerInterface:
 
     def internal_monologue(self, msg: str, internal_monologue_part: str, end="\n"):
         self.server_message_stack.append(
-            {
-                "type": "internal_monologue",
-                "arguments": {
-                    "msg": msg,
-                    "internal_monologue_part": internal_monologue_part,
-                    "end": end,
-                },
-            }
+            {"type": "internal_monologue", "arguments": {"msg": msg, "end": end}}
         )
 
     def assistant_message(self, msg: str, end="\n"):

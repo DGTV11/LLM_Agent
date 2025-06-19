@@ -1,38 +1,49 @@
-from random import choice
-from os import path
+import json
 from collections import deque
 from functools import reduce
-import json, json5
+from os import path
+from random import choice
+
+import json5
 import regex
-
 from host import HOST
+from pydantic import BaseModel, TypedDict
 
-from llm_os.interface import CLIInterface
-from llm_os.web_interface import WebInterface
-from llm_os.memory.memory import Memory
-from llm_os.memory.working_context import WorkingContext
-from llm_os.memory.archival_storage import ArchivalStorage
-from llm_os.memory.recall_storage import RecallStorage
-from llm_os.memory.file_storage import FileStorage
-from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
-from llm_os.constants import (
-    USE_JSON_MODE,
-    USE_SET_STARTING_MESSAGE,
-    SET_STARTING_MESSAGE,
-    SHOW_DEBUG_MESSAGES,
-    INNER_MONOLOGUE_PARTS,
-    SEND_MESSAGE_FUNCTION_NAME,
-    MEMORY_EDITING_FUNCTIONS,
-    WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT,
+
+class FunctionCall(TypedDict):
+    name: str
+    arguments: dict
+
+
+class Response(TypedDict):
+    emotions: list[str]
+    thoughts: list[str]
+    function_call: FunctionCall
+
+
+from llm_os.constants import (  # INNER_MONOLOGUE_PARTS,; SET_STARTING_MESSAGE,; USE_SET_STARTING_MESSAGE,
     FIRST_MESSAGE_COMPULSORY_FUNCTION_SET,
-    PY_TO_JSON_TYPE_MAP,
-    JSON_TO_PY_TYPE_MAP,
-    FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
-    WARNING_TOKEN_FRAC,
     FLUSH_TOKEN_FRAC,
-    TRUNCATION_TOKEN_FRAC,
+    FUNCTION_PARAM_NAME_REQ_HEARTBEAT,
+    JSON_TO_PY_TYPE_MAP,
     LAST_N_MESSAGES_TO_PRESERVE,
+    MEMORY_EDITING_FUNCTIONS,
+    PY_TO_JSON_TYPE_MAP,
+    SEND_MESSAGE_FUNCTION_NAME,
+    SHOW_DEBUG_MESSAGES,
+    TRUNCATION_TOKEN_FRAC,
+    USE_JSON_MODE,
+    WARNING__MESSAGE_SINCE_LAST_CONSCIOUS_MEMORY_EDIT__COUNT,
+    WARNING_TOKEN_FRAC,
 )
+from llm_os.interface import CLIInterface
+from llm_os.memory.archival_storage import ArchivalStorage
+from llm_os.memory.file_storage import FileStorage
+from llm_os.memory.memory import Memory
+from llm_os.memory.recall_storage import RecallStorage
+from llm_os.memory.working_context import WorkingContext
+from llm_os.prompts.llm_os_summarize import get_summarise_system_prompt
+from llm_os.web_interface import WebInterface
 
 
 class DuplicateKeyError(Exception):
@@ -561,11 +572,10 @@ class Agent:
                 and json_result.get("function_call", None)
             ):
                 ##*Step 4: Handle thoughts
-                ### Thpught steps: "user_emotion_analysis", "inner_emotions", "long_term_planning", "conversation_planning", "auxiliary_reasoning", "function_call_planning"
-                thought_object = json_result["thoughts"]
+                thought_list = json_result["thoughts"]
 
-                if type(thought_object) is not dict:
-                    interface_message = f"Failed to parse thoughts: 'thoughts' field's value is not an object."
+                if type(thought_list) is not list:
+                    interface_message = f"Failed to parse thoughts: 'thoughts' field's value is not a list."
                     res_messageds.append(
                         {
                             "type": "system",
@@ -577,31 +587,9 @@ class Agent:
                     heartbeat_request = True
                     function_failed = False
 
-                unidentified_thought_keys = []
-                for key in thought_object.keys():
-                    if key not in INNER_MONOLOGUE_PARTS:
-                        unidentified_thought_keys.append(key)
-                if unidentified_thought_keys:
-                    surround_with_single_quotes = lambda s: f"'{s}'"
-                    interface_message = f"Error: fields {', '.join(map(surround_with_single_quotes, unidentified_thought_keys))} should not be included in the object corresponding to your generated JSON object's 'thoughts' field (refer to the given JSON schema!). Please try again without acknowledging this message."
-                    res_messageds.append(
-                        {
-                            "type": "system",
-                            "user_id": user_id,
-                            "message": {"role": "user", "content": interface_message},
-                        }
-                    )
-                    self.interface.system_message(interface_message)
-                    heartbeat_request = True
-                    function_failed = False
-
-                if len(thought_object.keys()) < len(INNER_MONOLOGUE_PARTS):
-                    surround_with_single_quotes = lambda s: f"'{s}'"
-                    interface_message = f"Object corresponding to your generated JSON object's 'thoughts' field is missing fields {', '.join(map(surround_with_single_quotes, list(set(INNER_MONOLOGUE_PARTS)-set(thought_object))))}."
-
-                for key, value in thought_object.items():
+                for thought in thought_list:
                     if type(value) is not str:
-                        interface_message = f"Value of '{key}' field of object corresponding to your generated object's 'thoughts' field is not a string."
+                        interface_message = f"All items in your generated object's 'thoughts' field must be strings."
                         res_messageds.append(
                             {
                                 "type": "system",
@@ -616,8 +604,8 @@ class Agent:
                         heartbeat_request = True
                         function_failed = False
 
-                for key, value in thought_object.items():
-                    self.interface.internal_monologue(value, key)
+                for thought in thought_list:
+                    self.interface.internal_monologue(thought)
 
                 ##*Step 5: Handle function call
                 d_res_messageds, heartbeat_request, function_failed = (

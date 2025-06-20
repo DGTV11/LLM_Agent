@@ -14,7 +14,9 @@ requests==2.31.0
 beautifulsoup4==4.10.0
 agentrun==0.2.4
 docker==7.1.0
-flask==3.0.3
+# flask==3.0.3
+fastapi[standard]==0.115.13
+uvicorn==0.34.3
 numpy<2
 semantic-text-splitter==0.15.0
 GitPython==3.1.43

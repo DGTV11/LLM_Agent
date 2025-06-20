@@ -1,13 +1,12 @@
-from os import path
-from datetime import datetime
 import hashlib
+from datetime import datetime
+from os import path
 
 import chromadb
 from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
-from semantic_text_splitter import TextSplitter
-
 from host import HOST_URL
 from llm_os.tokenisers import NOMIC_EMBED_TEXT_TOKENIZER
+from semantic_text_splitter import TextSplitter
 
 
 class ArchivalStorage:
@@ -48,7 +47,21 @@ class ArchivalStorage:
                 }
                 for _ in range(len(chunk_list))
             ]
-            self.collection.add(documents=chunk_list, metadatas=metadatas, ids=ids)
+            print("archival insert debugging", chunk_list, metadatas, ids)
+
+            print(
+                "lengths →",
+                len(chunk_list),
+                "chunks;",
+                len(ids),
+                "ids;",
+                len(metadatas),
+                "metadatas",
+            )
+
+            self.collection.add(
+                documents=chunk_list, metadatas=metadatas, ids=ids
+            )  # *BUG
 
             if return_ids:
                 return ids

@@ -73,14 +73,17 @@ sudo apt-get install gstreamer1.0-qt5
 sudo apt-get install gstreamer1.0-pulseaudio
 ```
 
+## Improvements
+- Use of "function paging" to reduce context usage of function schemas (TODO: list available function sets in system prompt)
+- Splitting of "thoughts" field (string) into **"emotions"** array (to encourage more humanlike behaviour) field and "thoughts" **array** (to encourage chain of thought reasoninng)
+
 ## Note
 - The code in llm_os is based on the MemGPT codebase [here](https://github.com/cpacker/MemGPT) (some parts are from the codebase, some parts are from the internet, some parts were from me)
-- The system instructions have been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/prompts) with few edits
+- The system instructions have been modified from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/prompts) with few edits
 - The schema generator has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/schema_generator.py) with few edits
 - The base function set has been lifted from [here](https://github.com/cpacker/MemGPT/tree/c6325feef6d9d2154c0445e317bcc06a7eb27665/memgpt/functions/function_sets/base.py) with few edits
 - The writing of some code in this repository has been assisted by AI
-- AI assistance was used during the compression of the default system prompt
+- AI assistance was used during the compression of the default system instructions
 
 ## References
 - Packer, Charles, et al. ‘MemGPT: Towards LLMs as Operating Systems’. arXiv [Cs.AI], 2024, http://arxiv.org/abs/2310.08560. arXiv.
-- Nussbaum, Zach, et al. ‘Nomic Embed: Training a Reproducible Long Context Text Embedder’. arXiv [Cs.CL], 2024, http://arxiv.org/abs/2402.01613. arXiv.

@@ -4,9 +4,10 @@ from os import path
 
 import chromadb
 from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
+from semantic_text_splitter import TextSplitter
+
 from host import HOST_URL
 from llm_os.tokenisers import NOMIC_EMBED_TEXT_TOKENIZER
-from semantic_text_splitter import TextSplitter
 
 
 class ArchivalStorage:
@@ -20,10 +21,7 @@ class ArchivalStorage:
                 conv_name,
             )
         )
-        self.ef = OllamaEmbeddingFunction(
-            model_name="nomic-embed-text",
-            url=f"{HOST_URL}/api/embed",
-        )
+        self.ef = OllamaEmbeddingFunction(url=HOST_URL, model_name="nomic-embed-text")
         self.collection = self.client.get_or_create_collection(
             name="archival_storage", embedding_function=self.ef
         )

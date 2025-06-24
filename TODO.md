@@ -1,6 +1,5 @@
 ## TODO
 1) Pressing issues 
-- Fix bug in archival storage
 - Make memory management more modular (including main system instructions+moving function schemas that are attached to memory modules)
 - Allow user to pick which extra memory modules and function sets are wanted before agent initalisation
 2) Essential stuff

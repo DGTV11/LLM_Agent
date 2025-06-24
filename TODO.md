@@ -1,10 +1,8 @@
 ## TODO
 1) Pressing issues 
-- Use list of thought sentences instead of complex dictionary
-    - NOTE: WE GOT https://ollama.com/blog/structured-outputs 🎉
+- Fix bug in archival storage
 - Make memory management more modular (including main system instructions+moving function schemas that are attached to memory modules)
-- Rewrite API using FastAPI library and
-- Allow user to pick which function sets are wanted
+- Allow user to pick which extra memory modules and function sets are wanted before agent initalisation
 2) Essential stuff
 - Refine function schema paging 
 - allow LLM_Agent to speak to multiple users at once (using semaphores)

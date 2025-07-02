@@ -1,5 +1,5 @@
 # LLM Agent
-A MemGPT-based conversational agent
+A MemGPT-like conversational agent
 
 ## Installation
 ### Manual installation

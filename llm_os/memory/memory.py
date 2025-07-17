@@ -8,6 +8,8 @@ from pathlib import Path
 import chromadb
 from chromadb.utils.embedding_functions import OllamaEmbeddingFunction
 from host import HOST_URL
+from semantic_text_splitter import TextSplitter
+
 from llm_os.memory.archival_storage import ArchivalStorage
 from llm_os.memory.file_storage import FileStorage
 from llm_os.memory.recall_storage import RecallStorage
@@ -16,7 +18,6 @@ from llm_os.tokenisers import (
     NOMIC_EMBED_TEXT_TOKENIZER,
     get_tokeniser_and_context_window,
 )
-from semantic_text_splitter import TextSplitter
 
 
 class Memory:
@@ -26,6 +27,7 @@ class Memory:
         conv_name: str,
         in_context_function_dats: dict,
         out_of_context_function_dats: dict,
+        out_of_context_function_sets: list,
         system_instructions: str,
         working_context: WorkingContext,
         archival_storage: ArchivalStorage,
@@ -43,6 +45,7 @@ class Memory:
         # Function data
         self.in_context_function_dats = in_context_function_dats
         self.out_of_context_function_dats = out_of_context_function_dats
+        self.out_of_context_function_sets = out_of_context_function_sets
         self.function_schema_search_top_k = function_schema_search_top_k
 
         # Function description embeddings
@@ -148,6 +151,8 @@ class Memory:
         {self.system_instructions}
         # IN-CONTEXT FUNCTION JSON SCHEMAS (some functions are stored out of context and not visible here)
         {newline.join([str(dat["json_schema"]) for dat in self.in_context_function_dats.values()])}
+        # OUT-OF-CONTEXT FUNCTION SETS
+        {newline.join(self.out_of_context_function_sets)}
         # EXTERNAL CONTEXT INFORMATION
         {len(self.recall_storage)} previous messages between you and the user are stored in recall storage (use functions to access them)
         {len(self.archival_storage)} total memories you created are stored in archival storage (use functions to access them)

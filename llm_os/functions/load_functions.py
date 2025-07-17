@@ -1,7 +1,10 @@
-import importlib, inspect, os, sys
+import importlib
+import inspect
+import os
+import sys
 
-from llm_os.functions.schema_generator import generate_schema
 from llm_os.constants import IN_CONTEXT_FUNCTION_SETS
+from llm_os.functions.schema_generator import generate_schema
 
 
 class FunctionSet:
@@ -72,6 +75,7 @@ def load_all_function_sets():
 def get_function_dats_from_function_sets(function_set_dict):
     in_context_func_dict = {}
     out_of_context_func_dict = {}
+    out_of_context_func_sets = []
 
     for function_set_name, function_set in function_set_dict.items():
         for func_name, func_dat in function_set.function_schemas_and_functions.items():
@@ -84,4 +88,6 @@ def get_function_dats_from_function_sets(function_set_dict):
                 in_context_func_dict[func_name] = func_dat
             else:
                 out_of_context_func_dict[func_name] = func_dat
-    return in_context_func_dict, out_of_context_func_dict
+                if function_set_name not in out_of_context_func_sets:
+                    out_of_context_func_sets.append(function_set_name)
+    return in_context_func_dict, out_of_context_func_dict, out_of_context_func_sets

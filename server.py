@@ -6,11 +6,11 @@ from time import time
 from uuid import uuid4
 
 import uvicorn
+from config import CONFIG
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from config import CONFIG
 from llm_os.agent import Agent
 from llm_os.functions.load_functions import (
     get_function_dats_from_function_sets,
@@ -66,6 +66,7 @@ def get_agent(conv_name):
     (
         in_context_function_dats,
         out_of_context_function_dats,
+        out_of_context_function_sets,
     ) = get_function_dats_from_function_sets(load_all_function_sets())
 
     # Load interfaces
@@ -87,6 +88,7 @@ def get_agent(conv_name):
         CONFIG["model_name"],
         in_context_function_dats,
         out_of_context_function_dats,
+        out_of_context_function_sets,
         system_instructions,
         working_context,
         archival_storage,
@@ -127,9 +129,11 @@ def init_agent(agent_persona_name, human_persona_name):
     system_instructions = get_system_text("llm_agent_chat")
 
     # Load functions
-    in_context_function_dats, out_of_context_function_dats = (
-        get_function_dats_from_function_sets(load_all_function_sets())
-    )
+    (
+        in_context_function_dats,
+        out_of_context_function_dats,
+        out_of_context_function_sets,
+    ) = get_function_dats_from_function_sets(load_all_function_sets())
 
     # Load interfaces
     interface = ServerInterface()
@@ -167,6 +171,7 @@ def init_agent(agent_persona_name, human_persona_name):
         CONFIG["model_name"],
         in_context_function_dats,
         out_of_context_function_dats,
+        out_of_context_function_sets,
         system_instructions,
         working_context,
         archival_storage,

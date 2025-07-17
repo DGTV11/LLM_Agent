@@ -6,11 +6,11 @@ from time import time
 from uuid import uuid4
 
 import uvicorn
-from config import CONFIG
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from config import CONFIG
 from llm_os.agent import Agent
 from llm_os.functions.load_functions import (
     get_function_dats_from_function_sets,
@@ -215,7 +215,7 @@ async def get_human_personas():
 
 
 @app.post("/agent")
-async def init_agent(data: InitAgentRequestParams):
+async def create_agent(data: InitAgentRequestParams):
     agent_persona_name = data.agent_persona_name
     human_persona_name = data.human_persona_name
 
